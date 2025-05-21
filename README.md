@@ -1,4 +1,4 @@
-# README.md
+# GC-QA-RAG
 
 [English Version](./README_ENGLISH.md) | 中文版
 
