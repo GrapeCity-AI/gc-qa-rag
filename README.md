@@ -1,5 +1,7 @@
 # README.md
 
+[English Version](./README_EN.md) | 中文版
+
 ![license](https://img.shields.io/badge/license-MIT-blue)
 ![RAG](https://img.shields.io/badge/tech-RAG-important)
 ![Enterprise](https://img.shields.io/badge/validated-Enterprise-success)

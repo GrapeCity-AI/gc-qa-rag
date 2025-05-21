@@ -1,4 +1,4 @@
-# README.md
+# GC-QA-RAG
 
 ![license](https://img.shields.io/badge/license-MIT-blue)
 ![RAG](https://img.shields.io/badge/tech-RAG-important)
