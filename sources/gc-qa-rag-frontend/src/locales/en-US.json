@@ -1,0 +1,53 @@
+{
+    "Common": {
+        "WebsiteName": "GrapeCity AI Search",
+        "Copyright": "© {{year}} GrapeCity Software, All rights reserved."
+    },
+    "Home": {
+        "SearchPlaceholder": "Enter your product question, press Enter to send, Shift+Enter for a new line",
+        "SearchPlaceholder_Mobile": "Enter your product question",
+        "DeepThink": "Deep Thinking (DeepSeek-R1 Full Version)"
+    },
+    "Search": {
+        "AIChat": "AI Q&A",
+        "SearchResults": "Search Results",
+        "Expand": "Expand",
+        "Collapse": "Collapse",
+        "ExpandMore": "[Show more...]",
+        "Commited": "Your feedback has been submitted",
+        "Copied": "Copied",
+        "CopiedImage": "Image copied to clipboard"
+    },
+    "ProductName": {
+        "Forguncy": "Forguncy",
+        "Wyn": "Wyn BI",
+        "SpreadJS": "SpreadJS",
+        "GcExcel": "GcExcel"
+    },
+    "SearchModeName": {
+        "chat": "Q&A Mode",
+        "think": "Thinking Mode"
+    },
+    "Answer": {
+        "DeepThink": "Deep Thinking (DeepSeek-R1 Full Version)",
+        "SmartAnswer": "Smart Answer",
+        "StopGenerating": "Stop Generating",
+        "AIHint": "The above content is AI-generated and for reference only.",
+        "Useful": "Useful",
+        "Useless": "Not Useful",
+        "Copy": "Copy",
+        "CopyImage": "Copy Image",
+        "AskMore": "Ask More",
+        "ContinueAsking": "Continue Asking"
+    },
+    "Tabs": {
+        "All": "All",
+        "Doc": "Documentation",
+        "ForumQA": "Help Center",
+        "ForumTutorial": "Tutorials"
+    },
+    "Button": {
+        "Search": "Search",
+        "NewChat": "New Chat"
+    }
+}

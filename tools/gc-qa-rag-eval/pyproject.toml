@@ -1,0 +1,20 @@
+[project]
+name = "gc-qa-rag-eval"
+version = "0.1.0"
+description = "gc-qa-rag eval app"
+authors = [{ name = "experdotxie", email = "experdot.xie@developertools.com" }]
+dependencies = [
+    "pandas>=2.2.3",
+    "requests>=2.32.3",
+    "matplotlib>=3.10.1",
+    "seaborn>=0.13.2",
+    "openpyxl>=3.1.5",
+    "openai>=1.77.0",
+]
+requires-python = "==3.13.*"
+readme = "README.md"
+license = { text = "MIT" }
+
+
+[tool.pdm]
+distribution = false

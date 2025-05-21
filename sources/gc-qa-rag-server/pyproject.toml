@@ -1,0 +1,27 @@
+[project]
+name = "gc-qa-rag-server"
+version = "0.1.0"
+description = "gc-qa-rag server app"
+authors = [{ name = "experdotxie", email = "experdot.xie@developertools.com" }]
+dependencies = [
+    "python-dotenv>=1.1.0",
+    "dashscope>=1.23.1",
+    "openai>=1.75.0",
+    "qdrant-client>=1.13.3",
+    "limits>=5.0.0",
+    "fastapi[standard]>=0.115.12",
+    "platformdirs>=4.3.7",
+    "SQLAlchemy>=2.0.40",
+    "mysql-connector-python>=9.3.0",
+]
+requires-python = "==3.13.*"
+readme = "README.md"
+license = { text = "MIT" }
+
+
+[tool.pdm]
+distribution = false
+
+[tool.pdm.scripts]
+start = "uvicorn ragapp.server:app --host 0.0.0.0 --port 8000"
+dev = "uvicorn ragapp.server:app --host 0.0.0.0 --port 8000 --reload"

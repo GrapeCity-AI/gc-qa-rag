@@ -1,0 +1,21 @@
+{
+    "llm_default": {
+        "api_key": "",
+        "api_base": "https://dashscope.aliyuncs.com/compatible-mode/v1",
+        "model_name": "qwen-plus"
+    },
+    "llm_think": {
+        "api_key": "",
+        "api_base": "https://dashscope.aliyuncs.com/compatible-mode/v1",
+        "model_name": "deepseek-r1"
+    },
+    "embedding": {
+        "api_key": ""
+    },
+    "vector_db": {
+        "host": "http://rag_qdrant_container:6333"
+    },
+    "db": {
+        "connection_string": "mysql+mysqlconnector://root:12345678@rag_mysql_container:3306/search_db"
+    }
+}

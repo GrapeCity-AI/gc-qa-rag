@@ -1,0 +1,13 @@
+[project]
+name = "gc-qa-rag"
+version = "0.1.0"
+description = "gc-qa-rag doc project"
+authors = [{ name = "experdotxie", email = "experdot.xie@developertools.com" }]
+dependencies = ["mkdocs-material>=9.6.12"]
+requires-python = "==3.13.*"
+readme = "README.md"
+license = { text = "MIT" }
+
+
+[tool.pdm]
+distribution = false

@@ -1,0 +1,69 @@
+version: "3.8"
+
+services:
+    mysql:
+        image: mysql:latest
+        container_name: rag_mysql_container
+        restart: unless-stopped
+        environment:
+            MYSQL_ROOT_PASSWORD: 12345678
+            MYSQL_DATABASE: search_db
+            MYSQL_USER: search_db_user
+            MYSQL_PASSWORD: 12345678
+        volumes:
+            - rag-mysql-data:/var/lib/mysql
+        ports:
+            - "3306:3306"
+        networks:
+            - rag_network
+
+    qdrant:
+        image: qdrant/qdrant:latest
+        container_name: rag_qdrant_container
+        restart: unless-stopped
+        environment:
+            QDRANT__SERVICE__GRPC_PORT: 6334
+            QDRANT__SERVICE__HTTP_PORT: 6333
+        volumes:
+            - rag-qdrant-data:/qdrant/storage
+        ports:
+            - "6333:6333" # HTTP port for REST API
+            - "6334:6334" # gRPC port
+        networks:
+            - rag_network
+        deploy:
+            resources:
+                limits:
+                    memory: 8G
+
+    server:
+        image: rag-server:latest
+        container_name: rag_server_container
+        restart: on-failure
+        depends_on:
+            - mysql
+            - qdrant
+        ports:
+            - "8000:8000"
+        environment:
+            GC_QA_RAG_ENV: production
+        networks:
+            - rag_network
+
+    frontend:
+        image: rag-frontend:latest
+        container_name: rag_frontend_container
+        restart: on-failure
+        depends_on:
+            - server
+        ports:
+            - "80:80"
+        networks:
+            - rag_network
+
+volumes:
+    rag-mysql-data:
+    rag-qdrant-data:
+
+networks:
+    rag_network:

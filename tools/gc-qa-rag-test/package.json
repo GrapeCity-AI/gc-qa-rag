@@ -1,0 +1,15 @@
+{
+  "name": "gc-qa-rag-test",
+  "version": "1.0.0",
+  "description": "gc-qa-rag k6 test app",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "devDependencies": {
+    "@types/k6": "^0.54.1"
+  }
+}

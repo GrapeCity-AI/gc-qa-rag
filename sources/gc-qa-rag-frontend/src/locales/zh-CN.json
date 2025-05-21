@@ -1,0 +1,53 @@
+{
+    "Common": {
+        "WebsiteName": "葡萄城AI搜索",
+        "Copyright": "© {{year}} 葡萄城软件，保留所有权利"
+    },
+    "Home": {
+        "SearchPlaceholder": "输入你想了解的产品问题，Enter键发送，Shift+Enter键换行",
+        "SearchPlaceholder_Mobile": "输入你想了解的产品问题",
+        "DeepThink": "深度思考（DeepSeek-R1满血版）"
+    },
+    "Search": {
+        "AIChat": "智能问答",
+        "SearchResults": "搜索结果",
+        "Expand": "展开",
+        "Collapse": "收起",
+        "ExpandMore": "[展开更多...]",
+        "Commited": "您的反馈已提交",
+        "Copied": "已复制",
+        "CopiedImage": "已复制图像到剪切板"
+    },
+    "ProductName": {
+        "Forguncy": "活字格",
+        "Wyn": "Wyn 商业智能",
+        "SpreadJS": "SpreadJS",
+        "GcExcel": "GcExcel"
+    },
+    "SearchModeName": {
+        "chat": "问答模式",
+        "think": "思考模式"
+    },
+    "Answer": {
+        "DeepThink": "深度思考 (DeepSeek-R1 满血版)",
+        "SmartAnswer": "智能回答",
+        "StopGenerating": "停止生成",
+        "AIHint": "以上内容由AI生成，仅供参考。",
+        "Useful": "有用",
+        "Useless": "没用",
+        "Copy": "复制",
+        "CopyImage": "复制图像",
+        "AskMore": "追问",
+        "ContinueAsking": "继续提问"
+    },
+    "Tabs": {
+        "All": "全部",
+        "Doc": "帮助文档",
+        "ForumQA": "求助中心",
+        "ForumTutorial": "专题教程"
+    },
+    "Button": {
+        "Search": "搜索",
+        "NewChat": "新的对话"
+    }
+}
