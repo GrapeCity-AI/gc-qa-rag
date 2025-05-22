@@ -15,6 +15,17 @@
 -   **开源实践支持**  
     提供完整技术教程，并开放源代码，助力开发者快速搭建易于落地的高质量企业级 AI 知识库系统。
 
+## 文档
+
+我们提供了详尽的文档介绍本项目，具体可以访问本项目的 GitHub Pages 文档站点：
+
+-   [项目背景](https://grapecity-ai.github.io/gc-qa-rag/0-%E9%A1%B9%E7%9B%AE%E6%A6%82%E8%BF%B0/1_%E9%A1%B9%E7%9B%AE%E8%83%8C%E6%99%AF/)
+-   [产品设计](https://grapecity-ai.github.io/gc-qa-rag/0-%E9%A1%B9%E7%9B%AE%E6%A6%82%E8%BF%B0/2_%E4%BA%A7%E5%93%81%E8%AE%BE%E8%AE%A1/)
+-   [技术架构](https://grapecity-ai.github.io/gc-qa-rag/0-%E9%A1%B9%E7%9B%AE%E6%A6%82%E8%BF%B0/3_%E6%8A%80%E6%9C%AF%E6%9E%B6%E6%9E%84/)
+-   [技术原理-切片方案](https://grapecity-ai.github.io/gc-qa-rag/1-%E6%8A%80%E6%9C%AF%E5%8E%9F%E7%90%86/1-%E5%88%87%E7%89%87%E6%96%B9%E6%A1%88/)
+-   [技术原理-向量检索](https://grapecity-ai.github.io/gc-qa-rag/1-%E6%8A%80%E6%9C%AF%E5%8E%9F%E7%90%86/2-%E5%90%91%E9%87%8F%E6%A3%80%E7%B4%A2/)
+-   [技术原理-问答生成](https://grapecity-ai.github.io/gc-qa-rag/1-%E6%8A%80%E6%9C%AF%E5%8E%9F%E7%90%86/3-%E9%97%AE%E7%AD%94%E7%94%9F%E6%88%90/)
+
 ## 概述
 
 GC-QA-RAG 是一款面向葡萄城产品生态（包括 活字格、WYN、SpreadJS 和 GCExcel 等）的检索增强生成（RAG）系统。该系统通过智能文档处理、高效知识检索、精准问答等功能，有效提升了知识管理效率和用户支持体验。
