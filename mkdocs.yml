@@ -1,69 +1,74 @@
 site_name: GC-QA-RAG Handbook
 theme:
-  name: material
-  features:
-    - navigation.instant
-    - navigation.instant.progress
-    - navigation.tracking
-    - navigation.top
-    # - navigation.tabs
-    # - navigation.expand
-    # - navigation.sections
-    # - content.action.view
-    # - content.action.edit
-    - content.code.copy
+    name: material
+    features:
+        - navigation.instant
+        - navigation.instant.progress
+        - navigation.tracking
+        - navigation.top
+        # - navigation.tabs
+        # - navigation.expand
+        # - navigation.sections
+        # - content.action.view
+        # - content.action.edit
+        - content.code.copy
 repo_url: https://github.com/GrapeCity-AI/gc-qa-rag
 
+extra:
+    analytics:
+        provider: google
+        property: G-94MX3DDQS3
+
 extra_css:
-  - stylesheets/extra.css
+    - stylesheets/extra.css
 
 nav:
-  - 首页: index.md
-  - 项目概述:
-      - 项目背景: 0-项目概述/1_项目背景.md
-      - 产品设计: 0-项目概述/2_产品设计.md
-      - 技术架构: 0-项目概述/3_技术架构.md
-      - 工程方案: 0-项目概述/4_工程方案.md
-      - 落地效果: 0-项目概述/5_落地效果.md
-  - 技术原理:
-      - 切片方案: 1-技术原理/1-切片方案.md
-      - 向量检索: 1-技术原理/2-向量检索.md
-      - 问答生成: 1-技术原理/3-问答生成.md
-  - 开发教程:
-      - 快速开始: 2-开发教程/0-快速开始.md
-      # - 需求调研: 2-开发教程/0-需求调研.md
-      # - 技术选型: 2-开发教程/1-技术选型.md
-      # - 项目计划: 2-开发教程/2-项目计划.md
-      # - 效果评测: 2-开发教程/3-效果评测.md
-      # - 技术清单: 2-开发教程/4-技术清单.md
-      - 代码详解 - ETL:
-          - 概述: 2-开发教程/0-ETL/1-概述.md
-          - 通用-文档切片: 2-开发教程/0-ETL/2-通用-文档切片.md
-          - 通用-向量生成: 2-开发教程/0-ETL/3-通用-向量生成.md
-          - 通用-提取对象: 2-开发教程/0-ETL/4-通用-提取对象.md
-          - 生成-问答对: 2-开发教程/0-ETL/5-生成-问答对.md
-          - 生成-长答案: 2-开发教程/0-ETL/6-生成-长答案.md
-          - 生成-子问题: 2-开发教程/0-ETL/7-生成-子问题.md
-          - 生成-合并输出: 2-开发教程/0-ETL/8-生成-合并输出.md
-          - 存储-存入向量库: 2-开发教程/0-ETL/9-存储-存入向量库.md
-          - 主函数-爬取: 2-开发教程/0-ETL/10-主函数-爬取.md
-          - 主函数-构建: 2-开发教程/0-ETL/11-主函数-构建.md
-          - 主函数-存储: 2-开发教程/0-ETL/12-主函数-存储.md
-      - 代码详解 - BACKEND:
-          - 概述: 2-开发教程/1-BACKEND/1-概述.md
-          - 通用-数据库设计: 2-开发教程/1-BACKEND/2-通用-数据库设计.md
-          - 通用-接口限流: 2-开发教程/1-BACKEND/3-通用-接口限流.md
-          - API-查询改写: 2-开发教程/1-BACKEND/4-API-查询改写.md
-          - API-检索匹配: 2-开发教程/1-BACKEND/5-API-检索匹配.md
-          - API-总结模式: 2-开发教程/1-BACKEND/6-API-总结模式.md
-          - API-思考模式: 2-开发教程/1-BACKEND/7-API-思考模式.md
-          - API-研究模式: 2-开发教程/1-BACKEND/8-API-研究模式.md
-          - 主函数-服务: 2-开发教程/1-BACKEND/9-主函数-服务.md
-      - 代码详解 - FRONTEND:
-          - 概述: 2-开发教程/2-FRONTEND/1-概述.md
-          - 通用-工具函数: 2-开发教程/2-FRONTEND/2-通用-工具函数.md
-          - 通用-网络请求: 2-开发教程/2-FRONTEND/3-通用-网络请求.md
-          - 页面-首页: 2-开发教程/2-FRONTEND/4-页面-首页.md
-          - 页面-搜索: 2-开发教程/2-FRONTEND/5-页面-搜索.md
-  - 技术博客:
-      - 博客1: 3-技术博客/1_blog.md
+    - 首页: index.md
+    - 项目概述:
+          - 项目背景: 0-项目概述/1_项目背景.md
+          - 产品设计: 0-项目概述/2_产品设计.md
+          - 技术架构: 0-项目概述/3_技术架构.md
+          - 工程方案: 0-项目概述/4_工程方案.md
+          - 落地效果: 0-项目概述/5_落地效果.md
+    - 技术原理:
+          - 切片方案: 1-技术原理/1-切片方案.md
+          - 向量检索: 1-技术原理/2-向量检索.md
+          - 问答生成: 1-技术原理/3-问答生成.md
+    - 开发教程:
+          - 快速开始: 2-开发教程/0-快速开始.md
+          # - 需求调研: 2-开发教程/0-需求调研.md
+          # - 技术选型: 2-开发教程/1-技术选型.md
+          # - 项目计划: 2-开发教程/2-项目计划.md
+          # - 效果评测: 2-开发教程/3-效果评测.md
+          # - 技术清单: 2-开发教程/4-技术清单.md
+          - 代码详解 - ETL:
+                - 概述: 2-开发教程/0-ETL/1-概述.md
+                - 通用-文档切片: 2-开发教程/0-ETL/2-通用-文档切片.md
+                - 通用-向量生成: 2-开发教程/0-ETL/3-通用-向量生成.md
+                - 通用-提取对象: 2-开发教程/0-ETL/4-通用-提取对象.md
+                - 生成-问答对: 2-开发教程/0-ETL/5-生成-问答对.md
+                - 生成-长答案: 2-开发教程/0-ETL/6-生成-长答案.md
+                - 生成-子问题: 2-开发教程/0-ETL/7-生成-子问题.md
+                - 生成-合并输出: 2-开发教程/0-ETL/8-生成-合并输出.md
+                - 存储-存入向量库: 2-开发教程/0-ETL/9-存储-存入向量库.md
+                - 主函数-爬取: 2-开发教程/0-ETL/10-主函数-爬取.md
+                - 主函数-构建: 2-开发教程/0-ETL/11-主函数-构建.md
+                - 主函数-存储: 2-开发教程/0-ETL/12-主函数-存储.md
+          - 代码详解 - BACKEND:
+                - 概述: 2-开发教程/1-BACKEND/1-概述.md
+                - 通用-数据库设计: 2-开发教程/1-BACKEND/2-通用-数据库设计.md
+                - 通用-接口限流: 2-开发教程/1-BACKEND/3-通用-接口限流.md
+                - API-查询改写: 2-开发教程/1-BACKEND/4-API-查询改写.md
+                - API-检索匹配: 2-开发教程/1-BACKEND/5-API-检索匹配.md
+                - API-总结模式: 2-开发教程/1-BACKEND/6-API-总结模式.md
+                - API-思考模式: 2-开发教程/1-BACKEND/7-API-思考模式.md
+                - API-研究模式: 2-开发教程/1-BACKEND/8-API-研究模式.md
+                - 主函数-服务: 2-开发教程/1-BACKEND/9-主函数-服务.md
+          - 代码详解 - FRONTEND:
+                - 概述: 2-开发教程/2-FRONTEND/1-概述.md
+                - 通用-工具函数: 2-开发教程/2-FRONTEND/2-通用-工具函数.md
+                - 通用-网络请求: 2-开发教程/2-FRONTEND/3-通用-网络请求.md
+                - 页面-首页: 2-开发教程/2-FRONTEND/4-页面-首页.md
+                - 页面-搜索: 2-开发教程/2-FRONTEND/5-页面-搜索.md
+    - 技术博客:
+          - 博客1: 3-技术博客/1_blog.md
