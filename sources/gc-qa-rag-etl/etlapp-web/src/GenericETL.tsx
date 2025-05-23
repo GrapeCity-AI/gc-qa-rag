@@ -11,7 +11,7 @@ const PRODUCT_OPTIONS = [
   { label: 'gcexcel', value: 'gcexcel' },
 ];
 
-const API_BASE = '/generic';
+const API_BASE = 'http://127.0.0.1:8000/generic';
 
 const fetchFiles = async (product: string) => {
   const res = await fetch(`${API_BASE}/files?product=${product}`);

@@ -1,6 +1,7 @@
 from fastapi import FastAPI, UploadFile, File, Form, BackgroundTasks
 from fastapi.responses import JSONResponse
 from fastapi.routing import APIRouter
+from fastapi.middleware.cors import CORSMiddleware
 import os
 import shutil
 import threading
@@ -12,6 +13,14 @@ from etlapp.common.config import app_config
 from etlapp.das.das_generic import das_generic_main
 
 app = FastAPI()
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
 # --- Generic ETL API Router ---
 generic_router = APIRouter(prefix="/generic")
