@@ -28,8 +28,8 @@ generic_router = APIRouter(prefix="/generic")
 # 用于简单进度追踪（生产建议用 redis/db）
 progress_status = {}
 
-@generic_router.post("/upload")
-async def upload_file(product: str = Form(...), file: UploadFile = File(...)):
+@generic_router.post("/das_upload")
+async def das_upload_file(product: str = Form(...), file: UploadFile = File(...)):
     input_dir = os.path.join(app_config.root_path, f"das/.temp/generic_input/{product}")
     ensure_folder_exists(input_dir)
     file_path = os.path.join(input_dir, file.filename)
@@ -37,16 +37,16 @@ async def upload_file(product: str = Form(...), file: UploadFile = File(...)):
         shutil.copyfileobj(file.file, f)
     return {"filename": file.filename}
 
-@generic_router.get("/files")
-def list_files(product: str):
+@generic_router.get("/das_files")
+def das_list_files(product: str):
     input_dir = os.path.join(app_config.root_path, f"das/.temp/generic_input/{product}")
     if not os.path.exists(input_dir):
         return {"files": []}
     files = os.listdir(input_dir)
     return {"files": files}
 
-@generic_router.post("/start_etl")
-def start_etl(product: str = Form(...)):
+@generic_router.post("/das_start")
+def das_start_execution(product: str = Form(...)):
     task_id = f"{product}_{int(time.time())}"
     progress_status[task_id] = {"status": "running", "progress": 0, "msg": ""}
 
@@ -64,20 +64,20 @@ def start_etl(product: str = Form(...)):
     threading.Thread(target=run_etl_task, daemon=True).start()
     return {"task_id": task_id}
 
-@generic_router.get("/progress/{task_id}")
-def get_progress(task_id: str):
+@generic_router.get("/das_progress/{task_id}")
+def das_get_progress(task_id: str):
     return progress_status.get(task_id, {"status": "not_found"})
 
-@generic_router.get("/results")
-def list_results(product: str):
+@generic_router.get("/das_results")
+def das_list_results(product: str):
     output_dir = os.path.join(app_config.root_path, f"das/.temp/generic_output/{product}")
     if not os.path.exists(output_dir):
         return {"files": []}
     files = [f for f in os.listdir(output_dir) if f.endswith('.json')]
     return {"files": files}
 
-@generic_router.get("/result_content")
-def get_result_content(product: str, filename: str):
+@generic_router.get("/das_result_content")
+def das_get_result_content(product: str, filename: str):
     output_dir = os.path.join(app_config.root_path, f"das/.temp/generic_output/{product}")
     file_path = os.path.join(output_dir, filename)
     if not os.path.exists(file_path):

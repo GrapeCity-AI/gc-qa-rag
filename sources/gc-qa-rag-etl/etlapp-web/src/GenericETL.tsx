@@ -6,29 +6,29 @@ import type { UploadFile } from 'antd/es/upload/interface';
 const API_BASE = 'http://127.0.0.1:8000/generic';
 
 const fetchFiles = async (product: string) => {
-  const res = await fetch(`${API_BASE}/files?product=${product}`);
+  const res = await fetch(`${API_BASE}/das_files?product=${product}`);
   return (await res.json()).files as string[];
 };
 
 const fetchResults = async (product: string) => {
-  const res = await fetch(`${API_BASE}/results?product=${product}`);
+  const res = await fetch(`${API_BASE}/das_results?product=${product}`);
   return (await res.json()).files as string[];
 };
 
 const fetchResultContent = async (product: string, filename: string) => {
-  const res = await fetch(`${API_BASE}/result_content?product=${product}&filename=${filename}`);
+  const res = await fetch(`${API_BASE}/das_result_content?product=${product}&filename=${filename}`);
   return await res.json();
 };
 
 const startETL = async (product: string) => {
   const form = new FormData();
   form.append('product', product);
-  const res = await fetch(`${API_BASE}/start_etl`, { method: 'POST', body: form });
+  const res = await fetch(`${API_BASE}/das_start`, { method: 'POST', body: form });
   return await res.json();
 };
 
 const fetchProgress = async (taskId: string) => {
-  const res = await fetch(`${API_BASE}/progress/${taskId}`);
+  const res = await fetch(`${API_BASE}/das_progress/${taskId}`);
   return await res.json();
 };
 
@@ -107,7 +107,7 @@ const GenericETL: React.FC = () => {
     const form = new FormData();
     form.append('product', product);
     form.append('file', file as any);
-    const res = await fetch(`${API_BASE}/upload`, {
+    const res = await fetch(`${API_BASE}/das_upload`, {
       method: 'POST',
       body: form,
     });
@@ -191,7 +191,7 @@ const GenericETL: React.FC = () => {
         loading={etlRunning}
         disabled={etlRunning || serverFiles.length === 0}
       >
-        启动 ETL 处理
+        启动 ETL - DAS 处理
       </Button>
       {etlRunning || progress === 100 ? (
         <div style={{ margin: '16px 0' }}>
@@ -200,7 +200,7 @@ const GenericETL: React.FC = () => {
         </div>
       ) : null}
       <div style={{ margin: '24px 0 8px 0' }}>
-        <b>处理结果文件：</b>
+        <b>DAS 处理结果文件：</b>
         <List
           size="small"
           bordered
