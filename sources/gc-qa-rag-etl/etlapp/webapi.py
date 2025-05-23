@@ -11,6 +11,7 @@ from typing import List
 from etlapp.common.file import ensure_folder_exists
 from etlapp.common.config import app_config
 from etlapp.das.das_generic import das_generic_main
+import sys
 
 app = FastAPI()
 
@@ -28,6 +29,7 @@ generic_router = APIRouter(prefix="/generic")
 # 用于简单进度追踪（生产建议用 redis/db）
 progress_status = {}
 
+
 @generic_router.post("/das_upload")
 async def das_upload_file(product: str = Form(...), file: UploadFile = File(...)):
     input_dir = os.path.join(app_config.root_path, f"das/.temp/generic_input/{product}")
@@ -37,6 +39,7 @@ async def das_upload_file(product: str = Form(...), file: UploadFile = File(...)
         shutil.copyfileobj(file.file, f)
     return {"filename": file.filename}
 
+
 @generic_router.get("/das_files")
 def das_list_files(product: str):
     input_dir = os.path.join(app_config.root_path, f"das/.temp/generic_input/{product}")
@@ -44,6 +47,7 @@ def das_list_files(product: str):
         return {"files": []}
     files = os.listdir(input_dir)
     return {"files": files}
+
 
 @generic_router.post("/das_start")
 def das_start_execution(product: str = Form(...)):
@@ -64,21 +68,28 @@ def das_start_execution(product: str = Form(...)):
     threading.Thread(target=run_etl_task, daemon=True).start()
     return {"task_id": task_id}
 
+
 @generic_router.get("/das_progress/{task_id}")
 def das_get_progress(task_id: str):
     return progress_status.get(task_id, {"status": "not_found"})
 
+
 @generic_router.get("/das_results")
 def das_list_results(product: str):
-    output_dir = os.path.join(app_config.root_path, f"das/.temp/generic_output/{product}")
+    output_dir = os.path.join(
+        app_config.root_path, f"das/.temp/generic_output/{product}"
+    )
     if not os.path.exists(output_dir):
         return {"files": []}
-    files = [f for f in os.listdir(output_dir) if f.endswith('.json')]
+    files = [f for f in os.listdir(output_dir) if f.endswith(".json")]
     return {"files": files}
+
 
 @generic_router.get("/das_result_content")
 def das_get_result_content(product: str, filename: str):
-    output_dir = os.path.join(app_config.root_path, f"das/.temp/generic_output/{product}")
+    output_dir = os.path.join(
+        app_config.root_path, f"das/.temp/generic_output/{product}"
+    )
     file_path = os.path.join(output_dir, filename)
     if not os.path.exists(file_path):
         return JSONResponse(status_code=404, content={"error": "File not found"})
@@ -86,22 +97,136 @@ def das_get_result_content(product: str, filename: str):
         content = json.load(f)
     return content
 
+
 @generic_router.get("/products")
 def list_products():
     input_root = os.path.join(app_config.root_path, "das/.temp/generic_input")
     if not os.path.exists(input_root):
         ensure_folder_exists(input_root)
     # 只列出文件夹
-    products = [name for name in os.listdir(input_root) if os.path.isdir(os.path.join(input_root, name))]
+    products = [
+        name
+        for name in os.listdir(input_root)
+        if os.path.isdir(os.path.join(input_root, name))
+    ]
     return {"products": sorted(list(products))}
+
 
 @generic_router.post("/create_product")
 def create_product(product: str = Form(...)):
     input_dir = os.path.join(app_config.root_path, f"das/.temp/generic_input/{product}")
     if os.path.exists(input_dir):
         from fastapi import HTTPException
+
         raise HTTPException(status_code=400, detail="Product already exists")
     ensure_folder_exists(input_dir)
     return {"msg": "Product created", "product": product}
+
+
+# --- ETL 处理相关 ---
+
+etl_progress_status = {}
+
+
+@generic_router.post("/etl_start")
+def etl_start_execution(
+    product: str = Form(...),
+    etl_type: str = Form(...),  # embedding, qa, full
+):
+    import subprocess
+
+    task_id = f"etl_{product}_{etl_type}_{int(time.time())}"
+    etl_progress_status[task_id] = {"status": "running", "progress": 0, "msg": ""}
+
+    def run_etl_task():
+        try:
+            etl_progress_status[task_id]["msg"] = f"ETL-{etl_type} started"
+            if etl_type == "embedding":
+                mode = "none"
+            elif etl_type == "qa":
+                mode = "none"
+            elif etl_type == "full":
+                mode = "full"
+            else:
+                etl_progress_status[task_id]["status"] = "error"
+                etl_progress_status[task_id]["msg"] = f"Unknown etl_type: {etl_type}"
+                return
+            cmd = [
+                sys.executable,
+                "-m",
+                "etlapp.etl_index",
+                "--doc_type",
+                "generic",
+                "--product",
+                product,
+                "--mode",
+                mode,
+                "--parallel_count",
+                "1",
+            ]
+            subprocess.run(cmd, check=True)
+            etl_progress_status[task_id]["status"] = "done"
+            etl_progress_status[task_id]["progress"] = 100
+            etl_progress_status[task_id]["msg"] = f"ETL-{etl_type} finished"
+        except Exception as e:
+            etl_progress_status[task_id]["status"] = "error"
+            etl_progress_status[task_id]["msg"] = str(e)
+
+    threading.Thread(target=run_etl_task, daemon=True).start()
+    return {"task_id": task_id}
+
+
+@generic_router.get("/etl_progress/{task_id}")
+def etl_get_progress(task_id: str):
+    return etl_progress_status.get(task_id, {"status": "not_found"})
+
+
+@generic_router.get("/etl_results")
+def etl_list_results(product: str, etl_type: str):
+    if etl_type == "embedding":
+        output_dir = os.path.join(
+            app_config.root_path, f"etl_generic/.temp/outputs_embedding/{product}"
+        )
+    elif etl_type == "qa":
+        output_dir = os.path.join(
+            app_config.root_path, f"etl_generic/.temp/outputs_generate_qa/{product}"
+        )
+    elif etl_type == "full":
+        output_dir = os.path.join(
+            app_config.root_path,
+            f"etl_generic/.temp/outputs_generate_qa_full/{product}",
+        )
+    else:
+        return {"files": []}
+    if not os.path.exists(output_dir):
+        return {"files": []}
+    files = [f for f in os.listdir(output_dir) if f.endswith(".json")]
+    return {"files": files}
+
+
+@generic_router.get("/etl_result_content")
+def etl_get_result_content(product: str, etl_type: str, filename: str):
+    if etl_type == "embedding":
+        output_dir = os.path.join(
+            app_config.root_path, f"etl_generic/.temp/outputs_embedding/{product}"
+        )
+    elif etl_type == "qa":
+        output_dir = os.path.join(
+            app_config.root_path, f"etl_generic/.temp/outputs_generate_qa/{product}"
+        )
+    elif etl_type == "full":
+        output_dir = os.path.join(
+            app_config.root_path,
+            f"etl_generic/.temp/outputs_generate_qa_full/{product}",
+        )
+    else:
+        return JSONResponse(status_code=400, content={"error": "Unknown etl_type"})
+    file_path = os.path.join(output_dir, filename)
+    if not os.path.exists(file_path):
+        return JSONResponse(status_code=404, content={"error": "File not found"})
+    with open(file_path, "r", encoding="utf-8") as f:
+        content = json.load(f)
+    return content
+
 
 app.include_router(generic_router)
