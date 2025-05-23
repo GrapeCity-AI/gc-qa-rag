@@ -1,11 +1,8 @@
-import './App.css'
+import React from 'react';
+import GenericETL from './GenericETL';
 
 function App() {
-  return (
-    <>
-      <h1>ETL - WebApp</h1>
-    </>
-  )
+  return <GenericETL />;
 }
 
-export default App
+export default App;
