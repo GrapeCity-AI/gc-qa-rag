@@ -1,15 +1,7 @@
 import React, { useState, useEffect } from 'react';
-import { Upload, Button, Select, Table, Progress, message, List, Modal } from 'antd';
-import { UploadOutlined, PlayCircleOutlined, EyeOutlined } from '@ant-design/icons';
+import { Upload, Button, Select, Table, Progress, message, List, Modal, Input } from 'antd';
+import { UploadOutlined, PlayCircleOutlined, EyeOutlined, PlusOutlined } from '@ant-design/icons';
 import type { UploadFile } from 'antd/es/upload/interface';
-import type { RcFile } from 'rc-upload/lib/interface';
-
-const PRODUCT_OPTIONS = [
-  { label: 'forguncy', value: 'forguncy' },
-  { label: 'wyn', value: 'wyn' },
-  { label: 'spreadjs', value: 'spreadjs' },
-  { label: 'gcexcel', value: 'gcexcel' },
-];
 
 const API_BASE = 'http://127.0.0.1:8000/generic';
 
@@ -40,6 +32,19 @@ const fetchProgress = async (taskId: string) => {
   return await res.json();
 };
 
+const fetchProducts = async () => {
+  const res = await fetch(`${API_BASE}/products`);
+  return (await res.json()).products as string[];
+};
+
+const createProduct = async (product: string) => {
+  const form = new FormData();
+  form.append('product', product);
+  const res = await fetch(`${API_BASE}/create_product`, { method: 'POST', body: form });
+  if (!res.ok) throw new Error((await res.json()).detail || '创建失败');
+  return await res.json();
+};
+
 const GenericETL: React.FC = () => {
   const [product, setProduct] = useState<string>('forguncy');
   const [fileList, setFileList] = useState<UploadFile[]>([]);
@@ -52,6 +57,19 @@ const GenericETL: React.FC = () => {
   const [previewModal, setPreviewModal] = useState(false);
   const [previewContent, setPreviewContent] = useState<any>(null);
   const [previewTitle, setPreviewTitle] = useState('');
+  const [products, setProducts] = useState<string[]>([]);
+  const [newProductModal, setNewProductModal] = useState(false);
+  const [newProductName, setNewProductName] = useState('');
+
+  useEffect(() => {
+    fetchProducts().then(setProducts);
+  }, []);
+
+  useEffect(() => {
+    if (products.length && !products.includes(product)) {
+      setProduct(products[0]);
+    }
+  }, [products]);
 
   useEffect(() => {
     if (product) {
@@ -61,9 +79,9 @@ const GenericETL: React.FC = () => {
   }, [product]);
 
   useEffect(() => {
-    let timer: NodeJS.Timeout;
+    let timer: number;
     if (etlRunning && taskId) {
-      timer = setInterval(async () => {
+      timer = window.setInterval(async () => {
         const res = await fetchProgress(taskId);
         if (res.status === 'done') {
           setProgress(100);
@@ -81,14 +99,14 @@ const GenericETL: React.FC = () => {
         }
       }, 1000);
     }
-    return () => timer && clearInterval(timer);
+    return () => { if (timer) clearInterval(timer); };
   }, [etlRunning, taskId, product]);
 
   const handleUpload = async (options: any) => {
     const { file } = options;
     const form = new FormData();
     form.append('product', product);
-    form.append('file', file as RcFile);
+    form.append('file', file as any);
     const res = await fetch(`${API_BASE}/upload`, {
       method: 'POST',
       body: form,
@@ -116,6 +134,19 @@ const GenericETL: React.FC = () => {
     setPreviewModal(true);
   };
 
+  const handleCreateProduct = async () => {
+    if (!newProductName) return;
+    try {
+      await createProduct(newProductName);
+      message.success('产品创建成功');
+      setNewProductModal(false);
+      setNewProductName('');
+      fetchProducts().then(setProducts);
+    } catch (e: any) {
+      message.error(e.message || '创建失败');
+    }
+  };
+
   return (
     <div style={{ maxWidth: 900, margin: '40px auto', background: '#fff', padding: 24, borderRadius: 8 }}>
       <h2>Generic ETL 流程演示</h2>
@@ -125,8 +156,15 @@ const GenericETL: React.FC = () => {
           style={{ width: 180, marginLeft: 8 }}
           value={product}
           onChange={setProduct}
-          options={PRODUCT_OPTIONS}
+          options={products.map(p => ({ label: p, value: p }))}
         />
+        <Button
+          icon={<PlusOutlined />}
+          style={{ marginLeft: 8 }}
+          onClick={() => setNewProductModal(true)}
+        >
+          新建产品
+        </Button>
       </div>
       <Upload
         customRequest={handleUpload}
@@ -190,6 +228,18 @@ const GenericETL: React.FC = () => {
         <pre style={{ maxHeight: 500, overflow: 'auto', background: '#f6f6f6', padding: 12 }}>
           {JSON.stringify(previewContent, null, 2)}
         </pre>
+      </Modal>
+      <Modal
+        open={newProductModal}
+        title="新建产品"
+        onCancel={() => setNewProductModal(false)}
+        onOk={handleCreateProduct}
+      >
+        <Input
+          placeholder="输入新产品名称"
+          value={newProductName}
+          onChange={e => setNewProductName(e.target.value)}
+        />
       </Modal>
     </div>
   );

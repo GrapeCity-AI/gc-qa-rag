@@ -86,4 +86,22 @@ def get_result_content(product: str, filename: str):
         content = json.load(f)
     return content
 
+@generic_router.get("/products")
+def list_products():
+    input_root = os.path.join(app_config.root_path, "das/.temp/generic_input")
+    if not os.path.exists(input_root):
+        ensure_folder_exists(input_root)
+    # 只列出文件夹
+    products = [name for name in os.listdir(input_root) if os.path.isdir(os.path.join(input_root, name))]
+    return {"products": sorted(list(products))}
+
+@generic_router.post("/create_product")
+def create_product(product: str = Form(...)):
+    input_dir = os.path.join(app_config.root_path, f"das/.temp/generic_input/{product}")
+    if os.path.exists(input_dir):
+        from fastapi import HTTPException
+        raise HTTPException(status_code=400, detail="Product already exists")
+    ensure_folder_exists(input_dir)
+    return {"msg": "Product created", "product": product}
+
 app.include_router(generic_router)
