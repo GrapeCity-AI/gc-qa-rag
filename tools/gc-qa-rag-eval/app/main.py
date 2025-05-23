@@ -2,7 +2,7 @@ import argparse
 import logging
 from app.analyze import ResultAnalyzer
 from app.eval import EvaluationEngine
-from app.llm import DashScopeImplementation
+from app.llm import DashScopeImplementation, OpenRouterImplementation
 from app.query import KnowledgeBaseClient
 from app.question import QuestionBank
 
@@ -19,7 +19,10 @@ def parse_args():
         "--parallel", type=int, default=1, help="Number of parallel threads"
     )
     parser.add_argument(
-        "--models", type=str, default="qwen-plus", help="Model names (comma separated)"
+        "--models",
+        type=str,
+        default="dashscope/qwen-plus",
+        help="Model names (comma separated)",
     )
     parser.add_argument(
         "--max_questions",
@@ -30,7 +33,7 @@ def parse_args():
     parser.add_argument(
         "--excel",
         type=str,
-        default=".data/questions_wrong.xlsx",
+        default=".data/questions_full.xlsx",
         help="Question bank Excel path",
     )
     parser.add_argument(
@@ -44,15 +47,19 @@ def get_models(model_names: str):
     name_list = [name.strip() for name in model_names.split(",")]
     models = []
     for name in name_list:
-        if name == "qwen-plus-thinking":
+        if name == "dashscope/qwen-plus-thinking":
             models.append(
                 DashScopeImplementation(
                     model_name="qwen-plus-2025-04-28",
                     options={"extra_body": {"enable_thinking": True}},
                 )
             )
+        elif name.startswith("dashscope/"):
+            models.append(
+                DashScopeImplementation(model_name=name.split("dashscope/")[1])
+            )
         else:
-            models.append(DashScopeImplementation(model_name=name))
+            models.append(OpenRouterImplementation(model_name=name))
 
     return models
 
@@ -67,6 +74,8 @@ def main():
     # Select subjects
     all_subjects = question_bank.get_subjects()
     subjects_str = args.subjects
+
+    # subjects_str = "活字格认证工程师-科目一"
 
     if subjects_str:
         subjects = [s for s in subjects_str.split(",") if s in all_subjects]

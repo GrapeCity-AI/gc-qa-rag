@@ -134,3 +134,22 @@ class DashScopeImplementation(OpenAIImplementation):
             options=options,
         )
         self.logger = logging.getLogger(__name__)
+
+
+class OpenRouterImplementation(OpenAIImplementation):
+    def __init__(
+        self,
+        model_name,
+        model_display_name: str = None,
+        api_key: str = "",
+        api_base: str = "https://openrouter.ai/api/v1",
+        options: dict = None,
+    ):
+        super().__init__(
+            model_name=model_name,
+            model_display_name=model_display_name,
+            api_key=api_key,
+            api_base=api_base,
+            options=options,
+        )
+        self.logger = logging.getLogger(__name__)
