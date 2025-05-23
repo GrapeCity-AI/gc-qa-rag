@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react';
-import { Upload, Button, Select, Progress, message, List, Modal, Input } from 'antd';
-import { UploadOutlined, PlayCircleOutlined, EyeOutlined, PlusOutlined } from '@ant-design/icons';
-import type { UploadFile } from 'antd/es/upload/interface';
+import { Button, Select, message, Modal, Input, Upload, Table, Card, Space, Divider, Typography, Spin } from 'antd';
+import { PlusOutlined, UploadOutlined } from '@ant-design/icons';
+import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter';
+import { vscDarkPlus } from 'react-syntax-highlighter/dist/esm/styles/prism';
 
 const API_BASE = 'http://127.0.0.1:8000/generic';
 
@@ -128,69 +129,54 @@ const GenericETL: React.FC = () => {
     setPreviewModal(true);
   };
 
-  // 表格列定义
-  const columns = [
-    { title: '文件名', dataIndex: 'filename', key: 'filename' },
-    { title: '上传时间', dataIndex: 'uploadTime', key: 'uploadTime' },
-    {
-      title: 'DAS处理', key: 'das',
-      render: (_: any, row: any) => {
-        if (row.das.status === 'done') return <Button size="small" onClick={() => handlePreview(row, 'das')}>预览</Button>;
-        if (processing[row.filename + ':das']) return <span>处理中...</span>;
-        return <Button size="small" color='primary' onClick={() => handleDasProcess(row)}>处理</Button>;
-      }
-    },
-    {
-      title: 'Embedding', key: 'embedding',
-      render: (_: any, row: any) => {
-        if (row.embedding.status === 'done') return <Button size="small" onClick={() => handlePreview(row, 'embedding')}>预览</Button>;
-        if (processing[row.filename + ':embedding']) return <span>处理中...</span>;
-        return <Button size="small" color='primary' onClick={() => handleEtlProcess(row, 'embedding')}>处理</Button>;
-      }
-    },
-    {
-      title: 'QA', key: 'qa',
-      render: (_: any, row: any) => {
-        if (row.qa.status === 'done') return <Button size="small" onClick={() => handlePreview(row, 'qa')}>预览</Button>;
-        if (processing[row.filename + ':qa']) return <span>处理中...</span>;
-        return <Button color='primary' size="small" onClick={() => handleEtlProcess(row, 'qa')}>处理</Button>;
-      }
-    },
-    {
-      title: 'FullAnswer', key: 'full',
-      render: (_: any, row: any) => {
-        if (row.full.status === 'done') return <Button size="small" onClick={() => handlePreview(row, 'full')}>预览</Button>;
-        if (processing[row.filename + ':full']) return <span>处理中...</span>;
-        return <Button color='primary' size="small" onClick={() => handleEtlProcess(row, 'full')}>处理</Button>;
-      }
-    },
-  ];
-
-  // 表格多选
-  const rowSelection = {
-    selectedRowKeys,
-    onChange: (newSelectedRowKeys: React.Key[]) => setSelectedRowKeys(newSelectedRowKeys),
-  };
+  const { Title, Text } = Typography;
 
   return (
-    <div style={{ maxWidth: 900, margin: '40px auto', background: '#fff', padding: 24, borderRadius: 8 }}>
-      <h2>Generic ETL 流程演示</h2>
-      <div style={{ marginBottom: 16 }}>
-        <span>选择产品：</span>
-        <Select
-          style={{ width: 180, marginLeft: 8 }}
-          value={product}
-          onChange={setProduct}
-          options={products.map(p => ({ label: p, value: p }))}
-        />
-        <Button
-          icon={<PlusOutlined />}
-          style={{ marginLeft: 8 }}
-          onClick={() => setNewProductModal(true)}
-        >
-          新建产品
-        </Button>
-      </div>
+    <div style={{ maxWidth: 1100, margin: '40px auto', background: '#f5f7fa', padding: 32, borderRadius: 12 }}>
+      <Card style={{ marginBottom: 24, boxShadow: '0 2px 8px #f0f1f2' }}>
+        <Title level={3} style={{ marginBottom: 16 }}>Generic ETL 流程演示</Title>
+        <Space size="large" align="center" style={{ width: '100%', flexWrap: 'wrap' }}>
+          <Space>
+            <Text strong>选择产品：</Text>
+            <Select
+              style={{ width: 180 }}
+              value={product}
+              onChange={setProduct}
+              options={products.map(p => ({ label: p, value: p }))}
+            />
+            <Button
+              icon={<PlusOutlined />}
+              type="primary"
+              onClick={() => setNewProductModal(true)}
+            >
+              新建产品
+            </Button>
+            <Upload
+              multiple
+              showUploadList={false}
+              customRequest={async ({ file, onSuccess, onError }) => {
+                const formData = new FormData();
+                formData.append('product', product);
+                formData.append('file', file);
+                try {
+                  await fetch(`${API_BASE}/das_upload`, {
+                    method: 'POST',
+                    body: formData,
+                  });
+                  message.success('上传成功');
+                  fetchFilesStatus(product).then(setEtlFileRows);
+                  if (onSuccess) onSuccess({}, file);
+                } catch (e) {
+                  message.error('上传失败');
+                  if (onError) onError(e as any);
+                }
+              }}
+            >
+              <Button icon={<UploadOutlined />}>上传文件</Button>
+            </Upload>
+          </Space>
+        </Space>
+      </Card>
       <Modal
         open={previewModal}
         title={previewTitle}
@@ -198,9 +184,11 @@ const GenericETL: React.FC = () => {
         footer={null}
         width={800}
       >
-        <pre style={{ maxHeight: 500, overflow: 'auto', background: '#f6f6f6', padding: 12 }}>
-          {JSON.stringify(previewContent, null, 2)}
-        </pre>
+        <div style={{ maxHeight: 500, overflow: 'auto', background: '#1e1e1e', borderRadius: 6, padding: 12 }}>
+          <SyntaxHighlighter language="json" style={vscDarkPlus} customStyle={{ background: 'transparent', fontSize: 15 }}>
+            {previewContent ? JSON.stringify(previewContent, null, 2) : ''}
+          </SyntaxHighlighter>
+        </div>
       </Modal>
       <Modal
         open={newProductModal}
@@ -208,44 +196,94 @@ const GenericETL: React.FC = () => {
         onCancel={() => setNewProductModal(false)}
         onOk={handleCreateProduct}
       >
+        <Text type="secondary">产品名称仅支持字母、数字、下划线，建议英文</Text>
         <Input
           placeholder="输入新产品名称"
           value={newProductName}
           onChange={e => setNewProductName(e.target.value)}
+          style={{ marginTop: 8 }}
         />
       </Modal>
-      <div style={{ margin: '24px 0' }}>
-        <b>文件全流程状态：</b>
-        <div style={{ margin: '8px 0' }}>
-          <Button disabled={selectedRowKeys.length === 0} onClick={() => handleBatchProcess('das')}>批量DAS处理</Button>
-          <Button disabled={selectedRowKeys.length === 0} style={{ marginLeft: 8 }} onClick={() => handleBatchProcess('embedding')}>批量Embedding</Button>
-          <Button disabled={selectedRowKeys.length === 0} style={{ marginLeft: 8 }} onClick={() => handleBatchProcess('qa')}>批量QA</Button>
-          <Button disabled={selectedRowKeys.length === 0} style={{ marginLeft: 8 }} onClick={() => handleBatchProcess('full')}>批量Full</Button>
-        </div>
-        <div>
-          <table className="ant-table">
-            <thead>
-              <tr>
-                <th>选择</th>
-                {columns.map(col => <th key={col.key}>{col.title}</th>)}
-              </tr>
-            </thead>
-            <tbody>
-              {etlFileRows.map((row, idx) => (
-                <tr key={row.filename}>
-                  <td>
-                    <input type="checkbox" checked={selectedRowKeys.includes(row.filename)} onChange={e => {
-                      if (e.target.checked) setSelectedRowKeys([...selectedRowKeys, row.filename]);
-                      else setSelectedRowKeys(selectedRowKeys.filter(k => k !== row.filename));
-                    }} />
-                  </td>
-                  {columns.map(col => <td key={col.key}>{col.render ? col.render(null, row) : row[col.dataIndex]}</td>)}
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-      </div>
+      <Card
+        title={<b>文件全流程状态</b>}
+        style={{ marginTop: 24, boxShadow: '0 2px 8px #f0f1f2' }}
+        extra={
+          <Space>
+            <Button disabled={selectedRowKeys.length === 0} onClick={() => handleBatchProcess('das')}>批量DAS处理</Button>
+            <Button disabled={selectedRowKeys.length === 0} onClick={() => handleBatchProcess('embedding')}>批量Embedding</Button>
+            <Button disabled={selectedRowKeys.length === 0} onClick={() => handleBatchProcess('qa')}>批量QA</Button>
+            <Button disabled={selectedRowKeys.length === 0} onClick={() => handleBatchProcess('full')}>批量Full</Button>
+          </Space>
+        }
+        bodyStyle={{ padding: 0 }}
+      >
+        <Table
+          rowKey="filename"
+          columns={[
+            {
+              title: '文件名',
+              dataIndex: 'filename',
+              key: 'filename',
+              width: 220,
+              ellipsis: true,
+            },
+            {
+              title: '上传时间',
+              dataIndex: 'uploadTime',
+              key: 'uploadTime',
+              width: 160,
+              ellipsis: true,
+            },
+            {
+              title: 'DAS处理',
+              key: 'das',
+              width: 120,
+              render: (_: any, row: any) => {
+                if (row.das.status === 'done') return <Button size="small" onClick={() => handlePreview(row, 'das')}>预览</Button>;
+                if (processing[row.filename + ':das']) return <Spin size="small" />;
+                return <Button size="small" type="primary" onClick={() => handleDasProcess(row)}>处理</Button>;
+              },
+            },
+            {
+              title: 'Embedding',
+              key: 'embedding',
+              width: 120,
+              render: (_: any, row: any) => {
+                if (row.embedding.status === 'done') return <Button size="small" onClick={() => handlePreview(row, 'embedding')}>预览</Button>;
+                if (processing[row.filename + ':embedding']) return <Spin size="small" />;
+                return <Button size="small" type="primary" onClick={() => handleEtlProcess(row, 'embedding')}>处理</Button>;
+              },
+            },
+            {
+              title: 'QA',
+              key: 'qa',
+              width: 120,
+              render: (_: any, row: any) => {
+                if (row.qa.status === 'done') return <Button size="small" onClick={() => handlePreview(row, 'qa')}>预览</Button>;
+                if (processing[row.filename + ':qa']) return <Spin size="small" />;
+                return <Button size="small" type="primary" onClick={() => handleEtlProcess(row, 'qa')}>处理</Button>;
+              },
+            },
+            {
+              title: 'FullAnswer',
+              key: 'full',
+              width: 120,
+              render: (_: any, row: any) => {
+                if (row.full.status === 'done') return <Button size="small" onClick={() => handlePreview(row, 'full')}>预览</Button>;
+                if (processing[row.filename + ':full']) return <Spin size="small" />;
+                return <Button size="small" type="primary" onClick={() => handleEtlProcess(row, 'full')}>处理</Button>;
+              },
+            },
+          ]}
+          dataSource={etlFileRows}
+          rowSelection={{
+            selectedRowKeys,
+            onChange: (selectedKeys) => setSelectedRowKeys(selectedKeys),
+          }}
+          pagination={{ pageSize: 8 }}
+          style={{ marginTop: 0, borderRadius: 8 }}
+        />
+      </Card>
     </div>
   );
 };
