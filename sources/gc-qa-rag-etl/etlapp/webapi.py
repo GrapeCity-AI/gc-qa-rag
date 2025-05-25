@@ -19,12 +19,6 @@ from etlapp.ved_index import ved_index_start
 
 app = FastAPI()
 
-# Mount static files
-static_path = os.path.join(os.path.dirname(os.path.dirname(__file__)), "static")
-if not os.path.exists(static_path):
-    os.makedirs(static_path)
-app.mount("/", StaticFiles(directory=static_path, html=True), name="static")
-
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
@@ -323,3 +317,14 @@ def publish_to_vector_db(product: str = Form(...), tag: str = Form(...)):
 
 
 app.include_router(generic_router)
+
+# Mount static files
+static_path = os.path.join(os.path.dirname(os.path.dirname(__file__)), "static")
+if not os.path.exists(static_path):
+    os.makedirs(static_path)
+
+# Mount assets directory separately to handle JS/CSS files
+app.mount("/assets", StaticFiles(directory=os.path.join(static_path, "assets")), name="assets")
+
+# Mount root path for HTML files
+app.mount("/", StaticFiles(directory=static_path, html=True), name="static")

@@ -36,5 +36,8 @@ COPY --from=frontend-builder /app/dist ./static/
 # Expose the port
 EXPOSE 8000
 
+# Set environment variable
+ENV GC_QA_RAG_ENV=development
+
 # Run the application
 CMD ["pdm", "run", "uvicorn", "etlapp.webapi:app", "--host", "0.0.0.0", "--port", "8000"]
