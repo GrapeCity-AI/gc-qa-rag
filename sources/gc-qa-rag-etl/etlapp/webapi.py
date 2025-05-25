@@ -2,6 +2,7 @@ from fastapi import FastAPI, UploadFile, File, Form, BackgroundTasks
 from fastapi.responses import JSONResponse
 from fastapi.routing import APIRouter
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.staticfiles import StaticFiles
 import os
 import shutil
 import threading
@@ -17,6 +18,12 @@ import datetime
 from etlapp.ved_index import ved_index_start
 
 app = FastAPI()
+
+# Mount static files
+static_path = os.path.join(os.path.dirname(os.path.dirname(__file__)), "static")
+if not os.path.exists(static_path):
+    os.makedirs(static_path)
+app.mount("/", StaticFiles(directory=static_path, html=True), name="static")
 
 app.add_middleware(
     CORSMiddleware,

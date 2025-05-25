@@ -1,1 +1,43 @@
-.temp/
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+.env
+.venv
+env/
+venv/
+ENV/
+dist/
+build/
+*.egg-info/
+
+# Node/Frontend
+etlapp-web/node_modules/
+etlapp-web/.pnpm-store/
+etlapp-web/dist/
+etlapp-web/coverage/
+etlapp-web/.env
+etlapp-web/.env.local
+
+# Development/IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+.DS_Store
+
+# Git
+.git/
+.gitignore
+
+# Docker
+.docker/
+Dockerfile
+.dockerignore
+
+# Project specific
+static/
+*.log
+.pdm-python

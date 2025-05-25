@@ -1,4 +1,3 @@
-import React from 'react';
 import GenericETL from './GenericETL';
 
 function App() {

@@ -1,8 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { Button, Select, message, Modal, Input, Upload, Table, Card, Space, Divider, Typography, Spin } from 'antd';
+import { Button, Select, message, Modal, Input, Upload, Table, Card, Space, Typography, Spin } from 'antd';
 import { PlusOutlined, UploadOutlined } from '@ant-design/icons';
-import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter';
-import { vscDarkPlus } from 'react-syntax-highlighter/dist/esm/styles/prism';
 
 const API_BASE = 'http://127.0.0.1:8000/generic';
 
@@ -37,7 +35,7 @@ const GenericETL: React.FC = () => {
   const [products, setProducts] = useState<string[]>([]);
   const [newProductModal, setNewProductModal] = useState(false);
   const [newProductName, setNewProductName] = useState('');
-  
+
   // 发布相关
   const [publishModal, setPublishModal] = useState(false);
   const [publishTag, setPublishTag] = useState('');
@@ -86,7 +84,7 @@ const GenericETL: React.FC = () => {
     setProcessing(p => ({ ...p, [row.filename + ':das']: true }));
     const form = new FormData();
     form.append('product', product);
-    const res = await fetch(`${API_BASE}/das_start`, { method: 'POST', body: form });
+    await fetch(`${API_BASE}/das_start`, { method: 'POST', body: form });
     setProcessing(p => ({ ...p, [row.filename + ':das']: false }));
     // 简单延迟后刷新
     setTimeout(() => fetchFilesStatus(product).then(setEtlFileRows), 1000);
@@ -98,7 +96,7 @@ const GenericETL: React.FC = () => {
     const form = new FormData();
     form.append('product', product);
     form.append('etl_type', etlType);
-    const res = await fetch(`${API_BASE}/etl_start`, { method: 'POST', body: form });
+    await fetch(`${API_BASE}/etl_start`, { method: 'POST', body: form });
     setProcessing(p => ({ ...p, [row.filename + ':' + etlType]: false }));
     setTimeout(() => fetchFilesStatus(product).then(setEtlFileRows), 1000);
   };
@@ -149,7 +147,7 @@ const GenericETL: React.FC = () => {
         method: 'POST',
         body: form,
       });
-      const data = await res.json();
+      await res.json();
       message.success('发布任务已启动');
       setPublishModal(false);
       setPublishTag('');
@@ -239,9 +237,7 @@ const GenericETL: React.FC = () => {
         width={800}
       >
         <div style={{ maxHeight: 500, overflow: 'auto', background: '#1e1e1e', borderRadius: 6, padding: 12 }}>
-          <SyntaxHighlighter language="json" style={vscDarkPlus} customStyle={{ background: 'transparent', fontSize: 15 }}>
-            {previewContent ? JSON.stringify(previewContent, null, 2) : ''}
-          </SyntaxHighlighter>
+          {previewContent ? JSON.stringify(previewContent, null, 2) : ''}
         </div>
       </Modal>
       <Modal

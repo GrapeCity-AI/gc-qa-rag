@@ -26,3 +26,4 @@ distribution = false
 das = "python -m etlapp.das_index"
 etl = "python -m etlapp.etl_index"
 ved = "python -m etlapp.ved_index"
+build-frontend = "python -m scripts.build_frontend"
