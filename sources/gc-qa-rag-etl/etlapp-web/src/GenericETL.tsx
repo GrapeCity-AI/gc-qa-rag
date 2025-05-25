@@ -28,7 +28,7 @@ const createProduct = async (product: string) => {
 
 const GenericETL: React.FC = () => {
   // DAS 相关 state
-  const [product, setProduct] = useState<string>('forguncy');
+  const [product, setProduct] = useState<string>('default');
   const [previewModal, setPreviewModal] = useState(false);
   const [previewContent, setPreviewContent] = useState<any>(null);
   const [previewTitle, setPreviewTitle] = useState('');
