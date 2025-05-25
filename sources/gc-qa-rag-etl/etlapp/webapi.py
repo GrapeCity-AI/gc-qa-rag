@@ -14,6 +14,7 @@ from etlapp.das.das_generic import das_generic_main
 import sys
 import glob
 import datetime
+from etlapp.ved_index import ved_index_start
 
 app = FastAPI()
 
@@ -292,6 +293,26 @@ def files_status(product: str):
             },
         })
     return {"files": result}
+
+
+@generic_router.post("/publish")
+def publish_to_vector_db(product: str = Form(...), tag: str = Form(...)):
+    task_id = f"publish_{product}_{tag}_{int(time.time())}"
+    progress_status[task_id] = {"status": "running", "progress": 0, "msg": ""}
+
+    def run_publish_task():
+        try:
+            progress_status[task_id]["msg"] = "Publishing started"
+            ved_index_start("generic", product, tag)
+            progress_status[task_id]["status"] = "done"
+            progress_status[task_id]["progress"] = 100
+            progress_status[task_id]["msg"] = "Publishing finished"
+        except Exception as e:
+            progress_status[task_id]["status"] = "error"
+            progress_status[task_id]["msg"] = str(e)
+
+    threading.Thread(target=run_publish_task, daemon=True).start()
+    return {"task_id": task_id}
 
 
 app.include_router(generic_router)

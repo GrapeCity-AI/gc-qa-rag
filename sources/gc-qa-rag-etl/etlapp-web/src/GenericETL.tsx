@@ -37,6 +37,11 @@ const GenericETL: React.FC = () => {
   const [products, setProducts] = useState<string[]>([]);
   const [newProductModal, setNewProductModal] = useState(false);
   const [newProductName, setNewProductName] = useState('');
+  
+  // 发布相关
+  const [publishModal, setPublishModal] = useState(false);
+  const [publishTag, setPublishTag] = useState('');
+  const [publishing, setPublishing] = useState(false);
 
   // 新表格数据
   const [etlFileRows, setEtlFileRows] = useState<any[]>([]);
@@ -129,13 +134,39 @@ const GenericETL: React.FC = () => {
     setPreviewModal(true);
   };
 
+  // 发布到向量数据库
+  const handlePublish = async () => {
+    if (!publishTag) {
+      message.error('请输入发布标签');
+      return;
+    }
+    setPublishing(true);
+    try {
+      const form = new FormData();
+      form.append('product', product);
+      form.append('tag', publishTag);
+      const res = await fetch(`${API_BASE}/publish`, {
+        method: 'POST',
+        body: form,
+      });
+      const data = await res.json();
+      message.success('发布任务已启动');
+      setPublishModal(false);
+      setPublishTag('');
+    } catch (e) {
+      message.error('发布失败');
+    } finally {
+      setPublishing(false);
+    }
+  };
+
   const { Title, Text } = Typography;
 
   return (
     <div style={{ maxWidth: 1100, margin: '40px auto', background: '#f5f7fa', padding: 32, borderRadius: 12 }}>
       <Card style={{ marginBottom: 24, boxShadow: '0 2px 8px #f0f1f2' }}>
         <Title level={3} style={{ marginBottom: 16 }}>Generic ETL 流程演示</Title>
-        <Space size="large" align="center" style={{ width: '100%', flexWrap: 'wrap' }}>
+        <Space size="large" align="center" style={{ width: '100%', flexWrap: 'wrap', justifyContent: 'space-between' }}>
           <Space>
             <Text strong>选择产品：</Text>
             <Select
@@ -175,8 +206,31 @@ const GenericETL: React.FC = () => {
               <Button icon={<UploadOutlined />}>上传文件</Button>
             </Upload>
           </Space>
+          <Button type="primary" onClick={() => setPublishModal(true)}>
+            发布到向量库
+          </Button>
         </Space>
       </Card>
+
+      {/* 发布Modal */}
+      <Modal
+        open={publishModal}
+        title="发布到向量数据库"
+        onCancel={() => setPublishModal(false)}
+        onOk={handlePublish}
+        confirmLoading={publishing}
+      >
+        <Space direction="vertical" style={{ width: '100%' }}>
+          <Text>当前产品: {product}</Text>
+          <Text type="secondary">请输入发布标签(tag)，用于版本管理</Text>
+          <Input
+            placeholder="输入标签，如: 230501"
+            value={publishTag}
+            onChange={e => setPublishTag(e.target.value)}
+          />
+        </Space>
+      </Modal>
+
       <Modal
         open={previewModal}
         title={previewTitle}
