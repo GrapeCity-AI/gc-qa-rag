@@ -308,6 +308,38 @@ def get_server_log(lines: int = 100):
     return {"log": "\n".join(last_lines)}
 
 
+@generic_router.get("/get_config")
+def get_config_api():
+    from etlapp.common.config import app_config
+    def dataclass_to_dict(obj):
+        if hasattr(obj, "__dataclass_fields__"):
+            return {k: dataclass_to_dict(v) for k, v in obj.__dict__.items()}
+        elif isinstance(obj, dict):
+            return {k: dataclass_to_dict(v) for k, v in obj.items()}
+        else:
+            return obj
+    return dataclass_to_dict(app_config)
+
+
+@generic_router.post("/update_config")
+async def update_config_api(request):
+    data = await request.json()
+    from etlapp.common.config import app_config
+    import json
+    from pathlib import Path
+    config_path = Path(f".config.{app_config.environment}.json")
+    if not config_path.exists():
+        return JSONResponse(status_code=404, content={"error": "Config file not found"})
+    with open(config_path, "r", encoding="utf-8") as f:
+        config_raw = json.load(f)
+    for key in ["llm", "embedding", "vector_db", "root_path", "log_path"]:
+        if key in data:
+            config_raw[key] = data[key]
+    with open(config_path, "w", encoding="utf-8") as f:
+        json.dump(config_raw, f, ensure_ascii=False, indent=4)
+    return {"msg": "Config updated"}
+
+
 app.include_router(generic_router)
 
 # --- Static files ---

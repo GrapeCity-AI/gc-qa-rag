@@ -39,6 +39,22 @@ const createProduct = async (product: string) => {
     return await res.json();
 };
 
+const fetchConfig = async () => {
+    const res = await fetch(`${API_BASE}/get_config`);
+    return await res.json();
+};
+
+const saveConfig = async (config: any) => {
+    const res = await fetch(`${API_BASE}/update_config`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(config),
+    });
+    if (!res.ok) throw new Error("保存失败");
+    message.success("配置已保存");
+    return true;
+};
+
 const GenericETL: React.FC = () => {
     // DAS 相关 state
     const [product, setProduct] = useState<string>("default");
@@ -65,6 +81,12 @@ const GenericETL: React.FC = () => {
 
     // 新增：日志相关 state
     const [serverLog, setServerLog] = useState<string>("");
+
+    // 新增：配置相关 state
+    const [configModal, setConfigModal] = useState(false);
+    const [config, setConfig] = useState<any>(null);
+    const [configLoading, setConfigLoading] = useState(false);
+    const [configSaving, setConfigSaving] = useState(false);
 
     // DAS 相关 effect
     useEffect(() => {
@@ -226,7 +248,7 @@ const GenericETL: React.FC = () => {
         >
             <Card style={{ marginBottom: 24, boxShadow: "0 2px 8px #f0f1f2" }}>
                 <Title level={3} style={{ marginBottom: 16 }}>
-                    Generic ETL 流程演示
+                    GC-QA-RAG Generic ETL 流程演示
                 </Title>
                 <Space
                     size="large"
@@ -285,12 +307,25 @@ const GenericETL: React.FC = () => {
                             <Button icon={<UploadOutlined />}>上传文件</Button>
                         </Upload>
                     </Space>
-                    <Button
-                        type="primary"
-                        onClick={() => setPublishModal(true)}
-                    >
-                        发布到向量库
-                    </Button>
+                    <Space>
+                        <Button
+                            onClick={() => {
+                                setConfigModal(true);
+                                setConfigLoading(true);
+                                fetchConfig()
+                                    .then((cfg) => setConfig(cfg))
+                                    .finally(() => setConfigLoading(false));
+                            }}
+                        >
+                            配置
+                        </Button>
+                        <Button
+                            type="primary"
+                            onClick={() => setPublishModal(true)}
+                        >
+                            发布到向量库
+                        </Button>
+                    </Space>
                 </Space>
             </Card>
 
@@ -382,7 +417,6 @@ const GenericETL: React.FC = () => {
                         </Button>
                     </Space>
                 }
-                bodyStyle={{ padding: 0 }}
             >
                 <Table
                     rowKey="filename"
@@ -538,12 +572,138 @@ const GenericETL: React.FC = () => {
             <Card
                 title={<b>Server 控制台日志</b>}
                 style={{ marginTop: 24, boxShadow: "0 2px 8px #f0f1f2" }}
-                bodyStyle={{ padding: 12, background: "#111", color: "#0f0", fontFamily: "monospace", minHeight: 200, maxHeight: 300, overflow: "auto" }}
             >
-                <pre style={{ whiteSpace: "pre-wrap", color: "#0f0", background: "transparent", margin: 0 }}>
+                <pre
+                    style={{
+                        whiteSpace: "pre-wrap",
+                        color: "#0f0",
+                        background: "transparent",
+                        margin: 0,
+                    }}
+                >
                     {serverLog}
                 </pre>
             </Card>
+            <Modal
+                open={configModal}
+                title="系统配置"
+                onCancel={() => setConfigModal(false)}
+                onOk={async () => {
+                    setConfigSaving(true);
+                    try {
+                        await saveConfig(config);
+                        setConfigModal(false);
+                    } catch (e) {
+                        // 错误提示已在 saveConfig 内部
+                    } finally {
+                        setConfigSaving(false);
+                    }
+                }}
+                confirmLoading={configSaving}
+                width={600}
+            >
+                {configLoading ? (
+                    <Spin />
+                ) : config ? (
+                    <div>
+                        <Text strong>LLM 配置</Text>
+                        <Input
+                            style={{ margin: "8px 0" }}
+                            addonBefore="API Key"
+                            value={config.llm.api_key}
+                            onChange={(e) =>
+                                setConfig({
+                                    ...config,
+                                    llm: {
+                                        ...config.llm,
+                                        api_key: e.target.value,
+                                    },
+                                })
+                            }
+                        />
+                        <Input
+                            style={{ margin: "8px 0" }}
+                            addonBefore="API Base"
+                            value={config.llm.api_base}
+                            onChange={(e) =>
+                                setConfig({
+                                    ...config,
+                                    llm: {
+                                        ...config.llm,
+                                        api_base: e.target.value,
+                                    },
+                                })
+                            }
+                        />
+                        <Input
+                            style={{ margin: "8px 0" }}
+                            addonBefore="模型名"
+                            value={config.llm.model_name}
+                            onChange={(e) =>
+                                setConfig({
+                                    ...config,
+                                    llm: {
+                                        ...config.llm,
+                                        model_name: e.target.value,
+                                    },
+                                })
+                            }
+                        />
+                        <Text strong>Embedding 配置</Text>
+                        <Input
+                            style={{ margin: "8px 0" }}
+                            addonBefore="API Key"
+                            value={config.embedding.api_key}
+                            onChange={(e) =>
+                                setConfig({
+                                    ...config,
+                                    embedding: {
+                                        ...config.embedding,
+                                        api_key: e.target.value,
+                                    },
+                                })
+                            }
+                        />
+                        <Text strong>Vector DB 配置</Text>
+                        <Input
+                            style={{ margin: "8px 0" }}
+                            addonBefore="Host"
+                            value={config.vector_db.host}
+                            onChange={(e) =>
+                                setConfig({
+                                    ...config,
+                                    vector_db: {
+                                        ...config.vector_db,
+                                        host: e.target.value,
+                                    },
+                                })
+                            }
+                        />
+                        <Text strong>Root Path</Text>
+                        <Input
+                            style={{ margin: "8px 0" }}
+                            value={config.root_path}
+                            onChange={(e) =>
+                                setConfig({
+                                    ...config,
+                                    root_path: e.target.value,
+                                })
+                            }
+                        />
+                        <Text strong>Log Path</Text>
+                        <Input
+                            style={{ margin: "8px 0" }}
+                            value={config.log_path}
+                            onChange={(e) =>
+                                setConfig({
+                                    ...config,
+                                    log_path: e.target.value,
+                                })
+                            }
+                        />
+                    </div>
+                ) : null}
+            </Modal>
         </div>
     );
 };
