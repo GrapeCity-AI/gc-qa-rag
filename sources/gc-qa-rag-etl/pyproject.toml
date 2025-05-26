@@ -13,6 +13,7 @@ dependencies = [
     "platformdirs>=4.3.7",
     "markitdown[all]>=0.1.1",
     "fastapi[standard]>=0.115.12",
+    "tailer>=0.4.1",
 ]
 requires-python = "==3.13.*"
 readme = "README.md"

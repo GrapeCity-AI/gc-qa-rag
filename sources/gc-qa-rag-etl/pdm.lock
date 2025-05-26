@@ -5,7 +5,7 @@
 groups = ["default"]
 strategy = ["inherit_metadata"]
 lock_version = "4.5.0"
-content_hash = "sha256:f8132b46c49643fb85cb83956ead15516826411d41c120a33d27c4f41522131e"
+content_hash = "sha256:85457d4b8f14be033ab1d9ea132b6472b210260693051e4d5d31f62a05bb1a33"
 
 [[metadata.targets]]
 requires_python = "==3.13.*"
@@ -1722,6 +1722,15 @@ dependencies = [
 files = [
     {file = "sympy-1.14.0-py3-none-any.whl", hash = "sha256:e091cc3e99d2141a0ba2847328f5479b05d94a6635cb96148ccb3f34671bd8f5"},
     {file = "sympy-1.14.0.tar.gz", hash = "sha256:d3d3fe8df1e5a0b42f0e7bdf50541697dbe7d23746e894990c030e2b05e72517"},
+]
+
+[[package]]
+name = "tailer"
+version = "0.4.1"
+summary = "Python tail is a simple implementation of GNU tail and head."
+groups = ["default"]
+files = [
+    {file = "tailer-0.4.1.tar.gz", hash = "sha256:78d60f23a1b8a2d32f400b3c8c06b01142ac7841b75d8a1efcb33515877ba531"},
 ]
 
 [[package]]

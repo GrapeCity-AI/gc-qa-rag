@@ -63,6 +63,9 @@ const GenericETL: React.FC = () => {
     // 处理loading
     const [processing, setProcessing] = useState<{ [k: string]: boolean }>({});
 
+    // 新增：日志相关 state
+    const [serverLog, setServerLog] = useState<string>("");
+
     // DAS 相关 effect
     useEffect(() => {
         fetchProducts().then(setProducts);
@@ -79,6 +82,22 @@ const GenericETL: React.FC = () => {
             fetchFilesStatus(product).then(setEtlFileRows);
         }
     }, [product]);
+
+    // 新增：定时拉取日志
+    useEffect(() => {
+        const fetchLog = async () => {
+            try {
+                const res = await fetch(`${API_BASE}/server_log?lines=100`);
+                const data = await res.json();
+                setServerLog(data.log || "");
+            } catch {
+                setServerLog("日志获取失败");
+            }
+        };
+        fetchLog();
+        const timer = setInterval(fetchLog, 3000); // 每3秒拉取一次
+        return () => clearInterval(timer);
+    }, []);
 
     // 公共
     const handleCreateProduct = async () => {
@@ -514,6 +533,16 @@ const GenericETL: React.FC = () => {
                     pagination={{ pageSize: 8 }}
                     style={{ marginTop: 0, borderRadius: 8 }}
                 />
+            </Card>
+            {/* 新增：日志区域 */}
+            <Card
+                title={<b>Server 控制台日志</b>}
+                style={{ marginTop: 24, boxShadow: "0 2px 8px #f0f1f2" }}
+                bodyStyle={{ padding: 12, background: "#111", color: "#0f0", fontFamily: "monospace", minHeight: 200, maxHeight: 300, overflow: "auto" }}
+            >
+                <pre style={{ whiteSpace: "pre-wrap", color: "#0f0", background: "transparent", margin: 0 }}>
+                    {serverLog}
+                </pre>
             </Card>
         </div>
     );

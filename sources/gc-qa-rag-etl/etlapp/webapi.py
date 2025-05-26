@@ -15,6 +15,7 @@ import sys
 import glob
 import datetime
 from etlapp.ved_index import ved_index_start
+import tailer
 
 app = FastAPI()
 
@@ -291,6 +292,20 @@ def publish_to_vector_db(product: str = Form(...), tag: str = Form(...)):
 
     threading.Thread(target=run_publish_task, daemon=True).start()
     return {"task_id": task_id}
+
+
+@generic_router.get("/server_log")
+def get_server_log(lines: int = 100):
+    """
+    返回 app.log 的最后 N 行
+    """
+    today = datetime.datetime.now().strftime("%Y-%m-%d")
+    log_path = os.path.join(app_config.log_path, ".logs", today, "app.log")
+    if not os.path.exists(log_path):
+        return {"log": ""}
+    with open(log_path, "r", encoding="utf-8") as f:
+        last_lines = tailer.tail(f, lines)
+    return {"log": "\n".join(last_lines)}
 
 
 app.include_router(generic_router)
