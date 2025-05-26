@@ -1,4 +1,4 @@
-const API_BASE = "http://127.0.0.1:8000/generic";
+const API_BASE = import.meta.env.MODE === "development" ? "http://127.0.0.1:8000/api" : "/api";
 
 export const fetchProducts = async () => {
     const res = await fetch(`${API_BASE}/products`);

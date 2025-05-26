@@ -9,7 +9,7 @@ from etlapp.common.file import ensure_folder_exists
 from etlapp.common.config import app_config
 from etlapp.das.das_generic import das_generic_main
 
-das_router = APIRouter(prefix="/generic")
+das_router = APIRouter(prefix="/api")
 
 das_progress_status = {}
 

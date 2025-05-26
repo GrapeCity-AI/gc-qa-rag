@@ -5,7 +5,7 @@ from etlapp.ved_index import ved_index_start
 
 das_progress_status = {}
 
-publish_router = APIRouter(prefix="/generic")
+publish_router = APIRouter(prefix="/api")
 
 @publish_router.post("/publish")
 def publish_to_vector_db(product: str = Form(...), tag: str = Form(...)):

@@ -4,7 +4,7 @@ import datetime
 from etlapp.common.config import app_config
 import tailer
 
-log_router = APIRouter(prefix="/generic")
+log_router = APIRouter(prefix="/api")
 
 @log_router.get("/server_log")
 def get_server_log(lines: int = 100):
@@ -12,6 +12,6 @@ def get_server_log(lines: int = 100):
     log_path = os.path.join(app_config.log_path, ".logs", today, "app.log")
     if not os.path.exists(log_path):
         return {"log": ""}
-    with open(log_path, "r", encoding="utf-8") as f:
+    with open(log_path, "r", encoding="utf-8", errors="replace") as f:
         last_lines = tailer.tail(f, lines)
     return {"log": "\n".join(last_lines)} 

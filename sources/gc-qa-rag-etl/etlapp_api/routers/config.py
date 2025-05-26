@@ -1,10 +1,10 @@
 from fastapi import APIRouter, Request
 from fastapi.responses import JSONResponse
-from etlapp.common.config import app_config
 import json
 from pathlib import Path
 
-config_router = APIRouter(prefix="/generic")
+config_router = APIRouter(prefix="/api")
+
 
 @config_router.get("/get_config")
 def get_config_api():
@@ -15,11 +15,17 @@ def get_config_api():
             return {k: dataclass_to_dict(v) for k, v in obj.items()}
         else:
             return obj
+
+    from etlapp.common.config import app_config
+
     return dataclass_to_dict(app_config)
+
 
 @config_router.post("/update_config")
 async def update_config_api(request: Request):
     data = await request.json()
+    from etlapp.common.config import app_config
+
     config_path = Path(f".config.{app_config.environment}.json")
     if not config_path.exists():
         return JSONResponse(status_code=404, content={"error": "Config file not found"})
@@ -30,4 +36,8 @@ async def update_config_api(request: Request):
             config_raw[key] = data[key]
     with open(config_path, "w", encoding="utf-8") as f:
         json.dump(config_raw, f, ensure_ascii=False, indent=4)
-    return {"msg": "Config updated"} 
+    # reload configuration
+    from etlapp.common.config import reload_config
+
+    reload_config()
+    return {"msg": "Config updated"}

@@ -7,7 +7,7 @@ import time
 import json
 from etlapp.common.config import app_config
 
-etl_router = APIRouter(prefix="/generic")
+etl_router = APIRouter(prefix="/api")
 
 etl_progress_status = {}
 

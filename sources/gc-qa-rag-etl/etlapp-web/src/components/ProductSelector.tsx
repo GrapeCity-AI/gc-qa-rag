@@ -27,7 +27,6 @@ const ProductSelector: React.FC<ProductSelectorProps> = ({
         />
         <Button
             icon={<PlusOutlined />}
-            type="primary"
             onClick={onNewProduct}
             style={{ marginLeft: 8 }}
         >
@@ -46,7 +45,7 @@ const ProductSelector: React.FC<ProductSelectorProps> = ({
                 }
             }}
         >
-            <Button icon={<UploadOutlined />} style={{ marginLeft: 8 }}>
+            <Button type="primary" icon={<UploadOutlined />} style={{ marginLeft: 8 }}>
                 上传文件
             </Button>
         </Upload>

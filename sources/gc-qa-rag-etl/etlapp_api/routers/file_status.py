@@ -4,7 +4,7 @@ import glob
 import datetime
 from etlapp.common.config import app_config
 
-file_status_router = APIRouter(prefix="/generic")
+file_status_router = APIRouter(prefix="/api")
 
 @file_status_router.get("/files_status")
 def files_status(product: str):
