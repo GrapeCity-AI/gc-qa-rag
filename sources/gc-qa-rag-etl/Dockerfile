@@ -28,7 +28,7 @@ RUN pdm install --prod --no-lock --no-editable
 COPY readme.md ./
 COPY .config.*.json ./
 COPY etlapp/ ./etlapp/
-COPY etlapp-api/ ./etlapp-api/
+COPY etlapp_api/ ./etlapp_api/
 COPY scripts/ ./scripts/
 
 # Copy built frontend from frontend-builder stage
