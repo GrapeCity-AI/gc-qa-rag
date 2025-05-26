@@ -95,3 +95,10 @@ try:
 except Exception as e:
     print(f"Failed to load configuration: {e}")
     raise
+
+
+def reload_config():
+    """Reload the global app_config."""
+    global app_config
+    app_config = get_config()
+    print(f"Reloaded config for environment: {app_config.environment}")
