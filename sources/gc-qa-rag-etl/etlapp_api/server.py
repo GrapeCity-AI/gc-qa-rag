@@ -31,7 +31,9 @@ app.include_router(log_router)
 # --- Static files ---
 
 # Mount static files
-static_path = os.path.join(os.path.dirname(os.path.dirname(__file__)), "static")
+static_path = os.path.join(
+    os.path.dirname(os.path.dirname(__file__)), "etlapp-web", "dist"
+)
 if os.path.exists(static_path):
     # Mount assets directory separately to handle JS/CSS files
     app.mount(

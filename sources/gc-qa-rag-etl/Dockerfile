@@ -31,9 +31,6 @@ COPY etlapp/ ./etlapp/
 COPY etlapp_api/ ./etlapp_api/
 COPY scripts/ ./scripts/
 
-# Copy built frontend from frontend-builder stage
-COPY --from=frontend-builder /app/dist ./static/
-
 # Expose the port
 EXPOSE 8000
 
