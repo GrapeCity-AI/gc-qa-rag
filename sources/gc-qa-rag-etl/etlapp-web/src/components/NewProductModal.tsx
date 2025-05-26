@@ -18,15 +18,8 @@ const NewProductModal: React.FC<NewProductModalProps> = ({
     onCancel,
     onOk,
 }) => (
-    <Modal
-        open={open}
-        title="新建产品"
-        onCancel={onCancel}
-        onOk={onOk}
-    >
-        <Text type="secondary">
-            产品名称仅支持字母、数字、下划线，建议英文
-        </Text>
+    <Modal open={open} title="新建产品" onCancel={onCancel} onOk={onOk}>
+        <Text type="secondary">产品名称仅支持字母、数字、下划线，建议英文</Text>
         <Input
             placeholder="输入新产品名称"
             value={newProductName}
@@ -36,4 +29,4 @@ const NewProductModal: React.FC<NewProductModalProps> = ({
     </Modal>
 );
 
-export default NewProductModal; 
+export default NewProductModal;

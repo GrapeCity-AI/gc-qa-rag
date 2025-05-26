@@ -7,47 +7,20 @@ import PublishModal from "./components/PublishModal";
 import PreviewModal from "./components/PreviewModal";
 import NewProductModal from "./components/NewProductModal";
 import ConfigModal from "./components/ConfigModal";
-
-const API_BASE = "http://127.0.0.1:8000/generic";
-
-// 公共
-const fetchProducts = async () => {
-    const res = await fetch(`${API_BASE}/products`);
-    return (await res.json()).products as string[];
-};
-
-// 获取所有文件及其全流程状态
-const fetchFilesStatus = async (product: string) => {
-    const res = await fetch(`${API_BASE}/files_status?product=${product}`);
-    return (await res.json()).files as any[];
-};
-
-const createProduct = async (product: string) => {
-    const form = new FormData();
-    form.append("product", product);
-    const res = await fetch(`${API_BASE}/create_product`, {
-        method: "POST",
-        body: form,
-    });
-    if (!res.ok) throw new Error((await res.json()).detail || "创建失败");
-    return await res.json();
-};
-
-const fetchConfig = async () => {
-    const res = await fetch(`${API_BASE}/get_config`);
-    return await res.json();
-};
-
-const saveConfig = async (config: any) => {
-    const res = await fetch(`${API_BASE}/update_config`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(config),
-    });
-    if (!res.ok) throw new Error("保存失败");
-    message.success("配置已保存");
-    return true;
-};
+import {
+    fetchProducts,
+    fetchFilesStatus,
+    createProduct,
+    fetchConfig,
+    saveConfig,
+    uploadFile,
+    dasStart,
+    etlStart,
+    fetchDasResultContent,
+    fetchEtlResultContent,
+    publish,
+    fetchServerLog,
+} from "./api/ApiService";
 
 const GenericETL: React.FC = () => {
     // DAS
@@ -59,28 +32,29 @@ const GenericETL: React.FC = () => {
     const [newProductModal, setNewProductModal] = useState(false);
     const [newProductName, setNewProductName] = useState("");
 
-    // 发布相关
+    // Related to publishing
     const [publishModal, setPublishModal] = useState(false);
     const [publishTag, setPublishTag] = useState("");
     const [publishing, setPublishing] = useState(false);
 
-    // 新表格数据
+    // New table data
     const [etlFileRows, setEtlFileRows] = useState<any[]>([]);
     const [selectedRowKeys, setSelectedRowKeys] = useState<React.Key[]>([]);
 
-    // 处理loading
+    // Handle loading
     const [processing, setProcessing] = useState<{ [k: string]: boolean }>({});
 
-    // 新增：日志相关 state
+    // Added: log related state
     const [serverLog, setServerLog] = useState<string>("");
 
-    // 新增：配置相关 state
+    // Added: config related state
     const [configModal, setConfigModal] = useState(false);
     const [config, setConfig] = useState<any>(null);
     const [configLoading, setConfigLoading] = useState(false);
     const [configSaving, setConfigSaving] = useState(false);
 
     // DAS 相关 effect
+    // DAS related effect
     useEffect(() => {
         fetchProducts().then(setProducts);
     }, []);
@@ -97,23 +71,22 @@ const GenericETL: React.FC = () => {
         }
     }, [product]);
 
-    // 定时拉取日志
+    // Periodically fetch logs
     useEffect(() => {
         const fetchLog = async () => {
             try {
-                const res = await fetch(`${API_BASE}/server_log?lines=100`);
-                const data = await res.json();
+                const data = await fetchServerLog(100);
                 setServerLog(data.log || "");
             } catch {
                 setServerLog("日志获取失败");
             }
         };
         fetchLog();
-        const timer = setInterval(fetchLog, 3000); // 每3秒拉取一次
+        const timer = setInterval(fetchLog, 3000);
         return () => clearInterval(timer);
     }, []);
 
-    // 创建产品
+    // Create product
     const handleCreateProduct = async () => {
         if (!newProductName) return;
         try {
@@ -127,32 +100,26 @@ const GenericETL: React.FC = () => {
         }
     };
 
-    // 单文件 DAS 处理
+    // Single file DAS processing
     const handleDasProcess = async (row: any) => {
         setProcessing((p) => ({ ...p, [row.filename + ":das"]: true }));
-        const form = new FormData();
-        form.append("product", product);
-        await fetch(`${API_BASE}/das_start`, { method: "POST", body: form });
+        await dasStart(product);
         setProcessing((p) => ({ ...p, [row.filename + ":das"]: false }));
-        // 简单延迟后刷新
         setTimeout(() => fetchFilesStatus(product).then(setEtlFileRows), 1000);
     };
 
-    // 单文件 ETL 处理
+    // Single file ETL processing
     const handleEtlProcess = async (
         row: any,
         etlType: "embedding" | "qa" | "full"
     ) => {
         setProcessing((p) => ({ ...p, [row.filename + ":" + etlType]: true }));
-        const form = new FormData();
-        form.append("product", product);
-        form.append("etl_type", etlType);
-        await fetch(`${API_BASE}/etl_start`, { method: "POST", body: form });
+        await etlStart(product, etlType);
         setProcessing((p) => ({ ...p, [row.filename + ":" + etlType]: false }));
         setTimeout(() => fetchFilesStatus(product).then(setEtlFileRows), 1000);
     };
 
-    // 批量处理
+    // Batch processing
     const handleBatchProcess = async (
         stage: "das" | "embedding" | "qa" | "full"
     ) => {
@@ -171,7 +138,7 @@ const GenericETL: React.FC = () => {
         fetchFilesStatus(product).then(setEtlFileRows);
     };
 
-    // 单文件内容预览
+    // Single file content preview
     const handlePreview = async (
         row: any,
         stage: "das" | "embedding" | "qa" | "full"
@@ -179,20 +146,18 @@ const GenericETL: React.FC = () => {
         let content = null;
         let title = "";
         if (stage === "das" && row.das.resultFile) {
-            const res = await fetch(
-                `${API_BASE}/das_result_content?product=${product}&filename=${row.das.resultFile}`
-            );
-            content = await res.json();
+            content = await fetchDasResultContent(product, row.das.resultFile);
             title = `${row.filename} - DAS`;
         } else if (
             (stage === "embedding" || stage === "qa" || stage === "full") &&
             row[stage].resultFile
         ) {
             const etlType = stage;
-            const res = await fetch(
-                `${API_BASE}/etl_result_content?product=${product}&etl_type=${etlType}&filename=${row[stage].resultFile}`
+            content = await fetchEtlResultContent(
+                product,
+                etlType,
+                row[stage].resultFile
             );
-            content = await res.json();
             title = `${row.filename} - ${stage}`;
         }
         setPreviewContent(content);
@@ -200,7 +165,7 @@ const GenericETL: React.FC = () => {
         setPreviewModal(true);
     };
 
-    // 发布到向量数据库
+    // Publish to vector database
     const handlePublish = async () => {
         if (!publishTag) {
             message.error("请输入发布标签");
@@ -208,14 +173,7 @@ const GenericETL: React.FC = () => {
         }
         setPublishing(true);
         try {
-            const form = new FormData();
-            form.append("product", product);
-            form.append("tag", publishTag);
-            const res = await fetch(`${API_BASE}/publish`, {
-                method: "POST",
-                body: form,
-            });
-            await res.json();
+            await publish(product, publishTag);
             message.success("发布任务已启动");
             setPublishModal(false);
             setPublishTag("");
@@ -257,13 +215,7 @@ const GenericETL: React.FC = () => {
                         setProduct={setProduct}
                         onNewProduct={() => setNewProductModal(true)}
                         onUpload={async (file) => {
-                            const formData = new FormData();
-                            formData.append("product", product);
-                            formData.append("file", file);
-                            await fetch(`${API_BASE}/das_upload`, {
-                                method: "POST",
-                                body: formData,
-                            });
+                            await uploadFile(product, file);
                             message.success("上传成功");
                             fetchFilesStatus(product).then(setEtlFileRows);
                         }}
@@ -324,7 +276,7 @@ const GenericETL: React.FC = () => {
                         await saveConfig(config);
                         setConfigModal(false);
                     } catch (e) {
-                        // 错误提示已在 saveConfig 内部
+                        message.error("保存失败");
                     } finally {
                         setConfigSaving(false);
                     }

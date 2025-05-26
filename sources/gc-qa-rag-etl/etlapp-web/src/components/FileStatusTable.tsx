@@ -7,7 +7,10 @@ interface FileStatusTableProps {
     setSelectedRowKeys: (keys: React.Key[]) => void;
     handleDasProcess: (row: any) => void;
     handleEtlProcess: (row: any, etlType: "embedding" | "qa" | "full") => void;
-    handlePreview: (row: any, stage: "das" | "embedding" | "qa" | "full") => void;
+    handlePreview: (
+        row: any,
+        stage: "das" | "embedding" | "qa" | "full"
+    ) => void;
     processing: { [k: string]: boolean };
 }
 
@@ -44,12 +47,21 @@ const FileStatusTable: React.FC<FileStatusTableProps> = ({
                 render: (_: any, row: any) => {
                     if (row.das.status === "done")
                         return (
-                            <Button size="small" onClick={() => handlePreview(row, "das")}>预览</Button>
+                            <Button
+                                size="small"
+                                onClick={() => handlePreview(row, "das")}
+                            >
+                                预览
+                            </Button>
                         );
                     if (processing[row.filename + ":das"])
                         return <Spin size="small" />;
                     return (
-                        <Button size="small" type="primary" onClick={() => handleDasProcess(row)}>
+                        <Button
+                            size="small"
+                            type="primary"
+                            onClick={() => handleDasProcess(row)}
+                        >
                             处理
                         </Button>
                     );
@@ -62,12 +74,21 @@ const FileStatusTable: React.FC<FileStatusTableProps> = ({
                 render: (_: any, row: any) => {
                     if (row.embedding.status === "done")
                         return (
-                            <Button size="small" onClick={() => handlePreview(row, "embedding")}>预览</Button>
+                            <Button
+                                size="small"
+                                onClick={() => handlePreview(row, "embedding")}
+                            >
+                                预览
+                            </Button>
                         );
                     if (processing[row.filename + ":embedding"])
                         return <Spin size="small" />;
                     return (
-                        <Button size="small" type="primary" onClick={() => handleEtlProcess(row, "embedding")}>
+                        <Button
+                            size="small"
+                            type="primary"
+                            onClick={() => handleEtlProcess(row, "embedding")}
+                        >
                             处理
                         </Button>
                     );
@@ -80,12 +101,21 @@ const FileStatusTable: React.FC<FileStatusTableProps> = ({
                 render: (_: any, row: any) => {
                     if (row.qa.status === "done")
                         return (
-                            <Button size="small" onClick={() => handlePreview(row, "qa")}>预览</Button>
+                            <Button
+                                size="small"
+                                onClick={() => handlePreview(row, "qa")}
+                            >
+                                预览
+                            </Button>
                         );
                     if (processing[row.filename + ":qa"])
                         return <Spin size="small" />;
                     return (
-                        <Button size="small" type="primary" onClick={() => handleEtlProcess(row, "qa")}>
+                        <Button
+                            size="small"
+                            type="primary"
+                            onClick={() => handleEtlProcess(row, "qa")}
+                        >
                             处理
                         </Button>
                     );
@@ -98,12 +128,21 @@ const FileStatusTable: React.FC<FileStatusTableProps> = ({
                 render: (_: any, row: any) => {
                     if (row.full.status === "done")
                         return (
-                            <Button size="small" onClick={() => handlePreview(row, "full")}>预览</Button>
+                            <Button
+                                size="small"
+                                onClick={() => handlePreview(row, "full")}
+                            >
+                                预览
+                            </Button>
                         );
                     if (processing[row.filename + ":full"])
                         return <Spin size="small" />;
                     return (
-                        <Button size="small" type="primary" onClick={() => handleEtlProcess(row, "full")}>
+                        <Button
+                            size="small"
+                            type="primary"
+                            onClick={() => handleEtlProcess(row, "full")}
+                        >
                             处理
                         </Button>
                     );
@@ -120,4 +159,4 @@ const FileStatusTable: React.FC<FileStatusTableProps> = ({
     />
 );
 
-export default FileStatusTable; 
+export default FileStatusTable;

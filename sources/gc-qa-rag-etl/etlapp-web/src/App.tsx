@@ -1,7 +1,7 @@
-import GenericETL from './GenericETL';
+import GenericETL from "./GenericETL";
 
 function App() {
-  return <GenericETL />;
+    return <GenericETL />;
 }
 
 export default App;

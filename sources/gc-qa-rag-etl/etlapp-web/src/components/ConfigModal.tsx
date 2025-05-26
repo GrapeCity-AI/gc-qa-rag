@@ -134,4 +134,4 @@ const ConfigModal: React.FC<ConfigModalProps> = ({
     </Modal>
 );
 
-export default ConfigModal; 
+export default ConfigModal;

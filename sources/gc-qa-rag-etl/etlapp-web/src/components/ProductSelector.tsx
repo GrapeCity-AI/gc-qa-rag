@@ -53,4 +53,4 @@ const ProductSelector: React.FC<ProductSelectorProps> = ({
     </span>
 );
 
-export default ProductSelector; 
+export default ProductSelector;

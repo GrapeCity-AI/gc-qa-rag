@@ -34,4 +34,4 @@ const PreviewModal: React.FC<PreviewModalProps> = ({
     </Modal>
 );
 
-export default PreviewModal; 
+export default PreviewModal;

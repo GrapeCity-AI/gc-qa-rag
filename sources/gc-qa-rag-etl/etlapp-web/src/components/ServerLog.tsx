@@ -13,4 +13,4 @@ const ServerLog: React.FC<{ serverLog: string }> = ({ serverLog }) => (
     </pre>
 );
 
-export default ServerLog; 
+export default ServerLog;

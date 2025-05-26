@@ -31,9 +31,7 @@ const PublishModal: React.FC<PublishModalProps> = ({
     >
         <Space direction="vertical" style={{ width: "100%" }}>
             <Text>当前产品: {product}</Text>
-            <Text type="secondary">
-                请输入发布标签(tag)，用于版本管理
-            </Text>
+            <Text type="secondary">请输入发布标签(tag)，用于版本管理</Text>
             <Input
                 placeholder="输入标签，如: 230501"
                 value={publishTag}
@@ -43,4 +41,4 @@ const PublishModal: React.FC<PublishModalProps> = ({
     </Modal>
 );
 
-export default PublishModal; 
+export default PublishModal;
