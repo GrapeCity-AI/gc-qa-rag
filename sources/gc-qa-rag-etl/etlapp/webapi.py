@@ -236,11 +236,20 @@ def etl_get_result_content(product: str, etl_type: str, filename: str):
 @generic_router.get("/files_status")
 def files_status(product: str):
     input_dir = os.path.join(app_config.root_path, f"das/.temp/generic_input/{product}")
-    das_output_dir = os.path.join(app_config.root_path, f"das/.temp/generic_output/{product}")
+    das_output_dir = os.path.join(
+        app_config.root_path, f"das/.temp/generic_output/{product}"
+    )
     etl_dirs = {
-        "embedding": os.path.join(app_config.root_path, f"etl_generic/.temp/outputs_embedding/{product}"),
-        "qa": os.path.join(app_config.root_path, f"etl_generic/.temp/outputs_generate_qa/{product}"),
-        "full": os.path.join(app_config.root_path, f"etl_generic/.temp/outputs_generate_qa_full/{product}"),
+        "embedding": os.path.join(
+            app_config.root_path, f"etl_generic/.temp/outputs_embedding/{product}"
+        ),
+        "qa": os.path.join(
+            app_config.root_path, f"etl_generic/.temp/outputs_generate_qa/{product}"
+        ),
+        "full": os.path.join(
+            app_config.root_path,
+            f"etl_generic/.temp/outputs_generate_qa_full/{product}",
+        ),
     }
     if not os.path.exists(input_dir):
         return {"files": []}
@@ -250,7 +259,9 @@ def files_status(product: str):
         file_path = os.path.join(input_dir, fname)
         if not os.path.isfile(file_path):
             continue
-        upload_time = datetime.datetime.fromtimestamp(os.path.getmtime(file_path)).strftime("%Y-%m-%d %H:%M:%S")
+        upload_time = datetime.datetime.fromtimestamp(
+            os.path.getmtime(file_path)
+        ).strftime("%Y-%m-%d %H:%M:%S")
         # DAS 状态
         das_result_prefix = fname
         das_result_pattern = das_result_prefix + "_*.json"
@@ -273,26 +284,28 @@ def files_status(product: str):
             else:
                 etl_status[etl_type] = "not_started"
                 etl_result_files[etl_type] = None
-        result.append({
-            "filename": fname,
-            "uploadTime": upload_time,
-            "das": {
-                "status": das_status,
-                "resultFile": das_result_file,
-            },
-            "embedding": {
-                "status": etl_status["embedding"],
-                "resultFile": etl_result_files["embedding"],
-            },
-            "qa": {
-                "status": etl_status["qa"],
-                "resultFile": etl_result_files["qa"],
-            },
-            "full": {
-                "status": etl_status["full"],
-                "resultFile": etl_result_files["full"],
-            },
-        })
+        result.append(
+            {
+                "filename": fname,
+                "uploadTime": upload_time,
+                "das": {
+                    "status": das_status,
+                    "resultFile": das_result_file,
+                },
+                "embedding": {
+                    "status": etl_status["embedding"],
+                    "resultFile": etl_result_files["embedding"],
+                },
+                "qa": {
+                    "status": etl_status["qa"],
+                    "resultFile": etl_result_files["qa"],
+                },
+                "full": {
+                    "status": etl_status["full"],
+                    "resultFile": etl_result_files["full"],
+                },
+            }
+        )
     return {"files": result}
 
 
@@ -320,11 +333,12 @@ app.include_router(generic_router)
 
 # Mount static files
 static_path = os.path.join(os.path.dirname(os.path.dirname(__file__)), "static")
-if not os.path.exists(static_path):
-    os.makedirs(static_path)
-
-# Mount assets directory separately to handle JS/CSS files
-app.mount("/assets", StaticFiles(directory=os.path.join(static_path, "assets")), name="assets")
-
-# Mount root path for HTML files
-app.mount("/", StaticFiles(directory=static_path, html=True), name="static")
+if os.path.exists(static_path):
+    # Mount assets directory separately to handle JS/CSS files
+    app.mount(
+        "/assets",
+        StaticFiles(directory=os.path.join(static_path, "assets")),
+        name="assets",
+    )
+    # Mount root path for HTML files
+    app.mount("/", StaticFiles(directory=static_path, html=True), name="static")
