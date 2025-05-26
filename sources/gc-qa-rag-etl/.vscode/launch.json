@@ -10,7 +10,7 @@
             "request": "launch",
             "module": "uvicorn",
             "args": [
-                "etlapp.webapi:app",
+                "etlapp-api.server:app",
                 "--reload"
             ],
             "jinja": true
