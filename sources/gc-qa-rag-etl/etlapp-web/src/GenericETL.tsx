@@ -1,18 +1,12 @@
 import React, { useState, useEffect } from "react";
-import {
-    Button,
-    Select,
-    message,
-    Modal,
-    Input,
-    Upload,
-    Table,
-    Card,
-    Space,
-    Typography,
-    Spin,
-} from "antd";
-import { PlusOutlined, UploadOutlined } from "@ant-design/icons";
+import { Button, Card, Space, Typography, message } from "antd";
+import ProductSelector from "./components/ProductSelector";
+import FileStatusTable from "./components/FileStatusTable";
+import ServerLog from "./components/ServerLog";
+import PublishModal from "./components/PublishModal";
+import PreviewModal from "./components/PreviewModal";
+import NewProductModal from "./components/NewProductModal";
+import ConfigModal from "./components/ConfigModal";
 
 const API_BASE = "http://127.0.0.1:8000/generic";
 
@@ -56,13 +50,11 @@ const saveConfig = async (config: any) => {
 };
 
 const GenericETL: React.FC = () => {
-    // DAS 相关 state
+    // DAS
     const [product, setProduct] = useState<string>("default");
     const [previewModal, setPreviewModal] = useState(false);
     const [previewContent, setPreviewContent] = useState<any>(null);
     const [previewTitle, setPreviewTitle] = useState("");
-
-    // 公共
     const [products, setProducts] = useState<string[]>([]);
     const [newProductModal, setNewProductModal] = useState(false);
     const [newProductName, setNewProductName] = useState("");
@@ -105,7 +97,7 @@ const GenericETL: React.FC = () => {
         }
     }, [product]);
 
-    // 新增：定时拉取日志
+    // 定时拉取日志
     useEffect(() => {
         const fetchLog = async () => {
             try {
@@ -121,7 +113,7 @@ const GenericETL: React.FC = () => {
         return () => clearInterval(timer);
     }, []);
 
-    // 公共
+    // 创建产品
     const handleCreateProduct = async () => {
         if (!newProductName) return;
         try {
@@ -234,7 +226,7 @@ const GenericETL: React.FC = () => {
         }
     };
 
-    const { Title, Text } = Typography;
+    const { Title } = Typography;
 
     return (
         <div
@@ -259,54 +251,23 @@ const GenericETL: React.FC = () => {
                         justifyContent: "space-between",
                     }}
                 >
-                    <Space>
-                        <Text strong>选择产品：</Text>
-                        <Select
-                            style={{ width: 180 }}
-                            value={product}
-                            onChange={setProduct}
-                            options={products.map((p) => ({
-                                label: p,
-                                value: p,
-                            }))}
-                        />
-                        <Button
-                            icon={<PlusOutlined />}
-                            type="primary"
-                            onClick={() => setNewProductModal(true)}
-                        >
-                            新建产品
-                        </Button>
-                        <Upload
-                            multiple
-                            showUploadList={false}
-                            customRequest={async ({
-                                file,
-                                onSuccess,
-                                onError,
-                            }) => {
-                                const formData = new FormData();
-                                formData.append("product", product);
-                                formData.append("file", file);
-                                try {
-                                    await fetch(`${API_BASE}/das_upload`, {
-                                        method: "POST",
-                                        body: formData,
-                                    });
-                                    message.success("上传成功");
-                                    fetchFilesStatus(product).then(
-                                        setEtlFileRows
-                                    );
-                                    if (onSuccess) onSuccess({}, file);
-                                } catch (e) {
-                                    message.error("上传失败");
-                                    if (onError) onError(e as any);
-                                }
-                            }}
-                        >
-                            <Button icon={<UploadOutlined />}>上传文件</Button>
-                        </Upload>
-                    </Space>
+                    <ProductSelector
+                        products={products}
+                        product={product}
+                        setProduct={setProduct}
+                        onNewProduct={() => setNewProductModal(true)}
+                        onUpload={async (file) => {
+                            const formData = new FormData();
+                            formData.append("product", product);
+                            formData.append("file", file);
+                            await fetch(`${API_BASE}/das_upload`, {
+                                method: "POST",
+                                body: formData,
+                            });
+                            message.success("上传成功");
+                            fetchFilesStatus(product).then(setEtlFileRows);
+                        }}
+                    />
                     <Space>
                         <Button
                             onClick={() => {
@@ -328,64 +289,47 @@ const GenericETL: React.FC = () => {
                     </Space>
                 </Space>
             </Card>
-
-            {/* 发布Modal */}
-            <Modal
+            <PublishModal
                 open={publishModal}
-                title="发布到向量数据库"
+                product={product}
+                publishTag={publishTag}
+                setPublishTag={setPublishTag}
                 onCancel={() => setPublishModal(false)}
                 onOk={handlePublish}
                 confirmLoading={publishing}
-            >
-                <Space direction="vertical" style={{ width: "100%" }}>
-                    <Text>当前产品: {product}</Text>
-                    <Text type="secondary">
-                        请输入发布标签(tag)，用于版本管理
-                    </Text>
-                    <Input
-                        placeholder="输入标签，如: 230501"
-                        value={publishTag}
-                        onChange={(e) => setPublishTag(e.target.value)}
-                    />
-                </Space>
-            </Modal>
-
-            <Modal
+            />
+            <PreviewModal
                 open={previewModal}
                 title={previewTitle}
+                content={previewContent}
                 onCancel={() => setPreviewModal(false)}
-                footer={null}
-                width={800}
-            >
-                <div
-                    style={{
-                        maxHeight: 500,
-                        overflow: "auto",
-                        borderRadius: 6,
-                        padding: 12,
-                    }}
-                >
-                    {previewContent
-                        ? JSON.stringify(previewContent, null, 2)
-                        : ""}
-                </div>
-            </Modal>
-            <Modal
+            />
+            <NewProductModal
                 open={newProductModal}
-                title="新建产品"
+                newProductName={newProductName}
+                setNewProductName={setNewProductName}
                 onCancel={() => setNewProductModal(false)}
                 onOk={handleCreateProduct}
-            >
-                <Text type="secondary">
-                    产品名称仅支持字母、数字、下划线，建议英文
-                </Text>
-                <Input
-                    placeholder="输入新产品名称"
-                    value={newProductName}
-                    onChange={(e) => setNewProductName(e.target.value)}
-                    style={{ marginTop: 8 }}
-                />
-            </Modal>
+            />
+            <ConfigModal
+                open={configModal}
+                config={config}
+                configLoading={configLoading}
+                configSaving={configSaving}
+                setConfig={setConfig}
+                onCancel={() => setConfigModal(false)}
+                onOk={async () => {
+                    setConfigSaving(true);
+                    try {
+                        await saveConfig(config);
+                        setConfigModal(false);
+                    } catch (e) {
+                        // 错误提示已在 saveConfig 内部
+                    } finally {
+                        setConfigSaving(false);
+                    }
+                }}
+            />
             <Card
                 title={<b>文件全流程状态</b>}
                 style={{ marginTop: 24, boxShadow: "0 2px 8px #f0f1f2" }}
@@ -418,292 +362,22 @@ const GenericETL: React.FC = () => {
                     </Space>
                 }
             >
-                <Table
-                    rowKey="filename"
-                    columns={[
-                        {
-                            title: "文件名",
-                            dataIndex: "filename",
-                            key: "filename",
-                            width: 220,
-                            ellipsis: true,
-                        },
-                        {
-                            title: "上传时间",
-                            dataIndex: "uploadTime",
-                            key: "uploadTime",
-                            width: 160,
-                            ellipsis: true,
-                        },
-                        {
-                            title: "DAS处理",
-                            key: "das",
-                            width: 120,
-                            render: (_: any, row: any) => {
-                                if (row.das.status === "done")
-                                    return (
-                                        <Button
-                                            size="small"
-                                            onClick={() =>
-                                                handlePreview(row, "das")
-                                            }
-                                        >
-                                            预览
-                                        </Button>
-                                    );
-                                if (processing[row.filename + ":das"])
-                                    return <Spin size="small" />;
-                                return (
-                                    <Button
-                                        size="small"
-                                        type="primary"
-                                        onClick={() => handleDasProcess(row)}
-                                    >
-                                        处理
-                                    </Button>
-                                );
-                            },
-                        },
-                        {
-                            title: "Embedding",
-                            key: "embedding",
-                            width: 120,
-                            render: (_: any, row: any) => {
-                                if (row.embedding.status === "done")
-                                    return (
-                                        <Button
-                                            size="small"
-                                            onClick={() =>
-                                                handlePreview(row, "embedding")
-                                            }
-                                        >
-                                            预览
-                                        </Button>
-                                    );
-                                if (processing[row.filename + ":embedding"])
-                                    return <Spin size="small" />;
-                                return (
-                                    <Button
-                                        size="small"
-                                        type="primary"
-                                        onClick={() =>
-                                            handleEtlProcess(row, "embedding")
-                                        }
-                                    >
-                                        处理
-                                    </Button>
-                                );
-                            },
-                        },
-                        {
-                            title: "QA",
-                            key: "qa",
-                            width: 120,
-                            render: (_: any, row: any) => {
-                                if (row.qa.status === "done")
-                                    return (
-                                        <Button
-                                            size="small"
-                                            onClick={() =>
-                                                handlePreview(row, "qa")
-                                            }
-                                        >
-                                            预览
-                                        </Button>
-                                    );
-                                if (processing[row.filename + ":qa"])
-                                    return <Spin size="small" />;
-                                return (
-                                    <Button
-                                        size="small"
-                                        type="primary"
-                                        onClick={() =>
-                                            handleEtlProcess(row, "qa")
-                                        }
-                                    >
-                                        处理
-                                    </Button>
-                                );
-                            },
-                        },
-                        {
-                            title: "FullAnswer",
-                            key: "full",
-                            width: 120,
-                            render: (_: any, row: any) => {
-                                if (row.full.status === "done")
-                                    return (
-                                        <Button
-                                            size="small"
-                                            onClick={() =>
-                                                handlePreview(row, "full")
-                                            }
-                                        >
-                                            预览
-                                        </Button>
-                                    );
-                                if (processing[row.filename + ":full"])
-                                    return <Spin size="small" />;
-                                return (
-                                    <Button
-                                        size="small"
-                                        type="primary"
-                                        onClick={() =>
-                                            handleEtlProcess(row, "full")
-                                        }
-                                    >
-                                        处理
-                                    </Button>
-                                );
-                            },
-                        },
-                    ]}
-                    dataSource={etlFileRows}
-                    rowSelection={{
-                        selectedRowKeys,
-                        onChange: (selectedKeys) =>
-                            setSelectedRowKeys(selectedKeys),
-                    }}
-                    pagination={{ pageSize: 8 }}
-                    style={{ marginTop: 0, borderRadius: 8 }}
+                <FileStatusTable
+                    etlFileRows={etlFileRows}
+                    selectedRowKeys={selectedRowKeys}
+                    setSelectedRowKeys={setSelectedRowKeys}
+                    handleDasProcess={handleDasProcess}
+                    handleEtlProcess={handleEtlProcess}
+                    handlePreview={handlePreview}
+                    processing={processing}
                 />
             </Card>
-            {/* 新增：日志区域 */}
             <Card
                 title={<b>Server 控制台日志</b>}
                 style={{ marginTop: 24, boxShadow: "0 2px 8px #f0f1f2" }}
             >
-                <pre
-                    style={{
-                        whiteSpace: "pre-wrap",
-                        color: "#0f0",
-                        background: "transparent",
-                        margin: 0,
-                    }}
-                >
-                    {serverLog}
-                </pre>
+                <ServerLog serverLog={serverLog} />
             </Card>
-            <Modal
-                open={configModal}
-                title="系统配置"
-                onCancel={() => setConfigModal(false)}
-                onOk={async () => {
-                    setConfigSaving(true);
-                    try {
-                        await saveConfig(config);
-                        setConfigModal(false);
-                    } catch (e) {
-                        // 错误提示已在 saveConfig 内部
-                    } finally {
-                        setConfigSaving(false);
-                    }
-                }}
-                confirmLoading={configSaving}
-                width={600}
-            >
-                {configLoading ? (
-                    <Spin />
-                ) : config ? (
-                    <div>
-                        <Text strong>LLM 配置</Text>
-                        <Input
-                            style={{ margin: "8px 0" }}
-                            addonBefore="API Key"
-                            value={config.llm.api_key}
-                            onChange={(e) =>
-                                setConfig({
-                                    ...config,
-                                    llm: {
-                                        ...config.llm,
-                                        api_key: e.target.value,
-                                    },
-                                })
-                            }
-                        />
-                        <Input
-                            style={{ margin: "8px 0" }}
-                            addonBefore="API Base"
-                            value={config.llm.api_base}
-                            onChange={(e) =>
-                                setConfig({
-                                    ...config,
-                                    llm: {
-                                        ...config.llm,
-                                        api_base: e.target.value,
-                                    },
-                                })
-                            }
-                        />
-                        <Input
-                            style={{ margin: "8px 0" }}
-                            addonBefore="模型名"
-                            value={config.llm.model_name}
-                            onChange={(e) =>
-                                setConfig({
-                                    ...config,
-                                    llm: {
-                                        ...config.llm,
-                                        model_name: e.target.value,
-                                    },
-                                })
-                            }
-                        />
-                        <Text strong>Embedding 配置</Text>
-                        <Input
-                            style={{ margin: "8px 0" }}
-                            addonBefore="API Key"
-                            value={config.embedding.api_key}
-                            onChange={(e) =>
-                                setConfig({
-                                    ...config,
-                                    embedding: {
-                                        ...config.embedding,
-                                        api_key: e.target.value,
-                                    },
-                                })
-                            }
-                        />
-                        <Text strong>Vector DB 配置</Text>
-                        <Input
-                            style={{ margin: "8px 0" }}
-                            addonBefore="Host"
-                            value={config.vector_db.host}
-                            onChange={(e) =>
-                                setConfig({
-                                    ...config,
-                                    vector_db: {
-                                        ...config.vector_db,
-                                        host: e.target.value,
-                                    },
-                                })
-                            }
-                        />
-                        <Text strong>Root Path</Text>
-                        <Input
-                            style={{ margin: "8px 0" }}
-                            value={config.root_path}
-                            onChange={(e) =>
-                                setConfig({
-                                    ...config,
-                                    root_path: e.target.value,
-                                })
-                            }
-                        />
-                        <Text strong>Log Path</Text>
-                        <Input
-                            style={{ margin: "8px 0" }}
-                            value={config.log_path}
-                            onChange={(e) =>
-                                setConfig({
-                                    ...config,
-                                    log_path: e.target.value,
-                                })
-                            }
-                        />
-                    </div>
-                ) : null}
-            </Modal>
         </div>
     );
 };
