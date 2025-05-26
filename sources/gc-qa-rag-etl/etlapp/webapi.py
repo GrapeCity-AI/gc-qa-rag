@@ -1,4 +1,4 @@
-from fastapi import FastAPI, UploadFile, File, Form, BackgroundTasks
+from fastapi import FastAPI, UploadFile, File, Form
 from fastapi.responses import JSONResponse
 from fastapi.routing import APIRouter
 from fastapi.middleware.cors import CORSMiddleware
@@ -8,7 +8,6 @@ import shutil
 import threading
 import time
 import json
-from typing import List
 from etlapp.common.file import ensure_folder_exists
 from etlapp.common.config import app_config
 from etlapp.das.das_generic import das_generic_main
@@ -30,8 +29,11 @@ app.add_middleware(
 # --- Generic ETL API Router ---
 generic_router = APIRouter(prefix="/generic")
 
-# 用于简单进度追踪（生产建议用 redis/db）
-progress_status = {}
+# For simple progress tracking (Redis/DB recommended for production)
+
+# --- DAS processing related ---
+
+das_progress_status = {}
 
 
 @generic_router.post("/das_upload")
@@ -56,37 +58,21 @@ def das_list_files(product: str):
 @generic_router.post("/das_start")
 def das_start_execution(product: str = Form(...)):
     task_id = f"{product}_{int(time.time())}"
-    progress_status[task_id] = {"status": "running", "progress": 0, "msg": ""}
+    das_progress_status[task_id] = {"status": "running", "progress": 0, "msg": ""}
 
     def run_etl_task():
         try:
-            progress_status[task_id]["msg"] = "ETL started"
+            das_progress_status[task_id]["msg"] = "ETL started"
             das_generic_main(product)
-            progress_status[task_id]["status"] = "done"
-            progress_status[task_id]["progress"] = 100
-            progress_status[task_id]["msg"] = "ETL finished"
+            das_progress_status[task_id]["status"] = "done"
+            das_progress_status[task_id]["progress"] = 100
+            das_progress_status[task_id]["msg"] = "ETL finished"
         except Exception as e:
-            progress_status[task_id]["status"] = "error"
-            progress_status[task_id]["msg"] = str(e)
+            das_progress_status[task_id]["status"] = "error"
+            das_progress_status[task_id]["msg"] = str(e)
 
     threading.Thread(target=run_etl_task, daemon=True).start()
     return {"task_id": task_id}
-
-
-@generic_router.get("/das_progress/{task_id}")
-def das_get_progress(task_id: str):
-    return progress_status.get(task_id, {"status": "not_found"})
-
-
-@generic_router.get("/das_results")
-def das_list_results(product: str):
-    output_dir = os.path.join(
-        app_config.root_path, f"das/.temp/generic_output/{product}"
-    )
-    if not os.path.exists(output_dir):
-        return {"files": []}
-    files = [f for f in os.listdir(output_dir) if f.endswith(".json")]
-    return {"files": files}
 
 
 @generic_router.get("/das_result_content")
@@ -107,7 +93,7 @@ def list_products():
     input_root = os.path.join(app_config.root_path, "das/.temp/generic_input")
     if not os.path.exists(input_root):
         ensure_folder_exists(input_root)
-    # 只列出文件夹
+    # only list folders
     products = [
         name
         for name in os.listdir(input_root)
@@ -127,7 +113,7 @@ def create_product(product: str = Form(...)):
     return {"msg": "Product created", "product": product}
 
 
-# --- ETL 处理相关 ---
+# --- ETL processing related ---
 
 etl_progress_status = {}
 
@@ -180,34 +166,6 @@ def etl_start_execution(
     return {"task_id": task_id}
 
 
-@generic_router.get("/etl_progress/{task_id}")
-def etl_get_progress(task_id: str):
-    return etl_progress_status.get(task_id, {"status": "not_found"})
-
-
-@generic_router.get("/etl_results")
-def etl_list_results(product: str, etl_type: str):
-    if etl_type == "embedding":
-        output_dir = os.path.join(
-            app_config.root_path, f"etl_generic/.temp/outputs_embedding/{product}"
-        )
-    elif etl_type == "qa":
-        output_dir = os.path.join(
-            app_config.root_path, f"etl_generic/.temp/outputs_generate_qa/{product}"
-        )
-    elif etl_type == "full":
-        output_dir = os.path.join(
-            app_config.root_path,
-            f"etl_generic/.temp/outputs_generate_qa_full/{product}",
-        )
-    else:
-        return {"files": []}
-    if not os.path.exists(output_dir):
-        return {"files": []}
-    files = [f for f in os.listdir(output_dir) if f.endswith(".json")]
-    return {"files": files}
-
-
 @generic_router.get("/etl_result_content")
 def etl_get_result_content(product: str, etl_type: str, filename: str):
     if etl_type == "embedding":
@@ -231,6 +189,9 @@ def etl_get_result_content(product: str, etl_type: str, filename: str):
     with open(file_path, "r", encoding="utf-8") as f:
         content = json.load(f)
     return content
+
+
+# --- File status related ---
 
 
 @generic_router.get("/files_status")
@@ -309,27 +270,32 @@ def files_status(product: str):
     return {"files": result}
 
 
+# --- Publish related ---
+
+
 @generic_router.post("/publish")
 def publish_to_vector_db(product: str = Form(...), tag: str = Form(...)):
     task_id = f"publish_{product}_{tag}_{int(time.time())}"
-    progress_status[task_id] = {"status": "running", "progress": 0, "msg": ""}
+    das_progress_status[task_id] = {"status": "running", "progress": 0, "msg": ""}
 
     def run_publish_task():
         try:
-            progress_status[task_id]["msg"] = "Publishing started"
+            das_progress_status[task_id]["msg"] = "Publishing started"
             ved_index_start("generic", product, tag)
-            progress_status[task_id]["status"] = "done"
-            progress_status[task_id]["progress"] = 100
-            progress_status[task_id]["msg"] = "Publishing finished"
+            das_progress_status[task_id]["status"] = "done"
+            das_progress_status[task_id]["progress"] = 100
+            das_progress_status[task_id]["msg"] = "Publishing finished"
         except Exception as e:
-            progress_status[task_id]["status"] = "error"
-            progress_status[task_id]["msg"] = str(e)
+            das_progress_status[task_id]["status"] = "error"
+            das_progress_status[task_id]["msg"] = str(e)
 
     threading.Thread(target=run_publish_task, daemon=True).start()
     return {"task_id": task_id}
 
 
 app.include_router(generic_router)
+
+# --- Static files ---
 
 # Mount static files
 static_path = os.path.join(os.path.dirname(os.path.dirname(__file__)), "static")
