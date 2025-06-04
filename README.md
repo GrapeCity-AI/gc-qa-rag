@@ -41,6 +41,8 @@ GC-QA-RAG 是一款面向葡萄城产品生态（包括 活字格、WYN、Spread
 
 ![alt text](./docs/image-1.png)
 
+葡萄城AI搜索地址：https://ai-assist.grapecity.com.cn/
+
 ## 项目背景
 
 作为企业级解决方案提供商，葡萄城积累了大量的产品用户。在日常使用中，用户需要快速获取准确的产品信息，但现有帮助文档和技术社区存在以下挑战：
