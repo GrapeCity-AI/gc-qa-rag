@@ -27,3 +27,4 @@ distribution = false
 das = "python -m etlapp.das_index"
 etl = "python -m etlapp.etl_index"
 ved = "python -m etlapp.ved_index"
+server = "uvicorn etlapp_api.server:app --reload --port 8001"
