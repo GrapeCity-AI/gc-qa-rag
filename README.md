@@ -26,13 +26,29 @@
 -   [技术原理-向量检索](https://grapecity-ai.github.io/gc-qa-rag/1-%E6%8A%80%E6%9C%AF%E5%8E%9F%E7%90%86/2-%E5%90%91%E9%87%8F%E6%A3%80%E7%B4%A2/)
 -   [技术原理-问答生成](https://grapecity-ai.github.io/gc-qa-rag/1-%E6%8A%80%E6%9C%AF%E5%8E%9F%E7%90%86/3-%E9%97%AE%E7%AD%94%E7%94%9F%E6%88%90/)
 
+## 快速开始
+
+GC-QA-RAG 项目采用模块化架构，包含 ETL（知识库构建）、Server（检索问答-后端服务）和 Frontend（检索问答-主前端界面）三个核心模块。各模块可独立开发、测试与部署，支持本地和 Docker 容器化运行。
+
+-   推荐先阅读[《快速开始》](./quickstart.md)文档，获取详细的环境准备、依赖安装与各模块启动说明。
+-   典型启动流程如下：
+
+1. 安装依赖
+    - Python 3.13、Node.js 16+、PDM、pnpm、MySQL、Qdrant
+2. 各模块编译与运行
+    - ETL 主程序：`cd sources/gc-qa-rag-etl && pdm install && pdm run dev`
+    - ETL 前端：`cd sources/gc-qa-rag-etl/etlapp-web && pnpm install && pnpm run dev`
+    - Server：`cd sources/gc-qa-rag-server && pdm install && pdm run dev`
+    - Frontend：`cd sources/gc-qa-rag-frontend && pnpm install && pnpm run dev`
+3. 生产环境建议使用 Docker 部署
+
 ## 概述
 
 GC-QA-RAG 是一款面向葡萄城产品生态（包括 活字格、WYN、SpreadJS 和 GCExcel 等）的检索增强生成（RAG）系统。该系统通过智能文档处理、高效知识检索、精准问答等功能，有效提升了知识管理效率和用户支持体验。
 
 本系统创新性地采用了 QA 预生成技术，克服了传统文本切片方法在知识库构建中的若干局限性。经过实践验证，该技术方案能够显著提升检索效果，可为 RAG 领域的技术实践提供新的思路。
 
-葡萄城秉持“赋能开发者”的理念，现将 GC-QA-RAG 项目完整开源：
+葡萄城秉持"赋能开发者"的理念，现将 GC-QA-RAG 项目完整开源：
 
 -   对于初学者，我们提供了详细的入门指南，帮助您快速掌握 QA-RAG 系统的构建方法
 -   对于面临传统架构挑战的开发者，我们的架构设计文档可为您提供参考，助力现有知识库的优化升级
@@ -41,7 +57,7 @@ GC-QA-RAG 是一款面向葡萄城产品生态（包括 活字格、WYN、Spread
 
 ![alt text](./docs/image-1.png)
 
-葡萄城AI搜索地址：https://ai-assist.grapecity.com.cn/
+葡萄城 AI 搜索地址：https://ai-assist.grapecity.com.cn/
 
 ## 项目背景
 
