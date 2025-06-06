@@ -33,7 +33,7 @@ pdm install
 **运行**
 
 ```bash
-pnpm run server
+pdm run dev
 ```
 
 服务默认运行在 `http://0.0.0.0:8001`
