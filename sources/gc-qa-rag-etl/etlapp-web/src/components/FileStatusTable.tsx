@@ -68,33 +68,6 @@ const FileStatusTable: React.FC<FileStatusTableProps> = ({
                 },
             },
             {
-                title: "Embedding",
-                key: "embedding",
-                width: 120,
-                render: (_: any, row: any) => {
-                    if (row.embedding.status === "done")
-                        return (
-                            <Button
-                                size="small"
-                                onClick={() => handlePreview(row, "embedding")}
-                            >
-                                预览
-                            </Button>
-                        );
-                    if (processing[row.filename + ":embedding"])
-                        return <Spin size="small" />;
-                    return (
-                        <Button
-                            size="small"
-                            type="primary"
-                            onClick={() => handleEtlProcess(row, "embedding")}
-                        >
-                            处理
-                        </Button>
-                    );
-                },
-            },
-            {
                 title: "QA",
                 key: "qa",
                 width: 120,
@@ -115,6 +88,7 @@ const FileStatusTable: React.FC<FileStatusTableProps> = ({
                             size="small"
                             type="primary"
                             onClick={() => handleEtlProcess(row, "qa")}
+                            disabled={row.das.status !== "done"}
                         >
                             处理
                         </Button>
@@ -122,7 +96,7 @@ const FileStatusTable: React.FC<FileStatusTableProps> = ({
                 },
             },
             {
-                title: "FullAnswer",
+                title: "FullAnswer(可选)",
                 key: "full",
                 width: 120,
                 render: (_: any, row: any) => {
@@ -142,6 +116,35 @@ const FileStatusTable: React.FC<FileStatusTableProps> = ({
                             size="small"
                             type="primary"
                             onClick={() => handleEtlProcess(row, "full")}
+                            disabled={row.das.status !== "done"}
+                        >
+                            处理
+                        </Button>
+                    );
+                },
+            },
+            {
+                title: "Embedding",
+                key: "embedding",
+                width: 120,
+                render: (_: any, row: any) => {
+                    if (row.embedding.status === "done")
+                        return (
+                            <Button
+                                size="small"
+                                onClick={() => handlePreview(row, "embedding")}
+                            >
+                                预览
+                            </Button>
+                        );
+                    if (processing[row.filename + ":embedding"])
+                        return <Spin size="small" />;
+                    return (
+                        <Button
+                            size="small"
+                            type="primary"
+                            onClick={() => handleEtlProcess(row, "embedding")}
+                            disabled
                         >
                             处理
                         </Button>

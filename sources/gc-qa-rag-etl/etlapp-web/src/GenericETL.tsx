@@ -92,6 +92,7 @@ const GenericETL: React.FC = () => {
         try {
             await createProduct(newProductName);
             message.success("产品创建成功");
+            setProduct(newProductName);
             setNewProductModal(false);
             setNewProductName("");
             fetchProducts().then(setProducts);
@@ -291,13 +292,7 @@ const GenericETL: React.FC = () => {
                             disabled={selectedRowKeys.length === 0}
                             onClick={() => handleBatchProcess("das")}
                         >
-                            批量DAS处理
-                        </Button>
-                        <Button
-                            disabled={selectedRowKeys.length === 0}
-                            onClick={() => handleBatchProcess("embedding")}
-                        >
-                            批量Embedding
+                            批量DAS
                         </Button>
                         <Button
                             disabled={selectedRowKeys.length === 0}
@@ -309,7 +304,13 @@ const GenericETL: React.FC = () => {
                             disabled={selectedRowKeys.length === 0}
                             onClick={() => handleBatchProcess("full")}
                         >
-                            批量Full
+                            批量FullAnswer
+                        </Button>
+                        <Button
+                            disabled={selectedRowKeys.length === 0}
+                            onClick={() => handleBatchProcess("embedding")}
+                        >
+                            批量Embedding
                         </Button>
                     </Space>
                 }
