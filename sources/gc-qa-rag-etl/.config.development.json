@@ -15,6 +15,6 @@
     "vector_db": {
         "host": "http://localhost:6333"
     },
-    "root_path": "C:/Workspace/Rag/rag-cache",
+    "root_path": "./.rag-cache",
     "log_path": "./"
 }
