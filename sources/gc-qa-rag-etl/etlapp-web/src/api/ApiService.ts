@@ -48,9 +48,10 @@ export const uploadFile = async (product: string, file: File) => {
     return await res.json();
 };
 
-export const dasStart = async (product: string) => {
+export const dasStart = async (product: string, filename: string) => {
     const form = new FormData();
     form.append("product", product);
+    form.append("filename", filename);
     const res = await fetch(`${API_BASE}/das_start`, {
         method: "POST",
         body: form,
@@ -59,10 +60,11 @@ export const dasStart = async (product: string) => {
     return await res.json();
 };
 
-export const etlStart = async (product: string, etlType: "embedding" | "qa" | "full") => {
+export const etlStart = async (product: string, etlType: "embedding" | "qa" | "full", filename: string) => {
     const form = new FormData();
     form.append("product", product);
     form.append("etl_type", etlType);
+    form.append("filename", filename);
     const res = await fetch(`${API_BASE}/etl_start`, {
         method: "POST",
         body: form,

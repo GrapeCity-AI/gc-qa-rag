@@ -13,6 +13,29 @@ das_router = APIRouter(prefix="/api")
 
 das_progress_status = {}
 
+def das_generic_single_file(product: str, filename: str):
+    """Process a single file with DAS for the given product."""
+    from etlapp.das.das_generic import collect_files, process_files
+    from markitdown import MarkItDown
+    
+    input_dir = os.path.join(app_config.root_path, f"das/.temp/generic_input/{product}")
+    output_dir = os.path.join(app_config.root_path, f"das/.temp/generic_output/{product}")
+    
+    ensure_folder_exists(input_dir)
+    ensure_folder_exists(output_dir)
+    
+    # Check if the specific file exists
+    file_path = os.path.join(input_dir, filename)
+    if not os.path.exists(file_path):
+        raise FileNotFoundError(f"File {filename} not found in {input_dir}")
+    
+    # Process only the specific file
+    rel_path = filename  # Since it's directly in the input_dir
+    files = [(file_path, rel_path)]
+    
+    markitdown_inst = MarkItDown()
+    process_files(product, files, markitdown_inst, output_dir)
+
 @das_router.post("/das_upload")
 async def das_upload_file(product: str = Form(...), file: UploadFile = File(...)):
     input_dir = os.path.join(app_config.root_path, f"das/.temp/generic_input/{product}")
@@ -31,17 +54,17 @@ def das_list_files(product: str):
     return {"files": files}
 
 @das_router.post("/das_start")
-def das_start_execution(product: str = Form(...)):
-    task_id = f"{product}_{int(time.time())}"
+def das_start_execution(product: str = Form(...), filename: str = Form(...)):
+    task_id = f"{product}_{filename}_{int(time.time())}"
     das_progress_status[task_id] = {"status": "running", "progress": 0, "msg": ""}
 
     def run_etl_task():
         try:
-            das_progress_status[task_id]["msg"] = "ETL started"
-            das_generic_main(product)
+            das_progress_status[task_id]["msg"] = f"DAS started for {filename}"
+            das_generic_single_file(product, filename)
             das_progress_status[task_id]["status"] = "done"
             das_progress_status[task_id]["progress"] = 100
-            das_progress_status[task_id]["msg"] = "ETL finished"
+            das_progress_status[task_id]["msg"] = f"DAS finished for {filename}"
         except Exception as e:
             das_progress_status[task_id]["status"] = "error"
             das_progress_status[task_id]["msg"] = str(e)

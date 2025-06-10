@@ -104,7 +104,7 @@ const GenericETL: React.FC = () => {
     // Single file DAS processing
     const handleDasProcess = async (row: any) => {
         setProcessing((p) => ({ ...p, [row.filename + ":das"]: true }));
-        await dasStart(product);
+        await dasStart(product, row.filename);
         setProcessing((p) => ({ ...p, [row.filename + ":das"]: false }));
         setTimeout(() => fetchFilesStatus(product).then(setEtlFileRows), 1000);
     };
@@ -115,7 +115,7 @@ const GenericETL: React.FC = () => {
         etlType: "embedding" | "qa" | "full"
     ) => {
         setProcessing((p) => ({ ...p, [row.filename + ":" + etlType]: true }));
-        await etlStart(product, etlType);
+        await etlStart(product, etlType, row.filename);
         setProcessing((p) => ({ ...p, [row.filename + ":" + etlType]: false }));
         setTimeout(() => fetchFilesStatus(product).then(setEtlFileRows), 1000);
     };
