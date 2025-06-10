@@ -29,13 +29,15 @@ COPY readme.md ./
 COPY .config.*.json ./
 COPY etlapp/ ./etlapp/
 COPY etlapp_api/ ./etlapp_api/
-COPY scripts/ ./scripts/
+
+# Copy frontend build files from builder stage
+COPY --from=frontend-builder /app/dist ./etlapp-web/dist
 
 # Expose the port
-EXPOSE 8000
+EXPOSE 8001
 
 # Set environment variable
 ENV GC_QA_RAG_ENV=development
 
 # Run the application
-CMD ["pdm", "run", "uvicorn", "etlapp-api.server:app", "--host", "0.0.0.0", "--port", "8000"]
+CMD ["pdm", "run", "uvicorn", "etlapp_api.server:app", "--host", "0.0.0.0", "--port", "8001"]

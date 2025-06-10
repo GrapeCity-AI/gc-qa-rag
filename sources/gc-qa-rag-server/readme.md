@@ -24,7 +24,7 @@ A Retrieval-Augmented Generation (RAG) server for question answering, built with
 
 ## Prerequisites
 
--   Python 3.11
+-   Python 3.13
 -   PDM
 -   MySQL
 -   Qdrant
