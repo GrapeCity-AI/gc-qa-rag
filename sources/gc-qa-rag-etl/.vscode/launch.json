@@ -9,10 +9,7 @@
             "type": "debugpy",
             "request": "launch",
             "module": "uvicorn",
-            "args": [
-                "etlapp_api.server:app",
-                "--reload"
-            ],
+            "args": ["etlapp_api.server:app", "--reload", "--port=8001"],
             "jinja": true
         }
     ]
