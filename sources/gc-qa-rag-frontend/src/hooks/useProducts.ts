@@ -7,12 +7,12 @@ export const useProducts = () => {
     const [products, setProducts] = useState<ProductInfo[]>([]);
     const [loading, setLoading] = useState(true);
     const [mode, setMode] = useState<'fixed' | 'generic'>('fixed');
-    
+
     // 获取URL参数或localStorage中的产品模式
     const getInitialMode = (): 'fixed' | 'generic' => {
         const urlMode = getUrlSearchArg("productmode");
         const storedMode = localStorage.getItem("gcai-product-mode");
-        
+
         if (urlMode === "generic" || storedMode === "generic") {
             return "generic";
         }
@@ -23,20 +23,20 @@ export const useProducts = () => {
     const getInitialProduct = (productList: ProductInfo[]): string => {
         const urlProduct = getUrlSearchArg("product");
         const storedProduct = localStorage.getItem("gcai-product");
-        
+
         if (urlProduct && productList.some(p => p.id === urlProduct)) {
             return urlProduct;
         }
-        
+
         if (storedProduct && productList.some(p => p.id === storedProduct)) {
             return storedProduct;
         }
-        
+
         // 默认返回第一个产品
-        return productList.length > 0 ? productList[0].id : ProductType.Forguncy;
+        return productList.length > 0 ? productList[0].id : urlProduct || storedProduct || ProductType.Forguncy;
     };
 
-    const [selectedProduct, setSelectedProduct] = useState<string>(ProductType.Forguncy);
+    const [selectedProduct, setSelectedProduct] = useState<string>(getInitialProduct([]));
 
     const loadProducts = async (productMode: 'fixed' | 'generic') => {
         try {
@@ -44,11 +44,11 @@ export const useProducts = () => {
             const response: ProductsResponse = await getProductsResult(productMode);
             setProducts(response.products);
             setMode(response.mode);
-            
+
             // 设置初始选中的产品
             const initialProduct = getInitialProduct(response.products);
             setSelectedProduct(initialProduct);
-            
+
         } catch (error) {
             console.error("Failed to load products:", error);
             // 出错时使用固定产品列表
