@@ -47,5 +47,4 @@ def update_aliases(product: str = Form(...), tag: str = Form(...)):
 
 @publish_router.get("/publish_progress")
 def get_progress(task_id: str):
-    """获取发布或更新别名任务的进度"""
     return das_progress_status.get(task_id, {"status": "not_found", "progress": 0, "msg": "Task not found"}) 

@@ -17,7 +17,6 @@ export const ProductNameKey = {
     [ProductType.GcExcel]: 'ProductName.GcExcel',
 }
 
-// 产品数据接口
 export interface ProductInfo {
     id: string;
     name: string;
@@ -25,7 +24,6 @@ export interface ProductInfo {
     type: 'fixed' | 'generic';
 }
 
-// 产品列表响应接口
 export interface ProductsResponse {
     mode: 'fixed' | 'generic';
     products: ProductInfo[];

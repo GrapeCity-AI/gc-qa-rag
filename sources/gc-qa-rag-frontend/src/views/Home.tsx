@@ -13,7 +13,6 @@ import CustomFooter from "../components/CustomFooter";
 import { getUrlSearchArg, raise_gtag_event } from "../common/utils";
 import { useTranslation } from "react-i18next";
 import { useProducts } from "../hooks/useProducts";
-// Custom hooks - 已移至独立的useProducts hook
 
 const useSearchMode = () => {
     const initialSearchMode =
