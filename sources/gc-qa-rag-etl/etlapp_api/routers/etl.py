@@ -70,6 +70,13 @@ def etl_start_execution(
     return {"task_id": task_id}
 
 
+@etl_router.get("/etl_progress")
+def etl_get_progress(task_id: str):
+    if task_id not in etl_progress_status:
+        return JSONResponse(status_code=404, content={"error": "Task not found"})
+    return etl_progress_status[task_id]
+
+
 @etl_router.get("/etl_result_content")
 def etl_get_result_content(product: str, etl_type: str, filename: str):
     if etl_type == "embedding":

@@ -60,6 +60,18 @@ export const dasStart = async (product: string, filename: string) => {
     return await res.json();
 };
 
+export const fetchDasProgress = async (taskId: string) => {
+    const res = await fetch(`${API_BASE}/das_progress?task_id=${taskId}`);
+    if (!res.ok) throw new Error("获取进度失败");
+    return await res.json();
+};
+
+export const fetchEtlProgress = async (taskId: string) => {
+    const res = await fetch(`${API_BASE}/etl_progress?task_id=${taskId}`);
+    if (!res.ok) throw new Error("获取进度失败");
+    return await res.json();
+};
+
 export const etlStart = async (product: string, etlType: "embedding" | "qa" | "full", filename: string) => {
     const form = new FormData();
     form.append("product", product);

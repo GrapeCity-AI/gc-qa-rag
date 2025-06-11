@@ -7,6 +7,31 @@ from etlapp.common.config import app_config
 file_status_router = APIRouter(prefix="/api")
 
 
+def get_running_task_status(filename: str, task_type: str, product: str):
+    """检查是否有正在运行的任务，返回任务状态"""
+    # 导入进度状态字典
+    from etlapp_api.routers.das import das_progress_status
+    from etlapp_api.routers.etl import etl_progress_status
+    
+    # 检查DAS任务
+    if task_type == "das":
+        # DAS任务ID格式: {product}_{filename}_{timestamp}
+        task_prefix = f"{product}_{filename}_"
+        for task_id, status in das_progress_status.items():
+            if task_id.startswith(task_prefix) and status["status"] == "running":
+                return "running"
+    
+    # 检查ETL任务
+    elif task_type in ["embedding", "qa", "full"]:
+        # ETL任务ID格式: etl_{product}_{etl_type}_{filename}_{timestamp}
+        task_prefix = f"etl_{product}_{task_type}_{filename}_"
+        for task_id, status in etl_progress_status.items():
+            if task_id.startswith(task_prefix) and status["status"] == "running":
+                return "running"
+    
+    return None
+
+
 @file_status_router.get("/files_status")
 def files_status(product: str):
     input_dir = os.path.join(app_config.root_path, f"das/.temp/generic_input/{product}")
@@ -43,7 +68,9 @@ def files_status(product: str):
             das_status = "done"
             das_result_file = os.path.basename(das_result_files[0])
         else:
-            das_status = "not_started"
+            # 检查是否有正在运行的DAS任务
+            running_status = get_running_task_status(fname, "das", product)
+            das_status = running_status if running_status else "not_started"
             das_result_file = None
         etl_status = {}
         etl_result_files = {}
@@ -69,7 +96,9 @@ def files_status(product: str):
                         etl_result_files_list[0]
                     )
             else:
-                etl_status[etl_type] = "not_started"
+                # 检查是否有正在运行的ETL任务
+                running_status = get_running_task_status(fname, etl_type, product)
+                etl_status[etl_type] = running_status if running_status else "not_started"
                 etl_result_files[etl_type] = None
         result.append(
             {

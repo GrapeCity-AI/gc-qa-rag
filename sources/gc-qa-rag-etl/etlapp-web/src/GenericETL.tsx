@@ -15,7 +15,9 @@ import {
     saveConfig,
     uploadFile,
     dasStart,
+    fetchDasProgress,
     etlStart,
+    fetchEtlProgress,
     fetchDasResultContent,
     fetchEtlResultContent,
     publish,
@@ -43,6 +45,9 @@ const GenericETL: React.FC = () => {
 
     // Handle loading
     const [processing, setProcessing] = useState<{ [k: string]: boolean }>({});
+
+    // 添加进度状态管理
+    const [progressInfo, setProgressInfo] = useState<{ [k: string]: { progress: number; msg: string } }>({});
 
     // Added: log related state
     const [serverLog, setServerLog] = useState<string>("");
@@ -104,9 +109,65 @@ const GenericETL: React.FC = () => {
     // Single file DAS processing
     const handleDasProcess = async (row: any) => {
         setProcessing((p) => ({ ...p, [row.filename + ":das"]: true }));
-        await dasStart(product, row.filename);
-        setProcessing((p) => ({ ...p, [row.filename + ":das"]: false }));
-        setTimeout(() => fetchFilesStatus(product).then(setEtlFileRows), 1000);
+        try {
+            const response = await dasStart(product, row.filename);
+            const taskId = response.task_id;
+            
+            // 轮询查询进度
+            const pollProgress = async () => {
+                try {
+                    const progress = await fetchDasProgress(taskId);
+                    console.log(`DAS进度 - ${row.filename}: ${progress.status} (${progress.progress}%) - ${progress.msg}`);
+                    
+                    // 更新进度信息
+                    setProgressInfo((prev) => ({
+                        ...prev,
+                        [row.filename + ":das"]: {
+                            progress: progress.progress || 0,
+                            msg: progress.msg || ""
+                        }
+                    }));
+                    
+                    if (progress.status === "done" || progress.status === "error") {
+                        setProcessing((p) => ({ ...p, [row.filename + ":das"]: false }));
+                        // 清除进度信息
+                        setProgressInfo((prev) => {
+                            const newInfo = { ...prev };
+                            delete newInfo[row.filename + ":das"];
+                            return newInfo;
+                        });
+                        if (progress.status === "error") {
+                            message.error(`DAS处理失败: ${progress.msg}`);
+                        } else {
+                            message.success(`DAS处理完成: ${row.filename}`);
+                        }
+                        // 刷新文件状态
+                        fetchFilesStatus(product).then(setEtlFileRows);
+                        return;
+                    }
+                    
+                    // 继续轮询
+                    setTimeout(pollProgress, 2000);
+                } catch (error) {
+                    console.error("获取进度失败:", error);
+                    setProcessing((p) => ({ ...p, [row.filename + ":das"]: false }));
+                    // 清除进度信息
+                    setProgressInfo((prev) => {
+                        const newInfo = { ...prev };
+                        delete newInfo[row.filename + ":das"];
+                        return newInfo;
+                    });
+                    message.error("获取进度失败");
+                }
+            };
+            
+            // 开始轮询
+            setTimeout(pollProgress, 1000);
+            
+        } catch (error: any) {
+            setProcessing((p) => ({ ...p, [row.filename + ":das"]: false }));
+            message.error(error.message || "DAS处理启动失败");
+        }
     };
 
     // Single file ETL processing
@@ -115,9 +176,65 @@ const GenericETL: React.FC = () => {
         etlType: "embedding" | "qa" | "full"
     ) => {
         setProcessing((p) => ({ ...p, [row.filename + ":" + etlType]: true }));
-        await etlStart(product, etlType, row.das.resultFile);
-        setProcessing((p) => ({ ...p, [row.das.resultFile + ":" + etlType]: false }));
-        setTimeout(() => fetchFilesStatus(product).then(setEtlFileRows), 1000);
+        try {
+            const response = await etlStart(product, etlType, row.das.resultFile);
+            const taskId = response.task_id;
+            
+            // 轮询查询进度
+            const pollProgress = async () => {
+                try {
+                    const progress = await fetchEtlProgress(taskId);
+                    console.log(`ETL-${etlType}进度 - ${row.filename}: ${progress.status} (${progress.progress}%) - ${progress.msg}`);
+                    
+                    // 更新进度信息
+                    setProgressInfo((prev) => ({
+                        ...prev,
+                        [row.filename + ":" + etlType]: {
+                            progress: progress.progress || 0,
+                            msg: progress.msg || ""
+                        }
+                    }));
+                    
+                    if (progress.status === "done" || progress.status === "error") {
+                        setProcessing((p) => ({ ...p, [row.filename + ":" + etlType]: false }));
+                        // 清除进度信息
+                        setProgressInfo((prev) => {
+                            const newInfo = { ...prev };
+                            delete newInfo[row.filename + ":" + etlType];
+                            return newInfo;
+                        });
+                        if (progress.status === "error") {
+                            message.error(`ETL-${etlType}处理失败: ${progress.msg}`);
+                        } else {
+                            message.success(`ETL-${etlType}处理完成: ${row.filename}`);
+                        }
+                        // 刷新文件状态
+                        fetchFilesStatus(product).then(setEtlFileRows);
+                        return;
+                    }
+                    
+                    // 继续轮询
+                    setTimeout(pollProgress, 2000);
+                } catch (error) {
+                    console.error("获取ETL进度失败:", error);
+                    setProcessing((p) => ({ ...p, [row.filename + ":" + etlType]: false }));
+                    // 清除进度信息
+                    setProgressInfo((prev) => {
+                        const newInfo = { ...prev };
+                        delete newInfo[row.filename + ":" + etlType];
+                        return newInfo;
+                    });
+                    message.error("获取ETL进度失败");
+                }
+            };
+            
+            // 开始轮询
+            setTimeout(pollProgress, 1000);
+            
+        } catch (error: any) {
+            setProcessing((p) => ({ ...p, [row.filename + ":" + etlType]: false }));
+            message.error(error.message || `ETL-${etlType}处理启动失败`);
+        }
     };
 
     // Batch processing
@@ -323,6 +440,7 @@ const GenericETL: React.FC = () => {
                     handleEtlProcess={handleEtlProcess}
                     handlePreview={handlePreview}
                     processing={processing}
+                    progressInfo={progressInfo}
                 />
             </Card>
             <Card

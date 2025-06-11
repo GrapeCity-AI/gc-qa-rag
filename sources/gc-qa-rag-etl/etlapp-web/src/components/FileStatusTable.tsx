@@ -1,5 +1,5 @@
 import React from "react";
-import { Table, Button, Spin } from "antd";
+import { Table, Button, Spin, Progress } from "antd";
 
 interface FileStatusTableProps {
     etlFileRows: any[];
@@ -12,6 +12,7 @@ interface FileStatusTableProps {
         stage: "das" | "embedding" | "qa" | "full"
     ) => void;
     processing: { [k: string]: boolean };
+    progressInfo: { [k: string]: { progress: number; msg: string } };
 }
 
 const FileStatusTable: React.FC<FileStatusTableProps> = ({
@@ -22,6 +23,7 @@ const FileStatusTable: React.FC<FileStatusTableProps> = ({
     handleEtlProcess,
     handlePreview,
     processing,
+    progressInfo,
 }) => (
     <Table
         rowKey="filename"
@@ -43,7 +45,7 @@ const FileStatusTable: React.FC<FileStatusTableProps> = ({
             {
                 title: "DAS处理",
                 key: "das",
-                width: 120,
+                width: 150,
                 render: (_: any, row: any) => {
                     if (row.das.status === "done")
                         return (
@@ -54,8 +56,24 @@ const FileStatusTable: React.FC<FileStatusTableProps> = ({
                                 预览
                             </Button>
                         );
-                    if (processing[row.filename + ":das"])
-                        return <Spin size="small" />;
+                    if (processing[row.filename + ":das"]) {
+                        const progressKey = row.filename + ":das";
+                        const progress = progressInfo[progressKey];
+                        return (
+                            <div style={{ width: 100 }}>
+                                <Progress 
+                                    percent={progress?.progress || 0} 
+                                    size="small" 
+                                    status="active"
+                                />
+                                {progress?.msg && (
+                                    <div style={{ fontSize: '12px', color: '#666', marginTop: '4px' }}>
+                                        {progress.msg.length > 20 ? progress.msg.substring(0, 20) + '...' : progress.msg}
+                                    </div>
+                                )}
+                            </div>
+                        );
+                    }
                     return (
                         <Button
                             size="small"
@@ -70,7 +88,7 @@ const FileStatusTable: React.FC<FileStatusTableProps> = ({
             {
                 title: "QA",
                 key: "qa",
-                width: 120,
+                width: 150,
                 render: (_: any, row: any) => {
                     if (row.qa.status === "done")
                         return (
@@ -81,8 +99,24 @@ const FileStatusTable: React.FC<FileStatusTableProps> = ({
                                 预览
                             </Button>
                         );
-                    if (processing[row.filename + ":qa"])
-                        return <Spin size="small" />;
+                    if (processing[row.filename + ":qa"]) {
+                        const progressKey = row.filename + ":qa";
+                        const progress = progressInfo[progressKey];
+                        return (
+                            <div style={{ width: 100 }}>
+                                <Progress 
+                                    percent={progress?.progress || 0} 
+                                    size="small" 
+                                    status="active"
+                                />
+                                {progress?.msg && (
+                                    <div style={{ fontSize: '12px', color: '#666', marginTop: '4px' }}>
+                                        {progress.msg.length > 20 ? progress.msg.substring(0, 20) + '...' : progress.msg}
+                                    </div>
+                                )}
+                            </div>
+                        );
+                    }
                     return (
                         <Button
                             size="small"
@@ -98,7 +132,7 @@ const FileStatusTable: React.FC<FileStatusTableProps> = ({
             {
                 title: "FullAnswer(可选)",
                 key: "full",
-                width: 120,
+                width: 150,
                 render: (_: any, row: any) => {
                     if (row.full.status === "done")
                         return (
@@ -109,8 +143,24 @@ const FileStatusTable: React.FC<FileStatusTableProps> = ({
                                 预览
                             </Button>
                         );
-                    if (processing[row.filename + ":full"])
-                        return <Spin size="small" />;
+                    if (processing[row.filename + ":full"]) {
+                        const progressKey = row.filename + ":full";
+                        const progress = progressInfo[progressKey];
+                        return (
+                            <div style={{ width: 100 }}>
+                                <Progress 
+                                    percent={progress?.progress || 0} 
+                                    size="small" 
+                                    status="active"
+                                />
+                                {progress?.msg && (
+                                    <div style={{ fontSize: '12px', color: '#666', marginTop: '4px' }}>
+                                        {progress.msg.length > 20 ? progress.msg.substring(0, 20) + '...' : progress.msg}
+                                    </div>
+                                )}
+                            </div>
+                        );
+                    }
                     return (
                         <Button
                             size="small"
@@ -129,7 +179,7 @@ const FileStatusTable: React.FC<FileStatusTableProps> = ({
             {
                 title: "Embedding",
                 key: "embedding",
-                width: 120,
+                width: 150,
                 render: (_: any, row: any) => {
                     if (row.embedding.status === "done")
                         return (
@@ -140,8 +190,24 @@ const FileStatusTable: React.FC<FileStatusTableProps> = ({
                                 预览
                             </Button>
                         );
-                    if (processing[row.filename + ":embedding"])
-                        return <Spin size="small" />;
+                    if (processing[row.filename + ":embedding"]) {
+                        const progressKey = row.filename + ":embedding";
+                        const progress = progressInfo[progressKey];
+                        return (
+                            <div style={{ width: 100 }}>
+                                <Progress 
+                                    percent={progress?.progress || 0} 
+                                    size="small" 
+                                    status="active"
+                                />
+                                {progress?.msg && (
+                                    <div style={{ fontSize: '12px', color: '#666', marginTop: '4px' }}>
+                                        {progress.msg.length > 20 ? progress.msg.substring(0, 20) + '...' : progress.msg}
+                                    </div>
+                                )}
+                            </div>
+                        );
+                    }
                     return (
                         <Button
                             size="small"

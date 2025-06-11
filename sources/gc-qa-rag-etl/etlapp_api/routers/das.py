@@ -49,6 +49,12 @@ def das_start_execution(product: str = Form(...), filename: str = Form(...)):
     threading.Thread(target=run_etl_task, daemon=True).start()
     return {"task_id": task_id}
 
+@das_router.get("/das_progress")
+def das_get_progress(task_id: str):
+    if task_id not in das_progress_status:
+        return JSONResponse(status_code=404, content={"error": "Task not found"})
+    return das_progress_status[task_id]
+
 @das_router.get("/das_result_content")
 def das_get_result_content(product: str, filename: str):
     output_dir = os.path.join(
