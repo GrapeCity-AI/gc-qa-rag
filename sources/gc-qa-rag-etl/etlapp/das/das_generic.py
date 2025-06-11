@@ -3,13 +3,19 @@ import json
 import argparse
 import logging
 from typing import List, Tuple, Optional, Dict, Any
-from markitdown import MarkItDown
 from etlapp.common.file import ensure_folder_exists, write_text_to_file
 from etlapp.common.hash import get_hash_str
 from etlapp.common.config import app_config
 
 logger = logging.getLogger(__name__)
 
+def get_markitdown_inst():
+    try:
+        from markitdown import MarkItDown
+        return MarkItDown()
+    except ImportError as e:
+        logger.error(f"Failed to import MarkItDown: {e}")
+        raise
 
 def collect_files(input_dir: str) -> List[Tuple[str, str]]:
     """
@@ -26,7 +32,7 @@ def collect_files(input_dir: str) -> List[Tuple[str, str]]:
 
 
 def convert_file_to_json(
-    product: str, file_path: str, rel_path: str, markitdown_inst: MarkItDown
+    product: str, file_path: str, rel_path: str, markitdown_inst
 ) -> Tuple[Dict[str, Any], str]:
     """
     Use MarkItDown to convert the file and generate a JSON object.
@@ -45,11 +51,10 @@ def convert_file_to_json(
         "content": content,
     }, content
 
-
 def process_files(
     product: str,
     files: List[Tuple[str, str]],
-    markitdown_inst: MarkItDown,
+    markitdown_inst,
     output_dir: str,
 ) -> None:
     """
@@ -70,12 +75,32 @@ def process_files(
         except Exception as e:
             logger.error(f"Failed to write {output_file}: {e}")
 
+def das_generic_single_file(product: str, filename: str): 
+    input_dir = os.path.join(app_config.root_path, f"das/.temp/generic_input/{product}")
+    output_dir = os.path.join(app_config.root_path, f"das/.temp/generic_output/{product}")
+    
+    ensure_folder_exists(input_dir)
+    ensure_folder_exists(output_dir)
+    
+    # Check if the specific file exists
+    file_path = os.path.join(input_dir, filename)
+    if not os.path.exists(file_path):
+        raise FileNotFoundError(f"File {filename} not found in {input_dir}")
+    
+    # Process only the specific file
+    rel_path = filename  # Since it's directly in the input_dir
+    files = [(file_path, rel_path)]
+    
+    logger.info(f"MarkItDown instance is getting")
+    markitdown_inst = get_markitdown_inst()
+    logger.info(f"MarkItDown instance created")
+    
+    process_files(product, files, markitdown_inst, output_dir)
 
 def das_generic_main(
     product: str,
     input_dir: Optional[str] = None,
     output_dir: Optional[str] = None,
-    markitdown_inst: Optional[MarkItDown] = None,
 ) -> None:
     """
     Main entry for generic DAS processing.
@@ -92,8 +117,9 @@ def das_generic_main(
     ensure_folder_exists(input_dir)
     ensure_folder_exists(output_dir)
 
-    if markitdown_inst is None:
-        markitdown_inst = MarkItDown()
+    logger.info(f"MarkItDown instance is getting")
+    markitdown_inst = get_markitdown_inst()
+    logger.info(f"MarkItDown instance created")
 
     files = collect_files(input_dir)
     logger.info(f"Found {len(files)} files in {input_dir}")

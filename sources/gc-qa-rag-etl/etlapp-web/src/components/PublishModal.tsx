@@ -1,5 +1,6 @@
-import React from "react";
+import React, { useState, useEffect } from "react";
 import { Modal, Space, Typography, Input } from "antd";
+import { fetchConfig } from "../api/ApiService";
 
 const { Text } = Typography;
 
@@ -21,24 +22,48 @@ const PublishModal: React.FC<PublishModalProps> = ({
     onCancel,
     onOk,
     confirmLoading,
-}) => (
-    <Modal
-        open={open}
-        title="发布到向量数据库"
-        onCancel={onCancel}
-        onOk={onOk}
-        confirmLoading={confirmLoading}
-    >
-        <Space direction="vertical" style={{ width: "100%" }}>
-            <Text>当前产品: {product}</Text>
-            <Text type="secondary">请输入发布标签(tag)，用于版本管理</Text>
-            <Input
-                placeholder="输入标签，如: 230501"
-                value={publishTag}
-                onChange={(e) => setPublishTag(e.target.value)}
-            />
-        </Space>
-    </Modal>
-);
+}) => {
+    const [vectorDbHost, setVectorDbHost] = useState<string>("");
+    const [configLoading, setConfigLoading] = useState<boolean>(false);
+
+    useEffect(() => {
+        if (open) {
+            loadConfig();
+        }
+    }, [open]);
+
+    const loadConfig = async () => {
+        setConfigLoading(true);
+        try {
+            const config = await fetchConfig();
+            setVectorDbHost(config.vector_db?.host || "");
+        } catch (error) {
+            console.error("获取配置失败:", error);
+        } finally {
+            setConfigLoading(false);
+        }
+    };
+
+    return (
+        <Modal
+            open={open}
+            title="发布到向量数据库"
+            onCancel={onCancel}
+            onOk={onOk}
+            confirmLoading={confirmLoading}
+        >
+            <Space direction="vertical" style={{ width: "100%" }}>
+                <Text>当前产品: {product}</Text>
+                <Text>发布目标: {configLoading ? "加载中..." : vectorDbHost || "未配置"}</Text>
+                <Text type="secondary">请输入发布标签(tag)，用于版本管理</Text>
+                <Input
+                    placeholder="输入标签，如: 230501"
+                    value={publishTag}
+                    onChange={(e) => setPublishTag(e.target.value)}
+                />
+            </Space>
+        </Modal>
+    );
+};
 
 export default PublishModal;
