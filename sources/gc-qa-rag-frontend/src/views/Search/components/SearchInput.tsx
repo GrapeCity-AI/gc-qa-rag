@@ -1,13 +1,11 @@
-import { Flex, Input, Segmented, Space, Button, Dropdown } from "antd";
+import { Flex, Input, Segmented, Space, Button, Dropdown, Spin } from "antd";
 import { isMobile } from "react-device-detect";
 import { SearchInputProps } from "../types";
 import {
     SearchMode,
     SearchModeNameKey,
-    ProductNameKey,
-    ProductType,
 } from "../../../types/Base";
-import { RobotOutlined, RocketOutlined } from "@ant-design/icons";
+import { RobotOutlined, RocketOutlined, SettingOutlined } from "@ant-design/icons";
 import GradientButton from "../../../components/GradientButton";
 import { useTranslation } from "react-i18next";
 
@@ -17,7 +15,11 @@ const searchModeIcons = {
 };
 
 const SearchInput = ({
-    productType,
+    products,
+    productsLoading,
+    mode,
+    selectedProduct,
+    switchMode,
     searchMode,
     inputValue,
     onProductChange,
@@ -28,14 +30,25 @@ const SearchInput = ({
     const { t } = useTranslation();
     return (
         <Space direction="vertical" style={{ width: "100%" }}>
-            <Flex>
-                <Segmented
-                    value={productType}
-                    options={Object.keys(ProductNameKey).map((key: string) => ({
-                        label: t(ProductNameKey[key as ProductType]),
-                        value: key as ProductType,
-                    }))}
-                    onChange={onProductChange}
+            <Flex align="center" gap={8}>
+                {productsLoading ? (
+                    <Spin size="small" />
+                ) : (
+                    <Segmented
+                        value={selectedProduct}
+                        options={products.map((product) => ({
+                            label: t(product.display_name, { defaultValue: product.name }),
+                            value: product.id,
+                        }))}
+                        onChange={onProductChange}
+                    />
+                )}
+                <Button 
+                    icon={<SettingOutlined />} 
+                    onClick={() => switchMode(mode === 'fixed' ? 'generic' : 'fixed')}
+                    title={`Switch to ${mode === 'fixed' ? 'Generic' : 'Fixed'} Mode`}
+                    type={mode === 'generic' ? 'primary' : 'default'}
+                    size="small"
                 />
             </Flex>
 

@@ -29,6 +29,7 @@ import SearchInput from "./components/SearchInput";
 import AnswerSection from "./components/AnswerSection";
 import SearchResults from "./components/SearchResults";
 import { useTranslation } from "react-i18next";
+import { useProducts } from "../../hooks/useProducts";
 
 interface RetrivalItem {
     key: number;
@@ -78,9 +79,8 @@ const searchModeIcons = {
 
 const SearchPage = () => {
     const { t } = useTranslation();
+    const { products, loading: productsLoading, mode, selectedProduct, switchMode, selectProduct } = useProducts();
     const {
-        productType,
-        setProductType,
         searchMode,
         setSearchMode,
         inputValue,
@@ -121,7 +121,7 @@ const SearchPage = () => {
         },
     });
 
-    const loadSearchResult = async (item: RetrivalItem) => {
+            const loadSearchResult = async (item: RetrivalItem) => {
         if (item.query === "") {
             item.search.loading = false;
             item.search.results = [];
@@ -131,7 +131,7 @@ const SearchPage = () => {
             const res = await getSearchResult(
                 item.query,
                 searchMode,
-                productType,
+                selectedProduct,
                 retrivalsUUID.current,
                 retrivals.length - 1
             );
@@ -173,7 +173,7 @@ const SearchPage = () => {
             getChatResult(
                 newQuery,
                 messages,
-                productType,
+                selectedProduct,
                 (e, end) => {
                     newItem.answer.loading = false;
                     refreshUI();
@@ -241,7 +241,7 @@ const SearchPage = () => {
             getThinkResult(
                 newQuery,
                 messages,
-                productType,
+                selectedProduct,
                 (e, end) => {
                     const newRValue = "";
                     const newCValue = e;
@@ -349,28 +349,31 @@ const SearchPage = () => {
     };
 
     const handleGoHome = () => {
-        const productArgStr = `product=${encodeURIComponent(productType)}`;
+        const productArgStr = `product=${encodeURIComponent(selectedProduct)}`;
         const searchModeArgStr = `searchmode=${encodeURIComponent(
             searchMode ?? SearchMode.Chat
         )}`;
+        const productModeArgStr = `productmode=${encodeURIComponent(mode)}`;
         window.document.title = t(TextResourcesKey.Common.WebsiteName);
 
         raise_gtag_event("search.gohome");
 
-        navigate(`/home?${productArgStr}&${searchModeArgStr}`);
+        navigate(`/home?${productArgStr}&${searchModeArgStr}&${productModeArgStr}`);
     };
 
     const handleSearch = () => {
         const queryArgStr = `query=${encodeURIComponent(inputValue)}`;
-        const productArgStr = `product=${encodeURIComponent(productType)}`;
+        const productArgStr = `product=${encodeURIComponent(selectedProduct)}`;
         const searchModeArgStr = `searchmode=${encodeURIComponent(
             searchMode ?? SearchMode.Chat
         )}`;
+        const productModeArgStr = `productmode=${encodeURIComponent(mode)}`;
 
         raise_gtag_event("search.enter", {
             query: inputValue,
-            product: productType,
+            product: selectedProduct,
             searchmode: searchMode,
+            productmode: mode,
         });
 
         controller?.abort();
@@ -379,7 +382,7 @@ const SearchPage = () => {
         setRetrivals([]);
         appendMessageMap.current.clear();
 
-        navigate(`/search?${queryArgStr}&${productArgStr}&${searchModeArgStr}`);
+        navigate(`/search?${queryArgStr}&${productArgStr}&${searchModeArgStr}&${productModeArgStr}`);
         initialize();
     };
 
@@ -388,8 +391,7 @@ const SearchPage = () => {
     };
 
     const handleProductChange = (value: string) => {
-        setProductType(value as ProductType);
-        localStorage.setItem("gcai-product", value);
+        selectProduct(value);
 
         controller?.abort();
         retrivalsUUID.current = uuidv4();
@@ -433,7 +435,7 @@ const SearchPage = () => {
             retrivalItem.answer.content,
             1,
             "",
-            productType
+            selectedProduct
         );
 
         raise_gtag_event("search.answer.like");
@@ -453,7 +455,7 @@ const SearchPage = () => {
             retrivalItem.answer.content,
             0,
             "",
-            productType
+            selectedProduct
         );
 
         raise_gtag_event("search.answer.dislike");
@@ -488,7 +490,11 @@ const SearchPage = () => {
                     vertical
                 >
                     <SearchInput
-                        productType={productType}
+                        products={products}
+                        productsLoading={productsLoading}
+                        mode={mode}
+                        selectedProduct={selectedProduct}
+                        switchMode={switchMode}
                         searchMode={searchMode}
                         inputValue={inputValue}
                         onProductChange={handleProductChange}

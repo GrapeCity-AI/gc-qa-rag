@@ -17,6 +17,20 @@ export const ProductNameKey = {
     [ProductType.GcExcel]: 'ProductName.GcExcel',
 }
 
+// 产品数据接口
+export interface ProductInfo {
+    id: string;
+    name: string;
+    display_name: string;
+    type: 'fixed' | 'generic';
+}
+
+// 产品列表响应接口
+export interface ProductsResponse {
+    mode: 'fixed' | 'generic';
+    products: ProductInfo[];
+}
+
 export const SearchModeNameKey = {
     [SearchMode.Chat]: 'SearchModeName.chat',
     [SearchMode.Think]: 'SearchModeName.think',

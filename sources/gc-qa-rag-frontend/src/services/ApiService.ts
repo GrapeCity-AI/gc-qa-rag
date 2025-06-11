@@ -190,3 +190,14 @@ export const getFeedbackResult = async (
     body: JSON.stringify(requestBody),
   }).then((res) => res.json());
 };
+
+export const getProductsResult = async (mode: string = "fixed") => {
+  const url = `${URL_ROOT}/products/?mode=${encodeURIComponent(mode)}`;
+
+  return fetch(url, {
+    method: "GET",
+    headers: {
+      "Content-Type": "application/json",
+    },
+  }).then((res) => res.json());
+};
