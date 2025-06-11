@@ -115,8 +115,8 @@ const GenericETL: React.FC = () => {
         etlType: "embedding" | "qa" | "full"
     ) => {
         setProcessing((p) => ({ ...p, [row.filename + ":" + etlType]: true }));
-        await etlStart(product, etlType, row.filename);
-        setProcessing((p) => ({ ...p, [row.filename + ":" + etlType]: false }));
+        await etlStart(product, etlType, row.das.resultFile);
+        setProcessing((p) => ({ ...p, [row.das.resultFile + ":" + etlType]: false }));
         setTimeout(() => fetchFilesStatus(product).then(setEtlFileRows), 1000);
     };
 

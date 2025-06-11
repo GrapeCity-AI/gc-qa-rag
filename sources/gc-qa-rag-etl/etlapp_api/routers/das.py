@@ -7,34 +7,11 @@ import time
 import json
 from etlapp.common.file import ensure_folder_exists
 from etlapp.common.config import app_config
-from etlapp.das.das_generic import das_generic_main
+from etlapp.das.das_generic import das_generic_single_file
 
 das_router = APIRouter(prefix="/api")
 
 das_progress_status = {}
-
-def das_generic_single_file(product: str, filename: str):
-    """Process a single file with DAS for the given product."""
-    from etlapp.das.das_generic import collect_files, process_files
-    from markitdown import MarkItDown
-    
-    input_dir = os.path.join(app_config.root_path, f"das/.temp/generic_input/{product}")
-    output_dir = os.path.join(app_config.root_path, f"das/.temp/generic_output/{product}")
-    
-    ensure_folder_exists(input_dir)
-    ensure_folder_exists(output_dir)
-    
-    # Check if the specific file exists
-    file_path = os.path.join(input_dir, filename)
-    if not os.path.exists(file_path):
-        raise FileNotFoundError(f"File {filename} not found in {input_dir}")
-    
-    # Process only the specific file
-    rel_path = filename  # Since it's directly in the input_dir
-    files = [(file_path, rel_path)]
-    
-    markitdown_inst = MarkItDown()
-    process_files(product, files, markitdown_inst, output_dir)
 
 @das_router.post("/das_upload")
 async def das_upload_file(product: str = Form(...), file: UploadFile = File(...)):

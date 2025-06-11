@@ -6,6 +6,7 @@ from etlapp.common.config import app_config
 
 file_status_router = APIRouter(prefix="/api")
 
+
 @file_status_router.get("/files_status")
 def files_status(product: str):
     input_dir = os.path.join(app_config.root_path, f"das/.temp/generic_input/{product}")
@@ -47,11 +48,26 @@ def files_status(product: str):
         etl_status = {}
         etl_result_files = {}
         for etl_type, etl_dir in etl_dirs.items():
-            etl_result_pattern = das_result_prefix + "_*.json"
+            if etl_type == "full":
+                etl_result_pattern = (
+                    das_result_prefix + "_*/" + das_result_prefix + "_*.md"
+                )
+            else:
+                etl_result_pattern = das_result_prefix + "_*.json"
+
             etl_result_files_list = glob.glob(os.path.join(etl_dir, etl_result_pattern))
             if etl_result_files_list:
                 etl_status[etl_type] = "done"
-                etl_result_files[etl_type] = os.path.basename(etl_result_files_list[0])
+                if etl_type == "full":
+                    etl_result_files[etl_type] = (
+                        os.path.basename(os.path.dirname(etl_result_files_list[0]))
+                        + "/"
+                        + os.path.basename(etl_result_files_list[0])
+                    )
+                else:
+                    etl_result_files[etl_type] = os.path.basename(
+                        etl_result_files_list[0]
+                    )
             else:
                 etl_status[etl_type] = "not_started"
                 etl_result_files[etl_type] = None
@@ -77,4 +93,4 @@ def files_status(product: str):
                 },
             }
         )
-    return {"files": result} 
+    return {"files": result}

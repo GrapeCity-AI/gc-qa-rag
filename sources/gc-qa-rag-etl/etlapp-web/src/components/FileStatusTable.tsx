@@ -116,7 +116,10 @@ const FileStatusTable: React.FC<FileStatusTableProps> = ({
                             size="small"
                             type="primary"
                             onClick={() => handleEtlProcess(row, "full")}
-                            disabled={row.das.status !== "done"}
+                            disabled={
+                                row.das.status !== "done" ||
+                                row.qa.status !== "done"
+                            }
                         >
                             处理
                         </Button>
@@ -144,7 +147,10 @@ const FileStatusTable: React.FC<FileStatusTableProps> = ({
                             size="small"
                             type="primary"
                             onClick={() => handleEtlProcess(row, "embedding")}
-                            disabled
+                            disabled={
+                                row.das.status !== "done" ||
+                                row.qa.status !== "done"
+                            }
                         >
                             处理
                         </Button>
