@@ -22,6 +22,8 @@ import {
     fetchEtlResultContent,
     publish,
     fetchServerLog,
+    updateAliases,
+    fetchPublishProgress,
 } from "./api/ApiService";
 
 const GenericETL: React.FC = () => {
@@ -38,6 +40,7 @@ const GenericETL: React.FC = () => {
     const [publishModal, setPublishModal] = useState(false);
     const [publishTag, setPublishTag] = useState("");
     const [publishing, setPublishing] = useState(false);
+    const [updatingAliases, setUpdatingAliases] = useState(false);
 
     // New table data
     const [etlFileRows, setEtlFileRows] = useState<any[]>([]);
@@ -291,14 +294,91 @@ const GenericETL: React.FC = () => {
         }
         setPublishing(true);
         try {
-            await publish(product, publishTag);
+            const response = await publish(product, publishTag);
+            const taskId = response.task_id;
             message.success("发布任务已启动");
-            setPublishModal(false);
-            setPublishTag("");
-        } catch (e) {
-            message.error("发布失败");
-        } finally {
+            
+            // 轮询查询进度
+            const pollProgress = async () => {
+                try {
+                    const progress = await fetchPublishProgress(taskId);
+                    console.log(`发布进度: ${progress.status} (${progress.progress}%) - ${progress.msg}`);
+                    
+                    if (progress.status === "done" || progress.status === "error") {
+                        setPublishing(false);
+                        if (progress.status === "error") {
+                            message.error(`发布失败: ${progress.msg}`);
+                        } else {
+                            message.success("发布完成");
+                        }
+                        setPublishModal(false);
+                        setPublishTag("");
+                        return;
+                    }
+                    
+                    // 继续轮询
+                    setTimeout(pollProgress, 2000);
+                } catch (error) {
+                    console.error("获取发布进度失败:", error);
+                    setPublishing(false);
+                    message.error("获取发布进度失败");
+                }
+            };
+            
+            // 开始轮询
+            setTimeout(pollProgress, 1000);
+            
+        } catch (e: any) {
+            message.error(e.message || "发布失败");
             setPublishing(false);
+        }
+    };
+
+    // Update aliases
+    const handleUpdateAliases = async () => {
+        if (!publishTag) {
+            message.error("请输入发布标签");
+            return;
+        }
+        setUpdatingAliases(true);
+        try {
+            const response = await updateAliases(product, publishTag);
+            const taskId = response.task_id;
+            message.success("更新别名任务已启动");
+            
+            // 轮询查询进度
+            const pollProgress = async () => {
+                try {
+                    const progress = await fetchPublishProgress(taskId);
+                    console.log(`更新别名进度: ${progress.status} (${progress.progress}%) - ${progress.msg}`);
+                    
+                    if (progress.status === "done" || progress.status === "error") {
+                        setUpdatingAliases(false);
+                        if (progress.status === "error") {
+                            message.error(`更新别名失败: ${progress.msg}`);
+                        } else {
+                            message.success("别名更新完成");
+                        }
+                        setPublishModal(false);
+                        setPublishTag("");
+                        return;
+                    }
+                    
+                    // 继续轮询
+                    setTimeout(pollProgress, 2000);
+                } catch (error) {
+                    console.error("获取更新别名进度失败:", error);
+                    setUpdatingAliases(false);
+                    message.error("获取更新别名进度失败");
+                }
+            };
+            
+            // 开始轮询
+            setTimeout(pollProgress, 1000);
+            
+        } catch (e: any) {
+            message.error(e.message || "更新别名失败");
+            setUpdatingAliases(false);
         }
     };
 
@@ -366,7 +446,9 @@ const GenericETL: React.FC = () => {
                 setPublishTag={setPublishTag}
                 onCancel={() => setPublishModal(false)}
                 onOk={handlePublish}
+                onUpdateAliases={handleUpdateAliases}
                 confirmLoading={publishing}
+                updateAliasesLoading={updatingAliases}
             />
             <PreviewModal
                 open={previewModal}
