@@ -14,6 +14,7 @@ from ragapp.services.query import chat_for_query
 from ragapp.services.summary import summary_hits
 from ragapp.services.think import summary_hits_think
 from ragapp.services.research import research_hits
+from ragapp.services.product import get_available_products
 from ragapp.common.limiter import rate_limiter
 from ragapp.common.llm import get_llm_sse_result, get_llm_full_result
 
@@ -230,3 +231,9 @@ def feedback(item: FeedbackModel, background_tasks: BackgroundTasks):
 
 async def getLimitText():
     return "当前达到最大对话轮次，请重新开始一个对话。"
+
+
+@app.get("/products/")
+def get_products(mode: str = "fixed"):
+    """获取可用的产品列表"""
+    return get_available_products(mode)
