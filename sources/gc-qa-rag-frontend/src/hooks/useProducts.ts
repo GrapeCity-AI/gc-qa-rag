@@ -8,7 +8,6 @@ export const useProducts = () => {
     const [loading, setLoading] = useState(true);
     const [mode, setMode] = useState<'fixed' | 'generic'>('fixed');
 
-    // 获取URL参数或localStorage中的产品模式
     const getInitialMode = (): 'fixed' | 'generic' => {
         const urlMode = getUrlSearchArg("productmode");
         const storedMode = localStorage.getItem("gcai-product-mode");
@@ -19,7 +18,6 @@ export const useProducts = () => {
         return "fixed";
     };
 
-    // 获取初始选中的产品
     const getInitialProduct = (productList: ProductInfo[]): string => {
         const urlProduct = getUrlSearchArg("product");
         const storedProduct = localStorage.getItem("gcai-product");
@@ -32,7 +30,6 @@ export const useProducts = () => {
             return storedProduct;
         }
 
-        // 默认返回第一个产品
         return productList.length > 0 ? productList[0].id : urlProduct || storedProduct || ProductType.Forguncy;
     };
 
@@ -45,13 +42,11 @@ export const useProducts = () => {
             setProducts(response.products);
             setMode(response.mode);
 
-            // 设置初始选中的产品
             const initialProduct = getInitialProduct(response.products);
             setSelectedProduct(initialProduct);
 
         } catch (error) {
             console.error("Failed to load products:", error);
-            // 出错时使用固定产品列表
             const fallbackProducts: ProductInfo[] = [
                 { id: ProductType.Forguncy, name: "Forguncy", display_name: "ProductName.Forguncy", type: "fixed" },
                 { id: ProductType.Wyn, name: "Wyn", display_name: "ProductName.Wyn", type: "fixed" },

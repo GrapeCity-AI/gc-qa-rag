@@ -15,6 +15,22 @@
 -   **Open-Source Practice Support**  
     Provides comprehensive technical tutorials and open-source code to help developers quickly build high-quality enterprise AI knowledge base systems that are easy to implement.
 
+## Quick Start
+
+The GC-QA-RAG project adopts a modular architecture, including three core modules: ETL (knowledge base construction), Server (retrieval Q&A - backend services), and Frontend (retrieval Q&A - main frontend interface). Each module can be independently developed, tested, and deployed, supporting both local and Docker containerized operation.
+
+- It is recommended to first read the [Quick Start](./quickstart_ENGLISH.md) document for detailed environment preparation, dependency installation, and module startup instructions.
+- The typical startup process is as follows:
+
+1. Install Dependencies
+   - Python 3.13, Node.js 16+, PDM, pnpm, MySQL, Qdrant
+2. Module Compilation and Running
+   - ETL Main Program: `cd sources/gc-qa-rag-etl && pdm install && pdm run dev`
+   - ETL Frontend: `cd sources/gc-qa-rag-etl/etlapp-web && pnpm install && pnpm run dev`
+   - Server: `cd sources/gc-qa-rag-server && pdm install && pdm run dev`
+   - Frontend: `cd sources/gc-qa-rag-frontend && pnpm install && pnpm run dev`
+3. Docker deployment is recommended for production environments
+
 ## Overview
 
 GC-QA-RAG is a Retrieval-Augmented Generation (RAG) system designed for GrapeCity's product ecosystem (including products like Huozige, WYN, SpreadJS, and GCExcel). The system enhances knowledge management efficiency and user support experience through intelligent document processing, efficient knowledge retrieval, and precise Q&A capabilities.
