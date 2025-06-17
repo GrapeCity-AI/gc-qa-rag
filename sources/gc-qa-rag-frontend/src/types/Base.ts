@@ -17,6 +17,18 @@ export const ProductNameKey = {
     [ProductType.GcExcel]: 'ProductName.GcExcel',
 }
 
+export interface ProductInfo {
+    id: string;
+    name: string;
+    display_name: string;
+    type: 'fixed' | 'generic';
+}
+
+export interface ProductsResponse {
+    mode: 'fixed' | 'generic';
+    products: ProductInfo[];
+}
+
 export const SearchModeNameKey = {
     [SearchMode.Chat]: 'SearchModeName.chat',
     [SearchMode.Think]: 'SearchModeName.think',

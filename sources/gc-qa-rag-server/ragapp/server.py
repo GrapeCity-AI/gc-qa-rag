@@ -5,6 +5,8 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi import BackgroundTasks
 from qdrant_client import QdrantClient
 import logging
+import time
+from typing import Dict, Any, Optional
 
 from ragapp.common.config import app_config
 from ragapp.common.db import db
@@ -14,11 +16,18 @@ from ragapp.services.query import chat_for_query
 from ragapp.services.summary import summary_hits
 from ragapp.services.think import summary_hits_think
 from ragapp.services.research import research_hits
+from ragapp.services.product import get_available_products
 from ragapp.common.limiter import rate_limiter
 from ragapp.common.llm import get_llm_sse_result, get_llm_full_result
 
 # Initialize logger
 logger = logging.getLogger(__name__)
+
+# Product cache configuration
+PRODUCTS_CACHE_TTL = 10  # Cache for 10 seconds
+_products_cache: Dict[
+    str, Dict[str, Any]
+] = {}  # {mode: {data: result, timestamp: time}}
 
 
 class SearchModel(BaseModel):
@@ -229,4 +238,78 @@ def feedback(item: FeedbackModel, background_tasks: BackgroundTasks):
 
 
 async def getLimitText():
-    return "当前达到最大对话轮次，请重新开始一个对话。"
+    return "Maximum conversation rounds reached, please start a new conversation."
+
+
+def _get_cached_products(mode: str) -> Optional[Dict]:
+    """Get cached product list"""
+    if mode in _products_cache:
+        cache_entry = _products_cache[mode]
+        current_time = time.time()
+
+        # Check if cache is expired
+        if current_time - cache_entry["timestamp"] < PRODUCTS_CACHE_TTL:
+            logger.info(f"Returning valid cached product list, mode: {mode}")
+            return cache_entry["data"]
+        else:
+            # Cache expired, but still return cached data and mark for update
+            logger.info(f"Returning expired cached product list, mode: {mode}")
+            return cache_entry["data"]
+
+    return None
+
+
+def _is_cache_expired(mode: str) -> bool:
+    """Check if cache is expired"""
+    if mode in _products_cache:
+        cache_entry = _products_cache[mode]
+        current_time = time.time()
+        return current_time - cache_entry["timestamp"] >= PRODUCTS_CACHE_TTL
+    return True
+
+
+def _set_cached_products(mode: str, data: Dict) -> None:
+    """Set product list cache"""
+    _products_cache[mode] = {"data": data, "timestamp": time.time()}
+    logger.info(f"Updated product cache, mode: {mode}")
+
+
+def _update_products_cache_background(mode: str) -> None:
+    """Background task: update product cache"""
+    try:
+        logger.info(f"Background product cache update started, mode: {mode}")
+        result = get_available_products(mode)
+        _set_cached_products(mode, result)
+        logger.info(f"Background product cache update completed, mode: {mode}")
+    except Exception as e:
+        logger.error(
+            f"Background product cache update failed, mode: {mode}, error: {e}"
+        )
+
+
+@app.get("/products/")
+def get_products(mode: str = "fixed", background_tasks: BackgroundTasks = None):
+    """Get available product list (with cache and background update)"""
+    # First try to get from cache
+    cached_result = _get_cached_products(mode)
+
+    if cached_result is not None:
+        # Have cached data, check if expired
+        if _is_cache_expired(mode):
+            # Cache expired, start background task to update
+            if background_tasks:
+                background_tasks.add_task(_update_products_cache_background, mode)
+                logger.info(
+                    f"Started background task to update expired cache, mode: {mode}"
+                )
+
+        return cached_result
+
+    # No cache at all, synchronously get data
+    logger.info(f"First time getting product list, mode: {mode}")
+    result = get_available_products(mode)
+
+    # Update cache
+    _set_cached_products(mode, result)
+
+    return result

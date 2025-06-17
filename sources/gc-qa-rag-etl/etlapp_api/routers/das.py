@@ -7,7 +7,7 @@ import time
 import json
 from etlapp.common.file import ensure_folder_exists
 from etlapp.common.config import app_config
-from etlapp.das.das_generic import das_generic_main
+from etlapp.das.das_generic import das_generic_single_file
 
 das_router = APIRouter(prefix="/api")
 
@@ -31,23 +31,29 @@ def das_list_files(product: str):
     return {"files": files}
 
 @das_router.post("/das_start")
-def das_start_execution(product: str = Form(...)):
-    task_id = f"{product}_{int(time.time())}"
+def das_start_execution(product: str = Form(...), filename: str = Form(...)):
+    task_id = f"{product}_{filename}_{int(time.time())}"
     das_progress_status[task_id] = {"status": "running", "progress": 0, "msg": ""}
 
     def run_etl_task():
         try:
-            das_progress_status[task_id]["msg"] = "ETL started"
-            das_generic_main(product)
+            das_progress_status[task_id]["msg"] = f"DAS started for {filename}"
+            das_generic_single_file(product, filename)
             das_progress_status[task_id]["status"] = "done"
             das_progress_status[task_id]["progress"] = 100
-            das_progress_status[task_id]["msg"] = "ETL finished"
+            das_progress_status[task_id]["msg"] = f"DAS finished for {filename}"
         except Exception as e:
             das_progress_status[task_id]["status"] = "error"
             das_progress_status[task_id]["msg"] = str(e)
 
     threading.Thread(target=run_etl_task, daemon=True).start()
     return {"task_id": task_id}
+
+@das_router.get("/das_progress")
+def das_get_progress(task_id: str):
+    if task_id not in das_progress_status:
+        return JSONResponse(status_code=404, content={"error": "Task not found"})
+    return das_progress_status[task_id]
 
 @das_router.get("/das_result_content")
 def das_get_result_content(product: str, filename: str):

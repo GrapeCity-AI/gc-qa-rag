@@ -48,9 +48,10 @@ export const uploadFile = async (product: string, file: File) => {
     return await res.json();
 };
 
-export const dasStart = async (product: string) => {
+export const dasStart = async (product: string, filename: string) => {
     const form = new FormData();
     form.append("product", product);
+    form.append("filename", filename);
     const res = await fetch(`${API_BASE}/das_start`, {
         method: "POST",
         body: form,
@@ -59,10 +60,23 @@ export const dasStart = async (product: string) => {
     return await res.json();
 };
 
-export const etlStart = async (product: string, etlType: "embedding" | "qa" | "full") => {
+export const fetchDasProgress = async (taskId: string) => {
+    const res = await fetch(`${API_BASE}/das_progress?task_id=${taskId}`);
+    if (!res.ok) throw new Error("获取进度失败");
+    return await res.json();
+};
+
+export const fetchEtlProgress = async (taskId: string) => {
+    const res = await fetch(`${API_BASE}/etl_progress?task_id=${taskId}`);
+    if (!res.ok) throw new Error("获取进度失败");
+    return await res.json();
+};
+
+export const etlStart = async (product: string, etlType: "embedding" | "qa" | "full", filename: string) => {
     const form = new FormData();
     form.append("product", product);
     form.append("etl_type", etlType);
+    form.append("filename", filename);
     const res = await fetch(`${API_BASE}/etl_start`, {
         method: "POST",
         body: form,
@@ -98,5 +112,23 @@ export const publish = async (product: string, tag: string) => {
 export const fetchServerLog = async (lines: number = 100) => {
     const res = await fetch(`${API_BASE}/server_log?lines=${lines}`);
     if (!res.ok) throw new Error("日志获取失败");
+    return await res.json();
+};
+
+export const updateAliases = async (product: string, tag: string) => {
+    const form = new FormData();
+    form.append("product", product);
+    form.append("tag", tag);
+    const res = await fetch(`${API_BASE}/update_aliases`, {
+        method: "POST",
+        body: form,
+    });
+    if (!res.ok) throw new Error("更新别名失败");
+    return await res.json();
+};
+
+export const fetchPublishProgress = async (taskId: string) => {
+    const res = await fetch(`${API_BASE}/publish_progress?task_id=${taskId}`);
+    if (!res.ok) throw new Error("获取进度失败");
     return await res.json();
 }; 

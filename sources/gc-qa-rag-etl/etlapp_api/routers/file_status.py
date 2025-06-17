@@ -6,6 +6,28 @@ from etlapp.common.config import app_config
 
 file_status_router = APIRouter(prefix="/api")
 
+
+def get_running_task_status(filename: str, task_type: str, product: str):
+    """Check if there is a running task and return its status"""
+
+    from etlapp_api.routers.das import das_progress_status
+    from etlapp_api.routers.etl import etl_progress_status
+    
+    if task_type == "das":
+        task_prefix = f"{product}_{filename}_"
+        for task_id, status in das_progress_status.items():
+            if task_id.startswith(task_prefix) and status["status"] == "running":
+                return "running"
+    
+    elif task_type in ["embedding", "qa", "full"]:
+        task_prefix = f"etl_{product}_{task_type}_{filename}_"
+        for task_id, status in etl_progress_status.items():
+            if task_id.startswith(task_prefix) and status["status"] == "running":
+                return "running"
+    
+    return None
+
+
 @file_status_router.get("/files_status")
 def files_status(product: str):
     input_dir = os.path.join(app_config.root_path, f"das/.temp/generic_input/{product}")
@@ -42,18 +64,35 @@ def files_status(product: str):
             das_status = "done"
             das_result_file = os.path.basename(das_result_files[0])
         else:
-            das_status = "not_started"
+            running_status = get_running_task_status(fname, "das", product)
+            das_status = running_status if running_status else "not_started"
             das_result_file = None
         etl_status = {}
         etl_result_files = {}
         for etl_type, etl_dir in etl_dirs.items():
-            etl_result_pattern = das_result_prefix + "_*.json"
+            if etl_type == "full":
+                etl_result_pattern = (
+                    das_result_prefix + "_*/" + das_result_prefix + "_*.md"
+                )
+            else:
+                etl_result_pattern = das_result_prefix + "_*.json"
+
             etl_result_files_list = glob.glob(os.path.join(etl_dir, etl_result_pattern))
             if etl_result_files_list:
                 etl_status[etl_type] = "done"
-                etl_result_files[etl_type] = os.path.basename(etl_result_files_list[0])
+                if etl_type == "full":
+                    etl_result_files[etl_type] = (
+                        os.path.basename(os.path.dirname(etl_result_files_list[0]))
+                        + "/"
+                        + os.path.basename(etl_result_files_list[0])
+                    )
+                else:
+                    etl_result_files[etl_type] = os.path.basename(
+                        etl_result_files_list[0]
+                    )
             else:
-                etl_status[etl_type] = "not_started"
+                running_status = get_running_task_status(fname, etl_type, product)
+                etl_status[etl_type] = running_status if running_status else "not_started"
                 etl_result_files[etl_type] = None
         result.append(
             {
@@ -77,4 +116,4 @@ def files_status(product: str):
                 },
             }
         )
-    return {"files": result} 
+    return {"files": result}

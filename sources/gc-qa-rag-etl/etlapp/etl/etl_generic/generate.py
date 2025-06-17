@@ -108,7 +108,8 @@ def start_generate_generic(context: EtlContext) -> None:
         if not os.path.exists(file_path):
             return
         logger.info(f"generate---{file_index}")
-        content = read_text_from_file(file_path)
+        doc_obj = json.loads(read_text_from_file(file_path))
+        content = doc_obj["content"]
         generator = QAGenerator()
         result = generator.generate(content)
         filename_r = os.path.basename(file_path)

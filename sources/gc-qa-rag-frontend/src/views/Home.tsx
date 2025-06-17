@@ -1,45 +1,18 @@
 import { useState } from "react";
-import { Button, Flex, Segmented, Space, Switch, Typography } from "antd";
+import { Button, Flex, Segmented, Space, Switch, Typography, Spin } from "antd";
 import { isMobile } from "react-device-detect";
-import { ArrowRightOutlined } from "@ant-design/icons";
+import { ArrowRightOutlined, SettingOutlined } from "@ant-design/icons";
 import Title from "antd/es/typography/Title";
 import TextArea from "antd/es/input/TextArea";
 import { useNavigate } from "react-router-dom";
 import {
-    ProductType,
-    ProductNameKey,
     SearchMode,
     TextResourcesKey,
 } from "../types/Base";
 import CustomFooter from "../components/CustomFooter";
 import { getUrlSearchArg, raise_gtag_event } from "../common/utils";
 import { useTranslation } from "react-i18next";
-// Custom hooks
-const useProductType = () => {
-    const initialProductType =
-        getUrlSearchArg("product") ??
-        localStorage.getItem("gcai-product") ??
-        ProductType.Forguncy;
-
-    const [productType, setProductType] = useState<ProductType>(() => {
-        if (
-            initialProductType !== ProductType.Forguncy &&
-            initialProductType !== ProductType.Wyn &&
-            initialProductType !== ProductType.SpreadJS &&
-            initialProductType !== ProductType.GcExcel
-        ) {
-            return ProductType.Forguncy;
-        }
-        return initialProductType as ProductType;
-    });
-
-    const handleProductChange = (value: ProductType) => {
-        setProductType(value);
-        localStorage.setItem("gcai-product", value);
-    };
-
-    return { productType, handleProductChange };
-};
+import { useProducts } from "../hooks/useProducts";
 
 const useSearchMode = () => {
     const initialSearchMode =
@@ -137,7 +110,7 @@ const SearchInput = ({
 };
 
 const HomePage = () => {
-    const { productType, handleProductChange } = useProductType();
+    const { products, loading, mode, selectedProduct, switchMode, selectProduct } = useProducts();
     const { searchMode, handleSearchModeChange } = useSearchMode();
     const [inputValue, setInputValue] = useState("");
     const navigate = useNavigate();
@@ -145,16 +118,18 @@ const HomePage = () => {
 
     const handleSearch = () => {
         const queryArg = `query=${encodeURIComponent(inputValue)}`;
-        const productArg = `product=${encodeURIComponent(productType)}`;
+        const productArg = `product=${encodeURIComponent(selectedProduct)}`;
         const searchModeArg = `searchmode=${encodeURIComponent(searchMode)}`;
+        const productModeArg = `productmode=${encodeURIComponent(mode)}`;
 
         raise_gtag_event("home.enter", {
             query: queryArg,
             product: productArg,
             searchmode: searchModeArg,
+            productmode: productModeArg,
         });
 
-        navigate(`/search?${queryArg}&${productArg}&${searchModeArg}`);
+        navigate(`/search?${queryArg}&${productArg}&${searchModeArg}&${productModeArg}`);
     };
 
     return (
@@ -187,16 +162,27 @@ const HomePage = () => {
                     {t(TextResourcesKey.Common.WebsiteName)}
                 </Title>
                 <Space direction="vertical" style={{ width: "100%" }}>
-                    <Segmented
-                        value={productType}
-                        options={Object.keys(ProductNameKey).map(
-                            (key: string) => ({
-                                label: t(ProductNameKey[key as ProductType]),
-                                value: key as ProductType,
-                            })
+                    <Flex align="center" gap={8}>
+                        {loading ? (
+                            <Spin size="small" />
+                        ) : (
+                            <Segmented
+                                value={selectedProduct}
+                                options={products.map((product) => ({
+                                    label: t(product.display_name, { defaultValue: product.name }),
+                                    value: product.id,
+                                }))}
+                                onChange={(value) => selectProduct(value as string)}
+                            />
                         )}
-                        onChange={(value) => handleProductChange(value)}
-                    />
+                        <Button 
+                            icon={<SettingOutlined />} 
+                            onClick={() => switchMode(mode === 'fixed' ? 'generic' : 'fixed')}
+                            title={`Switch to ${mode === 'fixed' ? 'Generic' : 'Fixed'} Mode`}
+                            type={mode === 'generic' ? 'primary' : 'default'}
+                            size="small"
+                        />
+                    </Flex>
                     <SearchInput
                         value={inputValue}
                         onChange={setInputValue}

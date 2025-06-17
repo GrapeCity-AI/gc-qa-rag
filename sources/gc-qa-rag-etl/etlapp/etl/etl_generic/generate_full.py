@@ -54,11 +54,11 @@ class FullGenericGenerator:
         self.product = context.product
         self.file_index = context.index
 
-    def _generate_answer(self, qa_pair: QAPair, doc: Document) -> str:
+    def _generate_answer(self, qa_pair: QAPair, doc_content: str) -> str:
         try:
             prompt = self.PROMPT_TEMPLATE.format(
                 question=f"Q：{qa_pair.question}\r\n",
-                content=doc.content_text,
+                content=doc_content,
             )
             return chat_to_llm(prompt)
         except Exception as e:
@@ -82,8 +82,8 @@ class FullGenericGenerator:
 
     def _load_document(self, doc_path: Path) -> Optional[Document]:
         try:
-            doc_content = read_text_from_file(str(doc_path))
-            return Document.from_text(doc_content)
+            doc_text = read_text_from_file(str(doc_path))
+            return json.loads(doc_text)["content"]
         except Exception as e:
             logger.error(f"Error loading document: {e}")
             return None
@@ -109,11 +109,11 @@ class FullGenericGenerator:
         qa_folder, full_folder, text_folder = self._get_file_paths()
         self._ensure_directories_exist(qa_folder, full_folder, text_folder)
         qa_path = qa_folder / f"{self.file_index}.json"
-        doc_path = text_folder / f"{self.file_index}.txt"
+        doc_path = text_folder / f"{self.file_index}.json"
         if not qa_path.exists() or not doc_path.exists():
             return
-        doc = self._load_document(doc_path)
-        if not doc:
+        doc_content = self._load_document(doc_path)
+        if not doc_content:
             return
         chunks = self._load_qa_data(qa_path)
         if not chunks:
@@ -126,7 +126,7 @@ class FullGenericGenerator:
                 logger.info(
                     f"--{self.file_index}_{chunk_index}_{qa_index}_{qa_pair.question}"
                 )
-                answer = self._generate_answer(qa_pair, doc)
+                answer = self._generate_answer(qa_pair, doc_content)
                 output_path = (
                     full_folder_path / f"{self.file_index}_{chunk_index}_{qa_index}.md"
                 )

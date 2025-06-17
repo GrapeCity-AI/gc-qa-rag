@@ -1,6 +1,6 @@
 import { MenuProps } from "antd";
 import { SearchItem } from "../../types/Api";
-import { ProductType, SearchMode } from "../../types/Base";
+import { ProductInfo, SearchMode } from "../../types/Base";
 
 export interface RetrivalItem {
   key: number;
@@ -27,7 +27,11 @@ export interface SearchHeaderProps {
 }
 
 export interface SearchInputProps {
-  productType: ProductType;
+  products: ProductInfo[];
+  productsLoading: boolean;
+  mode: 'fixed' | 'generic';
+  selectedProduct: string;
+  switchMode: (mode: 'fixed' | 'generic') => Promise<void>;
   searchMode: SearchMode;
   inputValue: string;
   onProductChange: (value: string) => void;

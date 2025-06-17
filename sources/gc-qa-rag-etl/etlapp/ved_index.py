@@ -10,7 +10,10 @@ from etlapp.ved.initialize_doc import start_initialize_doc
 from etlapp.ved.initialize_forum_qa import start_initialize_forum_qa
 from etlapp.ved.initialize_forum_tutorial import start_initialize_forum_tutorial
 from etlapp.ved.initialize_generic import start_initialize_generic
-from etlapp.ved.update_aliases import start_update_aliases
+from etlapp.ved.update_aliases import (
+    start_update_aliases,
+    start_update_aliases_by_product,
+)
 
 # Configure logging
 setup_logging()
@@ -65,6 +68,21 @@ def ved_update_collections_aliases(tag: str) -> None:
     """
     base_url = app_config.vector_db.host
     start_update_aliases(base_url, tag)
+
+
+def ved_update_collections_aliases_by_product(product: ProductType, tag: str) -> None:
+    """
+    Update collection aliases in the vector database for a specific product.
+
+    Args:
+        product: Product name to update aliases for
+        tag: Tag identifier for the update process
+
+    Returns:
+        None
+    """
+    base_url = app_config.vector_db.host
+    start_update_aliases_by_product(base_url, product, tag)
 
 
 def main():

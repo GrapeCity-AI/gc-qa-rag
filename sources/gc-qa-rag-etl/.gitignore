@@ -5,7 +5,7 @@
 
 # Customize
 .temp/
-.temp_old/
+.rag-cache
 .venv/
 *.egg-info/
 
