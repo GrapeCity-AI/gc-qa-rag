@@ -278,7 +278,7 @@ docker run --rm -v rag-mysql-data:/data -v $(pwd):/backup alpine tar czf /backup
 docker network ls
 
 # 检查容器网络
-docker network inspect deploy_rag_network
+docker network inspect rag_network
 ```
 
 ## 7. 监控和维护
