@@ -40,7 +40,7 @@ GC-QA-RAG 项目采用模块化架构，包含 ETL（知识库构建）、Server
     - ETL 前端：`cd sources/gc-qa-rag-etl/etlapp-web && pnpm install && pnpm run dev`
     - Server：`cd sources/gc-qa-rag-server && pdm install && pdm run dev`
     - Frontend：`cd sources/gc-qa-rag-frontend && pnpm install && pnpm run dev`
-3. 生产环境建议使用 Docker 部署
+3. 生产环境建议使用 [Docker 部署](https://grapecity-ai.github.io/gc-qa-rag/2-%E5%BC%80%E5%8F%91%E6%95%99%E7%A8%8B/1-Docker%E9%83%A8%E7%BD%B2/)
 
 ## 概述
 

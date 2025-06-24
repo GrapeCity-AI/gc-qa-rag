@@ -19,17 +19,17 @@
 
 The GC-QA-RAG project adopts a modular architecture, including three core modules: ETL (knowledge base construction), Server (retrieval Q&A - backend services), and Frontend (retrieval Q&A - main frontend interface). Each module can be independently developed, tested, and deployed, supporting both local and Docker containerized operation.
 
-- It is recommended to first read the [Quick Start](./quickstart_ENGLISH.md) document for detailed environment preparation, dependency installation, and module startup instructions.
-- The typical startup process is as follows:
+-   It is recommended to first read the [Quick Start](./quickstart_ENGLISH.md) document for detailed environment preparation, dependency installation, and module startup instructions.
+-   The typical startup process is as follows:
 
 1. Install Dependencies
-   - Python 3.13, Node.js 16+, PDM, pnpm, MySQL, Qdrant
+    - Python 3.13, Node.js 16+, PDM, pnpm, MySQL, Qdrant
 2. Module Compilation and Running
-   - ETL Main Program: `cd sources/gc-qa-rag-etl && pdm install && pdm run dev`
-   - ETL Frontend: `cd sources/gc-qa-rag-etl/etlapp-web && pnpm install && pnpm run dev`
-   - Server: `cd sources/gc-qa-rag-server && pdm install && pdm run dev`
-   - Frontend: `cd sources/gc-qa-rag-frontend && pnpm install && pnpm run dev`
-3. Docker deployment is recommended for production environments
+    - ETL Main Program: `cd sources/gc-qa-rag-etl && pdm install && pdm run dev`
+    - ETL Frontend: `cd sources/gc-qa-rag-etl/etlapp-web && pnpm install && pnpm run dev`
+    - Server: `cd sources/gc-qa-rag-server && pdm install && pdm run dev`
+    - Frontend: `cd sources/gc-qa-rag-frontend && pnpm install && pnpm run dev`
+3. Docker deployment is recommended for production environments. See also: [Docker Deployment](https://grapecity-ai.github.io/gc-qa-rag/2-%E5%BC%80%E5%8F%91%E6%95%99%E7%A8%8B/1-Docker%E9%83%A8%E7%BD%B2/)
 
 ## Overview
 
