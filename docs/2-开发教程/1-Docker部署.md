@@ -21,6 +21,7 @@
 系统提供两种一键部署方式，您可以根据需求选择：
 
 #### 方式一：自动构建部署（推荐新手）
+
 使用 `docker-compose.yml`，系统会自动构建最新代码：
 
 ```bash
@@ -32,12 +33,14 @@ docker compose up -d --build
 ```
 
 **适用场景**：
-- ✅ 首次部署
-- ✅ 开发测试环境
-- ✅ 希望使用最新代码
-- ✅ 不想手动构建镜像
+
+-   ✅ 首次部署
+-   ✅ 开发测试环境
+-   ✅ 希望使用最新代码
+-   ✅ 不想手动构建镜像
 
 #### 方式二：预构建镜像部署（推荐生产环境）
+
 使用 `docker-compose.image.yml`，使用预构建的镜像：
 
 ```bash
@@ -56,10 +59,11 @@ docker compose -f docker-compose.image.yml up -d
 ```
 
 **适用场景**：
-- ✅ 生产环境部署
-- ✅ 版本控制严格的环境
-- ✅ 已有镜像仓库
-- ✅ 快速启动（无需构建时间）
+
+-   ✅ 生产环境部署
+-   ✅ 版本控制严格的环境
+-   ✅ 已有镜像仓库
+-   ✅ 快速启动（无需构建时间）
 
 ### 2.2 服务组成
 
@@ -73,8 +77,9 @@ docker compose -f docker-compose.image.yml up -d
 **注意**：以上仅包含 RAG 系统核心服务，ETL 数据处理模块需要单独部署。
 
 **说明**：
-- 首次部署时，系统会自动构建 `rag-server` 和 `rag-frontend` 镜像，可能需要几分钟时间
-- `--build` 参数确保使用最新代码构建镜像
+
+-   首次部署时，系统会自动构建 `rag-server` 和 `rag-frontend` 镜像，可能需要几分钟时间
+-   `--build` 参数确保使用最新代码构建镜像
 
 ### 2.3 ETL 模块部署
 
@@ -122,6 +127,7 @@ ETL 应用：
 根据您使用的部署方式选择对应的停止命令：
 
 #### 方式一：自动构建部署
+
 ```bash
 # 停止所有服务
 docker compose down
@@ -131,6 +137,7 @@ docker compose down -v
 ```
 
 #### 方式二：预构建镜像部署
+
 ```bash
 # 停止所有服务
 docker compose -f docker-compose.image.yml down
@@ -140,6 +147,7 @@ docker compose -f docker-compose.image.yml down -v
 ```
 
 #### 停止 ETL 服务
+
 ```bash
 # 停止 ETL 服务
 docker stop rag-etl
