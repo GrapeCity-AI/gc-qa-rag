@@ -16,9 +16,54 @@
 
 ## 2. 一键部署（推荐）
 
-### 2.1 部署步骤
+### 2.1 部署方式选择
 
-使用预配置的 `docker-compose.yml` 可以一键启动完整的 RAG 系统，包括：
+系统提供两种一键部署方式，您可以根据需求选择：
+
+#### 方式一：自动构建部署（推荐新手）
+使用 `docker-compose.yml`，系统会自动构建最新代码：
+
+```bash
+# 进入部署目录
+cd sources/gc-qa-rag-server/deploy
+
+# 构建并启动所有服务（首次运行会自动构建镜像）
+docker compose up -d --build
+```
+
+**适用场景**：
+- ✅ 首次部署
+- ✅ 开发测试环境
+- ✅ 希望使用最新代码
+- ✅ 不想手动构建镜像
+
+#### 方式二：预构建镜像部署（推荐生产环境）
+使用 `docker-compose.image.yml`，使用预构建的镜像：
+
+```bash
+# 进入部署目录
+cd sources/gc-qa-rag-server/deploy
+
+# 首先构建所需镜像
+cd ../
+docker build -t rag-server:latest .
+cd ../gc-qa-rag-frontend
+docker build -t rag-frontend:latest .
+
+# 返回部署目录并启动服务
+cd ../gc-qa-rag-server/deploy
+docker compose -f docker-compose.image.yml up -d
+```
+
+**适用场景**：
+- ✅ 生产环境部署
+- ✅ 版本控制严格的环境
+- ✅ 已有镜像仓库
+- ✅ 快速启动（无需构建时间）
+
+### 2.2 服务组成
+
+两种部署方式都包含完整的 RAG 系统核心服务：
 
 -   MySQL 数据库
 -   Qdrant 向量数据库
@@ -27,15 +72,11 @@
 
 **注意**：以上仅包含 RAG 系统核心服务，ETL 数据处理模块需要单独部署。
 
-```bash
-# 进入部署目录
-cd sources/gc-qa-rag-server/deploy
+**说明**：
+- 首次部署时，系统会自动构建 `rag-server` 和 `rag-frontend` 镜像，可能需要几分钟时间
+- `--build` 参数确保使用最新代码构建镜像
 
-# 构建并启动所有服务
-docker compose up -d
-```
-
-### 2.2 ETL 模块部署
+### 2.3 ETL 模块部署
 
 ETL 模块负责数据采集、处理和向量化，是完整 RAG 系统的重要组成部分。需要在核心服务启动后单独部署：
 
@@ -54,7 +95,7 @@ docker run -d \
   rag-etl:latest
 ```
 
-### 2.3 服务访问
+### 2.4 服务访问
 
 部署完成后，可通过以下地址访问：
 
@@ -67,7 +108,7 @@ ETL 应用：
 
 -   **ETL 管理界面**：http://localhost:8001
 
-### 2.4 默认配置
+### 2.5 默认配置
 
 | 服务       | 端口      | 用户名         | 密码     |
 | ---------- | --------- | -------------- | -------- |
@@ -76,18 +117,33 @@ ETL 应用：
 | Qdrant     | 6333/6334 | -              | -        |
 | ETL        | 8001      | -              | -        |
 
-### 2.5 停止服务
+### 2.6 停止服务
 
+根据您使用的部署方式选择对应的停止命令：
+
+#### 方式一：自动构建部署
 ```bash
 # 停止所有服务
 docker compose down
 
+# 停止服务并删除数据卷（谨慎操作）
+docker compose down -v
+```
+
+#### 方式二：预构建镜像部署
+```bash
+# 停止所有服务
+docker compose -f docker-compose.image.yml down
+
+# 停止服务并删除数据卷（谨慎操作）
+docker compose -f docker-compose.image.yml down -v
+```
+
+#### 停止 ETL 服务
+```bash
 # 停止 ETL 服务
 docker stop rag-etl
 docker rm rag-etl
-
-# 停止服务并删除数据卷（谨慎操作）
-docker compose down -v
 ```
 
 ## 3. 单独部署

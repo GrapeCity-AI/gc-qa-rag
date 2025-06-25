@@ -37,9 +37,7 @@ services:
                     memory: 8G
 
     server:
-        build:
-            context: ../
-            dockerfile: Dockerfile
+        image: rag-server:latest
         container_name: rag_server_container
         restart: on-failure
         depends_on:
@@ -53,9 +51,7 @@ services:
             - rag_network
 
     frontend:
-        build:
-            context: ../../gc-qa-rag-frontend
-            dockerfile: Dockerfile
+        image: rag-frontend:latest
         container_name: rag_frontend_container
         restart: on-failure
         depends_on:
@@ -70,4 +66,4 @@ volumes:
     rag-qdrant-data:
 
 networks:
-    rag_network:
+    rag_network: 
