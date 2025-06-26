@@ -29,6 +29,7 @@ RUN pdm install --prod --no-editable
 
 # Copy project files
 COPY readme.md ./
+COPY .env ./
 COPY .config.*.json ./
 COPY etlapp/ ./etlapp/
 COPY etlapp_api/ ./etlapp_api/
