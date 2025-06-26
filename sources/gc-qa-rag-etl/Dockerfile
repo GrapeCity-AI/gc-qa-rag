@@ -1,6 +1,8 @@
 # Build stage for frontend
-FROM node:latest AS frontend-builder
+FROM node:20-slim AS frontend-builder
+
 WORKDIR /app
+
 # Install pnpm
 RUN npm install -g pnpm
 
@@ -8,11 +10,12 @@ RUN npm install -g pnpm
 COPY etlapp-web/package.json etlapp-web/pnpm-lock.yaml ./
 RUN pnpm install --frozen-lockfile
 
+# Copy the rest of the frontend source code and build it
 COPY etlapp-web/ ./
 RUN pnpm build
 
 # Final stage
-FROM python:3.13
+FROM python:3.13-slim
 WORKDIR /app
 
 # Install PDM
@@ -35,9 +38,6 @@ COPY --from=frontend-builder /app/dist ./etlapp-web/dist
 
 # Expose the port
 EXPOSE 8001
-
-# Set environment variable
-ENV GC_QA_RAG_ENV=development
 
 # Run the application
 CMD ["pdm", "run", "uvicorn", "etlapp_api.server:app", "--host", "0.0.0.0", "--port", "8001"]
