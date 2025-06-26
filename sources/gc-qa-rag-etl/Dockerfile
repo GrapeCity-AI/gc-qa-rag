@@ -29,7 +29,6 @@ RUN pdm install --prod --no-editable
 
 # Copy project files
 COPY readme.md ./
-COPY .env ./
 COPY .config.*.json ./
 COPY etlapp/ ./etlapp/
 COPY etlapp_api/ ./etlapp_api/
@@ -39,6 +38,8 @@ COPY --from=frontend-builder /app/dist ./etlapp-web/dist
 
 # Expose the port
 EXPOSE 8001
+
+ENV GC_QA_RAG_ENV=production
 
 # Run the application
 CMD ["pdm", "run", "uvicorn", "etlapp_api.server:app", "--host", "0.0.0.0", "--port", "8001"]
