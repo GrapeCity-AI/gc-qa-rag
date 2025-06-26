@@ -22,7 +22,7 @@ RUN pip install pdm
 COPY pyproject.toml pdm.lock ./
 
 # Install dependencies
-RUN pdm install --prod --no-lock --no-editable
+RUN pdm install --prod --no-editable
 
 # Copy project files
 COPY readme.md ./
