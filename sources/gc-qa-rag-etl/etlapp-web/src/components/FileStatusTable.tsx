@@ -1,5 +1,5 @@
 import React from "react";
-import { Table, Button, Spin, Progress } from "antd";
+import { Table, Button, Progress } from "antd";
 
 interface FileStatusTableProps {
     etlFileRows: any[];
