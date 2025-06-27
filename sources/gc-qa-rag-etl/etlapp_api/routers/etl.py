@@ -48,6 +48,28 @@ def etl_start_execution(
     etl_type: str = Form(...),  # embedding, qa, full
     filename: str = Form(...),
 ):
+    # 检查配置完整性
+    config_errors = []
+    
+    # 检查LLM配置
+    if not app_config.llm.api_key:
+        config_errors.append("LLM API密钥未配置")
+    if not app_config.llm.api_base:
+        config_errors.append("LLM API基础地址未配置")
+    if not app_config.llm.model_name:
+        config_errors.append("LLM模型名称未配置")
+    
+    # 检查Embedding配置
+    if not app_config.embedding.api_key:
+        config_errors.append("Embedding API密钥未配置")
+    
+    # 如果有配置错误，返回错误信息
+    if config_errors:
+        return JSONResponse(
+            status_code=400, 
+            content={"error": "配置不完整", "details": config_errors}
+        )
+    
     task_id = f"etl_{product}_{etl_type}_{filename}_{int(time.time())}"
     etl_progress_status[task_id] = {"status": "running", "progress": 0, "msg": ""}
 

@@ -81,7 +81,14 @@ export const etlStart = async (product: string, etlType: "embedding" | "qa" | "f
         method: "POST",
         body: form,
     });
-    if (!res.ok) throw new Error("ETL处理启动失败");
+    if (!res.ok) {
+        const errorData = await res.json();
+        // 如果是配置错误，显示详细信息
+        if (errorData.error && errorData.details) {
+            throw new Error(`${errorData.error}: ${errorData.details.join(", ")}`);
+        }
+        throw new Error(errorData.detail || errorData.error || "ETL处理启动失败");
+    }
     return await res.json();
 };
 

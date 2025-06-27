@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { Button, Card, Space, Typography, message } from "antd";
+import { Button, Card, Space, Typography, App } from "antd";
 import ProductSelector from "./components/ProductSelector";
 import FileStatusTable from "./components/FileStatusTable";
 import ServerLog from "./components/ServerLog";
@@ -27,6 +27,8 @@ import {
 } from "./api/ApiService";
 
 const GenericETL: React.FC = () => {
+    const { message } = App.useApp();
+    
     // DAS
     const [product, setProduct] = useState<string>("default");
     const [previewModal, setPreviewModal] = useState(false);
