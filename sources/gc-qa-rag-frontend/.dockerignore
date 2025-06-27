@@ -1,0 +1,12 @@
+# See https://help.docker.com/engine/reference/builder/#dockerignore-file
+
+# node
+node_modules
+npm-debug.log
+
+# build
+dist
+.vite
+
+# system
+.DS_Store 

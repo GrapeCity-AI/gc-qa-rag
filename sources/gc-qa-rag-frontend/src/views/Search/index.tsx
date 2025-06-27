@@ -11,7 +11,6 @@ import {
     getThinkResult,
 } from "../../services/ApiService";
 import {
-    ProductType,
     SearchMode,
     SearchModeNameKey,
     TextResourcesKey,
@@ -79,7 +78,14 @@ const searchModeIcons = {
 
 const SearchPage = () => {
     const { t } = useTranslation();
-    const { products, loading: productsLoading, mode, selectedProduct, switchMode, selectProduct } = useProducts();
+    const {
+        products,
+        loading: productsLoading,
+        mode,
+        selectedProduct,
+        switchMode,
+        selectProduct,
+    } = useProducts();
     const {
         searchMode,
         setSearchMode,
@@ -121,7 +127,7 @@ const SearchPage = () => {
         },
     });
 
-            const loadSearchResult = async (item: RetrivalItem) => {
+    const loadSearchResult = async (item: RetrivalItem) => {
         if (item.query === "") {
             item.search.loading = false;
             item.search.results = [];
@@ -358,7 +364,9 @@ const SearchPage = () => {
 
         raise_gtag_event("search.gohome");
 
-        navigate(`/home?${productArgStr}&${searchModeArgStr}&${productModeArgStr}`);
+        navigate(
+            `/home?${productArgStr}&${searchModeArgStr}&${productModeArgStr}`
+        );
     };
 
     const handleSearch = () => {
@@ -382,7 +390,9 @@ const SearchPage = () => {
         setRetrivals([]);
         appendMessageMap.current.clear();
 
-        navigate(`/search?${queryArgStr}&${productArgStr}&${searchModeArgStr}&${productModeArgStr}`);
+        navigate(
+            `/search?${queryArgStr}&${productArgStr}&${searchModeArgStr}&${productModeArgStr}`
+        );
         initialize();
     };
 
