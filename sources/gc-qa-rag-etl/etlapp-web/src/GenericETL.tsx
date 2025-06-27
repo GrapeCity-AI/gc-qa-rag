@@ -308,11 +308,12 @@ const GenericETL: React.FC = () => {
                         setPublishing(false);
                         if (progress.status === "error") {
                             message.error(`发布失败: ${progress.msg}`);
+                            setPublishModal(false);
+                            setPublishTag("");
                         } else {
-                            message.success("发布完成");
+                            message.success("发布完成！现在可以选择是否更新生产别名");
+                            // 不关闭 modal，让用户选择下一步操作
                         }
-                        setPublishModal(false);
-                        setPublishTag("");
                         return;
                     }
                     
@@ -357,8 +358,9 @@ const GenericETL: React.FC = () => {
                         if (progress.status === "error") {
                             message.error(`更新别名失败: ${progress.msg}`);
                         } else {
-                            message.success("别名更新完成");
+                            message.success("生产别名更新完成！新版本已上线");
                         }
+                        // 完成后关闭 modal 并重置状态
                         setPublishModal(false);
                         setPublishTag("");
                         return;
@@ -444,7 +446,10 @@ const GenericETL: React.FC = () => {
                 product={product}
                 publishTag={publishTag}
                 setPublishTag={setPublishTag}
-                onCancel={() => setPublishModal(false)}
+                onCancel={() => {
+                    setPublishModal(false);
+                    setPublishTag("");
+                }}
                 onOk={handlePublish}
                 onUpdateAliases={handleUpdateAliases}
                 confirmLoading={publishing}
