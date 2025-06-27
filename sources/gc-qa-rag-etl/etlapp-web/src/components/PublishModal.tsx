@@ -1,11 +1,11 @@
 import React, { useState, useEffect } from "react";
-import { Modal, Space, Typography, Input, Button, Divider, Alert, Steps, Collapse, Table, Tag, Spin } from "antd";
+import { Modal, Space, Typography, Input, Button, Divider, Alert, Steps, Tabs, Table, Tag, Spin } from "antd";
 import { CheckCircleOutlined, LoadingOutlined, DatabaseOutlined } from "@ant-design/icons";
 import { fetchConfig, fetchVectorCollections } from "../api/ApiService";
 
 const { Text } = Typography;
 const { Step } = Steps;
-const { Panel } = Collapse;
+const { TabPane } = Tabs;
 
 interface CollectionInfo {
     name: string;
@@ -222,50 +222,43 @@ const PublishModal: React.FC<PublishModalProps> = ({
                 
                 <Divider />
 
-                <Collapse ghost>
-                    <Panel 
-                        header={
-                            <Space>
-                                <DatabaseOutlined />
-                                <Text>当前向量数据库状态</Text>
-                                {collectionsLoading && <Spin size="small" />}
-                            </Space>
-                        } 
-                        key="collections"
-                    >
-                        {collectionsData?.error ? (
-                            <Alert message={collectionsData.error} type="error" />
-                        ) : (
-                            <Space direction="vertical" style={{ width: "100%" }}>
-                                <div>
-                                    <Text strong>Collections ({collectionsData?.collections.length || 0}个)</Text>
-                                    <Table
-                                        columns={collectionsColumns}
-                                        dataSource={collectionsData?.collections || []}
-                                        pagination={false}
-                                        size="small"
-                                        rowKey="name"
-                                        scroll={{ y: 200 }}
-                                    />
-                                </div>
-                                <div>
-                                    <Text strong>别名 ({collectionsData?.aliases.length || 0}个)</Text>
-                                    <Table
-                                        columns={aliasesColumns}
-                                        dataSource={collectionsData?.aliases || []}
-                                        pagination={false}
-                                        size="small"
-                                        rowKey="alias_name"
-                                        scroll={{ y: 200 }}
-                                    />
-                                </div>
-                            </Space>
-                        )}
-                    </Panel>
-                </Collapse>
+                <div>
+                    <Space style={{ marginBottom: 8 }}>
+                        <DatabaseOutlined />
+                        <Text strong>当前向量数据库状态</Text>
+                        {collectionsLoading && <Spin size="small" />}
+                    </Space>
+                    {collectionsData?.error ? (
+                        <Alert message={collectionsData.error} type="error" />
+                    ) : (
+                        <Tabs defaultActiveKey="collections" size="small">
+                            <TabPane tab={`Collections (${collectionsData?.collections.length || 0})`} key="collections">
+                                <Table
+                                    columns={collectionsColumns}
+                                    dataSource={collectionsData?.collections || []}
+                                    pagination={false}
+                                    size="small"
+                                    rowKey="name"
+                                    scroll={collectionsData?.collections && collectionsData.collections.length > 4 ? { y: 150 } : undefined}
+                                />
+                            </TabPane>
+                            <TabPane tab={`别名 (${collectionsData?.aliases.length || 0})`} key="aliases">
+                                <Table
+                                    columns={aliasesColumns}
+                                    dataSource={collectionsData?.aliases || []}
+                                    pagination={false}
+                                    size="small"
+                                    rowKey="alias_name"
+                                    scroll={collectionsData?.aliases && collectionsData.aliases.length > 3 ? { y: 120 } : undefined}
+                                />
+                            </TabPane>
+                        </Tabs>
+                    )}
+                </div>
                 
                 <Divider />
                 
+                <Text strong style={{ fontSize: '14px', marginBottom: '16px', display: 'block' }}>发布流程</Text>
                 <Steps current={currentStep} direction="vertical" size="small">
                     {getSteps().map((step, index) => (
                         <Step
@@ -303,6 +296,9 @@ const PublishModal: React.FC<PublishModalProps> = ({
                                     <li><strong>更新生产别名</strong>：将刚发布的版本设置为生产环境</li>
                                     <li><strong>跳过更新别名</strong>：保持当前生产环境不变</li>
                                 </ul>
+                                <p style={{ marginTop: '12px', padding: '8px', backgroundColor: '#f6f8fa', borderRadius: '4px', fontSize: '13px' }}>
+                                    💡 <strong>提示</strong>：只有生产环境版本的别名才可以在RAG的前端产品列表中出现
+                                </p>
                             </div>
                         }
                         type="success"
