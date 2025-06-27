@@ -147,3 +147,66 @@ class VectorClient:
                 f"Failed to update alias {alias_name} for collection {collection_name}: {str(e)}"
             )
             raise
+
+    def get_collections_info(self) -> List[Dict[str, Any]]:
+        """Get information about all collections including basic stats.
+
+        Returns:
+            List[Dict[str, Any]]: List of collection information dictionaries
+
+        Raises:
+            Exception: If getting collections info fails
+        """
+        try:
+            collections = self.client.get_collections()
+            collections_info = []
+            
+            for collection in collections.collections:
+                try:
+                    # Get collection info with stats
+                    collection_info = self.client.get_collection(collection.name)
+                    collections_info.append({
+                        "name": collection.name,
+                        "vectors_count": collection_info.vectors_count or 0,
+                        "points_count": collection_info.points_count or 0,
+                        "status": collection_info.status.value if collection_info.status else "unknown",
+                    })
+                except Exception as e:
+                    logger.warning(f"Failed to get details for collection {collection.name}: {str(e)}")
+                    collections_info.append({
+                        "name": collection.name,
+                        "vectors_count": 0,
+                        "points_count": 0,
+                        "status": "unknown",
+                    })
+            
+            logger.info(f"Retrieved information for {len(collections_info)} collections")
+            return collections_info
+        except Exception as e:
+            logger.error(f"Failed to get collections info: {str(e)}")
+            raise
+
+    def get_collection_aliases(self) -> List[Dict[str, Any]]:
+        """Get information about all collection aliases.
+
+        Returns:
+            List[Dict[str, Any]]: List of alias information dictionaries
+
+        Raises:
+            Exception: If getting aliases fails
+        """
+        try:
+            aliases_response = self.client.get_aliases()
+            aliases_info = []
+            
+            for alias_description in aliases_response.aliases:
+                aliases_info.append({
+                    "alias_name": alias_description.alias_name,
+                    "collection_name": alias_description.collection_name
+                })
+            
+            logger.info(f"Retrieved {len(aliases_info)} aliases")
+            return aliases_info
+        except Exception as e:
+            logger.error(f"Failed to get collection aliases: {str(e)}")
+            raise

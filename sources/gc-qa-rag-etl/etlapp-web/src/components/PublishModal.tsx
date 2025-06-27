@@ -1,10 +1,29 @@
 import React, { useState, useEffect } from "react";
-import { Modal, Space, Typography, Input, Button, Divider, Alert, Steps } from "antd";
-import { CheckCircleOutlined, LoadingOutlined } from "@ant-design/icons";
-import { fetchConfig } from "../api/ApiService";
+import { Modal, Space, Typography, Input, Button, Divider, Alert, Steps, Collapse, Table, Tag, Spin } from "antd";
+import { CheckCircleOutlined, LoadingOutlined, DatabaseOutlined } from "@ant-design/icons";
+import { fetchConfig, fetchVectorCollections } from "../api/ApiService";
 
 const { Text } = Typography;
 const { Step } = Steps;
+const { Panel } = Collapse;
+
+interface CollectionInfo {
+    name: string;
+    vectors_count: number;
+    points_count: number;
+    status: string;
+}
+
+interface AliasInfo {
+    alias_name: string;
+    collection_name: string;
+}
+
+interface VectorCollectionsData {
+    collections: CollectionInfo[];
+    aliases: AliasInfo[];
+    error?: string;
+}
 
 interface PublishModalProps {
     open: boolean;
@@ -33,10 +52,13 @@ const PublishModal: React.FC<PublishModalProps> = ({
     const [configLoading, setConfigLoading] = useState<boolean>(false);
     const [publishCompleted, setPublishCompleted] = useState<boolean>(false);
     const [currentStep, setCurrentStep] = useState<number>(0);
+    const [collectionsData, setCollectionsData] = useState<VectorCollectionsData | null>(null);
+    const [collectionsLoading, setCollectionsLoading] = useState<boolean>(false);
 
     useEffect(() => {
         if (open) {
             loadConfig();
+            loadCollectionsData();
             // 重置状态
             setPublishCompleted(false);
             setCurrentStep(0);
@@ -59,6 +81,19 @@ const PublishModal: React.FC<PublishModalProps> = ({
             console.error("获取配置失败:", error);
         } finally {
             setConfigLoading(false);
+        }
+    };
+
+    const loadCollectionsData = async () => {
+        setCollectionsLoading(true);
+        try {
+            const data = await fetchVectorCollections();
+            setCollectionsData(data);
+        } catch (error) {
+            console.error("获取向量数据库信息失败:", error);
+            setCollectionsData({ collections: [], aliases: [], error: "获取信息失败" });
+        } finally {
+            setCollectionsLoading(false);
         }
     };
 
@@ -95,12 +130,58 @@ const PublishModal: React.FC<PublishModalProps> = ({
         },
     ];
 
+    const collectionsColumns = [
+        {
+            title: "Collection名称",
+            dataIndex: "name",
+            key: "name",
+            render: (text: string) => <Text code>{text}</Text>,
+        },
+        {
+            title: "状态",
+            dataIndex: "status",
+            key: "status",
+            render: (status: string) => (
+                <Tag color={status === "green" ? "success" : status === "yellow" ? "warning" : "default"}>
+                    {status}
+                </Tag>
+            ),
+        },
+        {
+            title: "向量数量",
+            dataIndex: "vectors_count",
+            key: "vectors_count",
+            render: (count: number) => count.toLocaleString(),
+        },
+        {
+            title: "点数量",
+            dataIndex: "points_count",
+            key: "points_count",
+            render: (count: number) => count.toLocaleString(),
+        },
+    ];
+
+    const aliasesColumns = [
+        {
+            title: "别名",
+            dataIndex: "alias_name",
+            key: "alias_name",
+            render: (text: string) => <Text strong>{text}</Text>,
+        },
+        {
+            title: "指向Collection",
+            dataIndex: "collection_name",
+            key: "collection_name",
+            render: (text: string) => <Text code>{text}</Text>,
+        },
+    ];
+
     return (
         <Modal
             open={open}
             title="发布到向量数据库"
             onCancel={onCancel}
-            width={600}
+            width={800}
             footer={
                 currentStep === 0 ? [
                     <Button key="cancel" onClick={onCancel}>
@@ -138,6 +219,50 @@ const PublishModal: React.FC<PublishModalProps> = ({
                         {configLoading ? "加载中..." : vectorDbHost || "未配置"}
                     </strong>
                 </Text>
+                
+                <Divider />
+
+                <Collapse ghost>
+                    <Panel 
+                        header={
+                            <Space>
+                                <DatabaseOutlined />
+                                <Text>当前向量数据库状态</Text>
+                                {collectionsLoading && <Spin size="small" />}
+                            </Space>
+                        } 
+                        key="collections"
+                    >
+                        {collectionsData?.error ? (
+                            <Alert message={collectionsData.error} type="error" />
+                        ) : (
+                            <Space direction="vertical" style={{ width: "100%" }}>
+                                <div>
+                                    <Text strong>Collections ({collectionsData?.collections.length || 0}个)</Text>
+                                    <Table
+                                        columns={collectionsColumns}
+                                        dataSource={collectionsData?.collections || []}
+                                        pagination={false}
+                                        size="small"
+                                        rowKey="name"
+                                        scroll={{ y: 200 }}
+                                    />
+                                </div>
+                                <div>
+                                    <Text strong>别名 ({collectionsData?.aliases.length || 0}个)</Text>
+                                    <Table
+                                        columns={aliasesColumns}
+                                        dataSource={collectionsData?.aliases || []}
+                                        pagination={false}
+                                        size="small"
+                                        rowKey="alias_name"
+                                        scroll={{ y: 200 }}
+                                    />
+                                </div>
+                            </Space>
+                        )}
+                    </Panel>
+                </Collapse>
                 
                 <Divider />
                 

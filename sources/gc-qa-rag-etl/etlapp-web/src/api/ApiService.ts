@@ -131,4 +131,10 @@ export const fetchPublishProgress = async (taskId: string) => {
     const res = await fetch(`${API_BASE}/publish_progress?task_id=${taskId}`);
     if (!res.ok) throw new Error("获取进度失败");
     return await res.json();
+};
+
+export const fetchVectorCollections = async () => {
+    const res = await fetch(`${API_BASE}/vector_collections`);
+    if (!res.ok) throw new Error("获取向量数据库信息失败");
+    return await res.json();
 }; 
