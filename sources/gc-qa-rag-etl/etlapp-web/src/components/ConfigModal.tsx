@@ -1,5 +1,5 @@
 import React from "react";
-import { Modal, Spin, Typography, Input } from "antd";
+import { Modal, Spin, Typography, Input, Alert } from "antd";
 
 const { Text } = Typography;
 
@@ -34,6 +34,13 @@ const ConfigModal: React.FC<ConfigModalProps> = ({
             <Spin />
         ) : config ? (
             <div>
+                <Alert
+                    message="配置更改后需要重启服务端才能生效"
+                    type="warning"
+                    showIcon
+                    style={{ marginBottom: "16px" }}
+                />
+                
                 <Text strong>LLM 配置</Text>
                 <Input
                     style={{ margin: "8px 0" }}
