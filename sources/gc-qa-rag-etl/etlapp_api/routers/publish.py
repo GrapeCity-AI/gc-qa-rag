@@ -2,7 +2,7 @@ from fastapi import APIRouter, Form
 import threading
 import time
 from etlapp.ved_index import ved_index_start, ved_update_collections_aliases_by_product
-from etlapp.common.vector import VectorClient
+from etlapp.common.vector import create_vector_client_from_config
 from etlapp.common.config import app_config
 import logging
 
@@ -58,11 +58,10 @@ def get_progress(task_id: str):
 def get_vector_collections():
     """Get information about all collections and aliases from vector database."""
     try:
-        vector_db_host = app_config.vector_db.host
-        if not vector_db_host:
+        if not app_config.vector_db.host:
             return {"error": "向量数据库URL未配置"}
         
-        client = VectorClient(vector_db_host)
+        client = create_vector_client_from_config()
         
         # 获取collections信息
         collections = client.get_collections_info()

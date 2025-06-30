@@ -28,7 +28,15 @@ class EmbeddingConfig:
 
 @dataclass
 class VectorDbConfig:
+    type: str  # 'qdrant' or 'milvus'
     host: str
+    port: Optional[int] = None
+    username: Optional[str] = None
+    password: Optional[str] = None
+    
+    def __post_init__(self):
+        if self.type not in ['qdrant', 'milvus']:
+            raise ValueError(f"Unsupported vector database type: {self.type}")
 
 
 @dataclass
@@ -67,7 +75,13 @@ class Config:
                 model_name=config_raw["llm"]["model_name"],
             ),
             embedding=EmbeddingConfig(api_key=config_raw["embedding"]["api_key"]),
-            vector_db=VectorDbConfig(host=config_raw["vector_db"]["host"]),
+            vector_db=VectorDbConfig(
+                type=config_raw["vector_db"]["type"],
+                host=config_raw["vector_db"]["host"],
+                port=config_raw["vector_db"].get("port"),
+                username=config_raw["vector_db"].get("username"),
+                password=config_raw["vector_db"].get("password"),
+            ),
             root_path=config_raw.get(
                 "root_path", user_cache_dir("gc-qa-rag", ensure_exists=True)
             ),

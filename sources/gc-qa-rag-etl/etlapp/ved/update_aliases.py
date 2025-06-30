@@ -1,6 +1,6 @@
 from typing import List, Tuple
 import logging
-from etlapp.common.vector import VectorClient
+from etlapp.common.vector import create_vector_client_from_url, VectorClient
 
 logger = logging.getLogger(__name__)
 
@@ -57,7 +57,7 @@ def start_update_aliases(url: str, tag: str) -> None:
         tag: Tag identifier for the update process
     """
     logger.info(f"Starting alias updates with tag: {tag}")
-    client = VectorClient(url)
+    client = create_vector_client_from_url(url)
 
     try:
         # Update doc collection aliases
@@ -88,12 +88,12 @@ def update_generic_aliases(client: VectorClient, tag: str) -> None:
     """
     try:
         # Get all collections from the vector database
-        collections_info = client.client.get_collections()
+        collections_info = client.get_collections_info()
         generic_collections = []
 
         # Find all generic collections with the current tag
-        for collection in collections_info.collections:
-            collection_name = collection.name
+        for collection in collections_info:
+            collection_name = collection["name"]
             if collection_name.startswith("generic_") and collection_name.endswith(
                 f"_{tag}"
             ):
@@ -130,7 +130,7 @@ def start_update_aliases_by_product(url: str, product: str, tag: str) -> None:
         tag: Tag identifier for the update process
     """
     logger.info(f"Starting alias updates for product: {product} with tag: {tag}")
-    client = VectorClient(url)
+    client = create_vector_client_from_url(url)
 
     try:
         # Filter aliases for the specific product

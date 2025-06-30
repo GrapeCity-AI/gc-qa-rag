@@ -7,7 +7,7 @@ from typing import List, Dict, Any, Optional
 from qdrant_client.models import PointStruct
 from etlapp.common.context import EtlRagContext
 from etlapp.common.format import extract_markdown_content
-from etlapp.common.vector import VectorClient
+from etlapp.common.vector import create_vector_client_from_url
 from etlapp.common.file import get_file_names_in_directory, read_text_from_file
 
 logger = logging.getLogger(__name__)
@@ -159,7 +159,7 @@ def start_initialize_generic(context: EtlRagContext) -> None:
     url = context.base_url
     product = context.product
     collection_name = f"generic_{product}_{context.tag}"
-    client = VectorClient(url)
+    client = create_vector_client_from_url(url)
     client.ensure_collection_exists(collection_name)
     folder_path = os.path.join(
         root_path, f"etl_generic/.temp/outputs_embedding/{product}"

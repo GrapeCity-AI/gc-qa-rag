@@ -8,7 +8,7 @@ from typing import List, Dict, Any, Optional
 from qdrant_client.models import PointStruct
 from etlapp.common.context import EtlRagContext
 from etlapp.common.hash import get_hash_folder
-from etlapp.common.vector import VectorClient
+from etlapp.common.vector import create_vector_client_from_url
 from etlapp.common.file import read_text_from_file
 
 # Configure logging
@@ -143,7 +143,7 @@ def start_initialize_forum_qa(context: EtlRagContext) -> None:
     url = context.base_url
     collection_name = f"forum_qa_{product}_{context.tag}"
 
-    client = VectorClient(url)
+    client = create_vector_client_from_url(url)
     client.ensure_collection_exists(collection_name)
 
     forum_file_path = f"{root_path}/das/.temp/forum/qa/{product}/combined.json"

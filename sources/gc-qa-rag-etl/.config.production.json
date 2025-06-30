@@ -13,6 +13,7 @@
         "api_key": ""
     },
     "vector_db": {
+        "type": "qdrant",
         "host": "http://localhost:6333"
     },
     "root_path": "./.rag-cache",
