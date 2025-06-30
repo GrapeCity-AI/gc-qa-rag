@@ -1,5 +1,6 @@
 import React from "react";
-import { Table, Button, Progress } from "antd";
+import { Table, Button, Progress, Popconfirm } from "antd";
+import { DeleteOutlined } from "@ant-design/icons";
 
 interface FileStatusTableProps {
     etlFileRows: any[];
@@ -11,6 +12,7 @@ interface FileStatusTableProps {
         row: any,
         stage: "das" | "embedding" | "qa" | "full"
     ) => void;
+    handleDeleteFile: (filename: string) => void;
     processing: { [k: string]: boolean };
     progressInfo: { [k: string]: { progress: number; msg: string } };
 }
@@ -22,6 +24,7 @@ const FileStatusTable: React.FC<FileStatusTableProps> = ({
     handleDasProcess,
     handleEtlProcess,
     handlePreview,
+    handleDeleteFile,
     processing,
     progressInfo,
 }) => (
@@ -222,6 +225,27 @@ const FileStatusTable: React.FC<FileStatusTableProps> = ({
                         </Button>
                     );
                 },
+            },
+            {
+                title: "操作",
+                key: "actions",
+                width: 80,
+                render: (_: any, row: any) => (
+                    <Popconfirm
+                        title="确认删除"
+                        description={`确定要删除文件 "${row.filename}" 及其所有处理结果吗？`}
+                        onConfirm={() => handleDeleteFile(row.filename)}
+                        okText="确定"
+                        cancelText="取消"
+                    >
+                        <Button
+                            size="small"
+                            type="text"
+                            danger
+                            icon={<DeleteOutlined />}
+                        />
+                    </Popconfirm>
+                ),
             },
         ]}
         dataSource={etlFileRows}

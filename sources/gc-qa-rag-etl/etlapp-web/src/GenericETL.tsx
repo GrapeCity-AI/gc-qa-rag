@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
-import { Button, Card, Space, Typography, App } from "antd";
+import { Button, Card, Space, Typography, App, Popconfirm } from "antd";
+import { DeleteOutlined } from "@ant-design/icons";
 import ProductSelector from "./components/ProductSelector";
 import FileStatusTable from "./components/FileStatusTable";
 import ServerLog from "./components/ServerLog";
@@ -24,6 +25,8 @@ import {
     fetchServerLog,
     updateAliases,
     fetchPublishProgress,
+    deleteFile,
+    deleteFiles,
 } from "./api/ApiService";
 
 const GenericETL: React.FC = () => {
@@ -386,6 +389,43 @@ const GenericETL: React.FC = () => {
         }
     };
 
+    // Delete file functions
+    const handleDeleteFile = async (filename: string) => {
+        try {
+            await deleteFile(product, filename);
+            message.success(`文件 ${filename} 已删除`);
+            fetchFilesStatus(product).then(setEtlFileRows);
+        } catch (e: any) {
+            message.error(e.message || "删除失败");
+        }
+    };
+
+    // Batch delete files
+    const handleBatchDelete = async () => {
+        if (selectedRowKeys.length === 0) {
+            message.warning("请选择要删除的文件");
+            return;
+        }
+        
+        try {
+            const filenames = selectedRowKeys as string[];
+            const result = await deleteFiles(product, filenames);
+            
+            if (result.deleted && result.deleted.length > 0) {
+                message.success(`成功删除 ${result.deleted.length} 个文件`);
+            }
+            
+            if (result.failed && result.failed.length > 0) {
+                message.warning(`${result.failed.length} 个文件删除失败`);
+            }
+            
+            setSelectedRowKeys([]);
+            fetchFilesStatus(product).then(setEtlFileRows);
+        } catch (e: any) {
+            message.error(e.message || "批量删除失败");
+        }
+    };
+
     const { Title } = Typography;
 
     return (
@@ -518,6 +558,22 @@ const GenericETL: React.FC = () => {
                         >
                             批量Embedding
                         </Button>
+                        <Popconfirm
+                            title="确认批量删除"
+                            description={`确定要删除选中的 ${selectedRowKeys.length} 个文件及其所有处理结果吗？`}
+                            onConfirm={handleBatchDelete}
+                            okText="确定"
+                            cancelText="取消"
+                            disabled={selectedRowKeys.length === 0}
+                        >
+                            <Button
+                                disabled={selectedRowKeys.length === 0}
+                                danger
+                                icon={<DeleteOutlined />}
+                            >
+                                批量删除
+                            </Button>
+                        </Popconfirm>
                     </Space>
                 }
             >
@@ -528,6 +584,7 @@ const GenericETL: React.FC = () => {
                     handleDasProcess={handleDasProcess}
                     handleEtlProcess={handleEtlProcess}
                     handlePreview={handlePreview}
+                    handleDeleteFile={handleDeleteFile}
                     processing={processing}
                     progressInfo={progressInfo}
                 />

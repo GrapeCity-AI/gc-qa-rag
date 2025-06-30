@@ -144,4 +144,24 @@ export const fetchVectorCollections = async () => {
     const res = await fetch(`${API_BASE}/vector_collections`);
     if (!res.ok) throw new Error("获取向量数据库信息失败");
     return await res.json();
+};
+
+export const deleteFile = async (product: string, filename: string) => {
+    const res = await fetch(`${API_BASE}/delete_file?product=${product}&filename=${filename}`, {
+        method: "DELETE",
+    });
+    if (!res.ok) throw new Error("删除文件失败");
+    return await res.json();
+};
+
+export const deleteFiles = async (product: string, filenames: string[]) => {
+    const form = new FormData();
+    form.append("product", product);
+    form.append("filenames", filenames.join(","));
+    const res = await fetch(`${API_BASE}/delete_files`, {
+        method: "POST",
+        body: form,
+    });
+    if (!res.ok) throw new Error("批量删除失败");
+    return await res.json();
 }; 
