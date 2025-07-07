@@ -4,9 +4,10 @@ from dashscope import TextEmbedding
 from ragapp.common.config import app_config
 
 # Default configuration
-DEFAULT_BATCH_SIZE = 6
+DEFAULT_BATCH_SIZE = 10
 DEFAULT_DIMENSION = 1024
 DEFAULT_OUTPUT_TYPE = "dense&sparse"
+DEFAULT_MODEL_NAME = "text-embedding-v4"
 
 
 class EmbeddingError(Exception):
@@ -60,7 +61,7 @@ def create_embedding(
     for batch in batched(texts, batch_size):
         resp = TextEmbedding.call(
             api_key=app_config.embedding.api_key,
-            model=TextEmbedding.Models.text_embedding_v3,
+            model=DEFAULT_MODEL_NAME,
             input=batch,
             dimension=dimension,
             output_type=output_type,

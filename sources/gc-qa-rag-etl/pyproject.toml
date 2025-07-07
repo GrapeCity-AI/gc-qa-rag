@@ -5,7 +5,7 @@ description = "gc-qa-rag ETL app"
 authors = [{ name = "experdotxie", email = "experdot.xie@developertools.com" }]
 dependencies = [
     "python-dotenv>=1.1.0",
-    "dashscope>=1.23.1",
+    "dashscope>=1.23.7",
     "openai>=1.75.0",
     "qdrant-client>=1.13.3",
     "lxml>=5.3.2",

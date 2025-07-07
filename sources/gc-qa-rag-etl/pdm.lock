@@ -5,7 +5,7 @@
 groups = ["default"]
 strategy = ["inherit_metadata"]
 lock_version = "4.5.0"
-content_hash = "sha256:85457d4b8f14be033ab1d9ea132b6472b210260693051e4d5d31f62a05bb1a33"
+content_hash = "sha256:06552202a1e69639ae7b154c1fdae13113a99b8017b25e41b8c37ecb32624a37"
 
 [[metadata.targets]]
 requires_python = "==3.13.*"
@@ -373,17 +373,18 @@ files = [
 
 [[package]]
 name = "dashscope"
-version = "1.23.2"
+version = "1.23.7"
 requires_python = ">=3.8.0"
 summary = "dashscope client sdk library"
 groups = ["default"]
 dependencies = [
     "aiohttp",
+    "cryptography",
     "requests",
     "websocket-client",
 ]
 files = [
-    {file = "dashscope-1.23.2-py3-none-any.whl", hash = "sha256:d2d17561ca58fcdeef6eef157efbd7d68b655551895be24d3c80e743eff21aa1"},
+    {file = "dashscope-1.23.7-py3-none-any.whl", hash = "sha256:b28cce4e3fcbf1000c0057cc544db07de9aa45b0c39311055a0ea32c6e2832b1"},
 ]
 
 [[package]]
