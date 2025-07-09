@@ -526,13 +526,16 @@ const SearchPage = () => {
                                             dislikeAnswer(retrivalItem)
                                         }
                                         onCopy={async () => {
+                                            const copyText =
+                                                searchMode === SearchMode.Think
+                                                    ? extractContentAfterDivider(
+                                                          retrivalItem.answer
+                                                              .content
+                                                      )
+                                                    : retrivalItem.answer
+                                                          .content;
                                             const success =
-                                                await copyToClipboard(
-                                                    extractContentAfterDivider(
-                                                        retrivalItem.answer
-                                                            .content
-                                                    )
-                                                );
+                                                await copyToClipboard(copyText);
                                             if (success) {
                                                 raise_gtag_event(
                                                     "search.answer.copy"
