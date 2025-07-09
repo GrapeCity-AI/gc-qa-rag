@@ -46,7 +46,7 @@ def get_embedding_pair(inputs: List):
         return {"embedding": [], "sparse_embedding": []}
 
 
-def distinct_search_hits(hits):
+def distinct_clean_search_hits(hits):
     seen_ids = set()
     unique_data = []
 
@@ -61,6 +61,10 @@ def distinct_search_hits(hits):
         if key not in seen_ids:
             seen_ids.add(key)
             unique_data.append(hit)
+
+            # clean id&version information to avoid AI generation's mistake
+            hit.id = None
+            hit.version = None
 
     return unique_data
 
@@ -123,4 +127,4 @@ def search_sementic_hybrid_single(client: QdrantClient, query, collection):
         limit=8,
         score_threshold=0.4,
     )
-    return distinct_search_hits(result.points)
+    return distinct_clean_search_hits(result.points)
