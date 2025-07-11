@@ -4,8 +4,8 @@ import { MessageItem } from "../types/Api";
 class RetriableError extends Error { }
 class FatalError extends Error { }
 
-//const URL_ROOT = ((window as any).GC_AI_SEARCH_SERVER_URL) || (window.location.protocol + "//" + window.location.hostname + ":8000");
-const URL_ROOT = (window.location.protocol + "//" + window.location.hostname + ":8000");
+const URL_ROOT = ((window as any).GC_AI_SEARCH_SERVER_URL) || (window.location.protocol + "//" + window.location.hostname + ":8000");
+//const URL_ROOT = (window.location.protocol + "//" + window.location.hostname + ":8000");
 
 export const getSearchResult = async (
   keyword: string,
