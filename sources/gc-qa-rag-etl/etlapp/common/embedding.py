@@ -68,7 +68,7 @@ def create_embedding(
         )
 
         if resp.status_code != HTTPStatus.OK:
-            raise EmbeddingError(f"Embedding failed: {resp.error}")
+            raise EmbeddingError(f"Embedding failed: {resp.message}")
 
         if result is None:
             result = resp
