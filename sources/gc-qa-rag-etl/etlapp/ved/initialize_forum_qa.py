@@ -149,7 +149,7 @@ def start_initialize_forum_qa(context: EtlRagContext) -> None:
     forum_file_path = f"{root_path}/das/.temp/forum/qa/{product}/combined.json"
     folder_path = f"{root_path}/etl_forum_qa/.temp/outputs_embedding/{product}"
 
-    thread_list = json.loads(read_text_from_file(forum_file_path))
+    thread_list = json.loads(read_text_from_file(forum_file_path))['threads']
     thread_dict = {
         f"{thread['tid']}_{thread['postDate']}": thread for thread in thread_list
     }
