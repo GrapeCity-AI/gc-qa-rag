@@ -43,10 +43,9 @@ class GroupObject:
 
 @dataclass
 class ForumObject:
-    """Represents a forum post with metadata and groups of Q&A pairs."""
+    """Represents a tutorial post with groups of Q&A pairs."""
 
-    summary: str
-    possible_qa: List[QAObject]
+    groups: List[GroupObject]
 
 
 def transform_sparse(embedding: List[Dict[str, Any]]) -> Dict[str, List[Any]]:
@@ -92,6 +91,49 @@ def extract_object(text: str) -> ForumObject:
         return ForumObject(summary="", possible_qa=[])
 
 
+def extract_object(text: str) -> ForumObject:
+    """Extract and parse tutorial object from JSON text."""
+    try:
+        data = json.loads(text)
+        groups = []
+        for group in data.get("Groups", []):
+            qa_objects = []
+            for qa in group.get("PossibleQA", []):
+                qa_objects.append(
+                    QAObject(
+                        question=qa.get("Question", ""),
+                        answer=qa.get("Answer", ""),
+                        question_embedding=EmbeddingData(
+                            embedding=qa.get("QuestionEmbedding", {}).get(
+                                "embedding", []
+                            ),
+                            sparse_embedding=qa.get("QuestionEmbedding", {}).get(
+                                "sparse_embedding", []
+                            ),
+                        )
+                        if "QuestionEmbedding" in qa
+                        else None,
+                        answer_embedding=EmbeddingData(
+                            embedding=qa.get("AnswerEmbedding", {}).get(
+                                "embedding", []
+                            ),
+                            sparse_embedding=qa.get("AnswerEmbedding", {}).get(
+                                "sparse_embedding", []
+                            ),
+                        )
+                        if "AnswerEmbedding" in qa
+                        else None,
+                    )
+                )
+            groups.append(
+                GroupObject(summary=group.get("Summary", ""), possible_qa=qa_objects)
+            )
+        return ForumObject(groups=groups)
+    except json.JSONDecodeError:
+        logger.error("Failed to parse JSON, returning empty tutorial object")
+        return ForumObject(groups=[])
+
+
 def create_point(qa: QAObject, metadata: Dict[str, Any]) -> Optional[PointStruct]:
     """Create a point structure for vector storage from a Q&A pair."""
     if not qa.question_embedding or not qa.answer_embedding:
@@ -115,19 +157,19 @@ def create_point(qa: QAObject, metadata: Dict[str, Any]) -> Optional[PointStruct
 
 
 def process_forum_object(
-    forum: ForumObject, file_index: str, question_index: int, metadata: Dict[str, Any]
+    group: GroupObject, file_index: str, question_index: int, metadata: Dict[str, Any]
 ) -> List[PointStruct]:
-    """Process a forum object and create points for vector storage."""
+    """Process a group object and create points for vector storage."""
     points = []
 
-    for qa in forum.possible_qa:
+    for qa in group.possible_qa:
         point = create_point(
             qa=qa,
             metadata={
                 **metadata,
                 "file_index": file_index,
                 "question_index": question_index,
-                "summary": forum.summary,
+                "summary": group.summary,
             },
         )
         if point:
@@ -151,7 +193,9 @@ def start_initialize_forum_qa(context: EtlRagContext) -> None:
 
     thread_list = json.loads(read_text_from_file(forum_file_path))['threads']
     thread_dict = {
-        f"{thread['tid']}_{thread['postDate']}": thread for thread in thread_list
+        f"{thread['tid']}_{thread['postDate']}": thread 
+        for thread in thread_list 
+        if thread['postDate'] >= 1609459200
     }
 
     for file_index in thread_dict:
@@ -161,13 +205,6 @@ def start_initialize_forum_qa(context: EtlRagContext) -> None:
 
         if not os.path.exists(file_path):
             logger.warning(f"File does not exist: {file_path}, skipping")
-            continue
-
-        # Check if post date is within specified range (after 2021.01.01 12:00:00 AM)
-        if thread_dict[file_index]["postDate"] < 1609459200:
-            logger.info(
-                f"Post date is outside specified range for file: {file_path}, skipping"
-            )
             continue
 
         content = read_text_from_file(file_path)
@@ -181,20 +218,13 @@ def start_initialize_forum_qa(context: EtlRagContext) -> None:
             "date": thread_dict[file_index]["postDate"],
         }
 
-        points = process_forum_object(
-            forum=forum, file_index=file_index, question_index=0, metadata=metadata
-        )
+        for group_index, group in enumerate(forum.groups):
+            points = process_forum_object(
+                group=group,
+                file_index=file_index,
+                question_index=group_index,
+                metadata=metadata,
+            )
 
-        if points:
-            # Retry up to 3 times
-            max_retries = 3
-            for attempt in range(max_retries):
-                try:
-                    client.insert_to_collection(collection_name, points)
-                    break
-                except Exception as e:
-                    if attempt == max_retries - 1:
-                        logger.error(
-                            f"Failed to insert points after {max_retries} attempts: {str(e)}"
-                        )
-                    time.sleep(1)
+            if points:
+                client.insert_to_collection(collection_name, points)
