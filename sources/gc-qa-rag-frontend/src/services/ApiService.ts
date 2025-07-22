@@ -60,6 +60,7 @@ export const getChatResult = async (
       },
       body: requestBody,
       signal: controller.signal,
+      openWhenHidden:true,
       async onopen(response) {
         if (response.ok) {
           return;
@@ -126,6 +127,7 @@ export const getThinkResult = async (
       },
       body: requestBody,
       signal: controller.signal,
+      openWhenHidden: true,
       async onopen(response) {
         if (response.ok) {
           return;
