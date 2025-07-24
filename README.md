@@ -36,9 +36,20 @@ GC-QA-RAG 是一个**企业级的检索增强生成（RAG）系统**。我们通
 
 我们强烈推荐使用 Docker 进行一键部署，这是体验本项目的最快方式。
 
+**⚠️ 重要提醒**：在部署之前，您必须先配置 API 密钥，否则系统无法正常工作！密钥若有变更，需重启服务。
+
 ### 🐳 Docker 一键部署 (推荐)
 
 确保你的机器已经安装了 `Docker` 和 `Docker Compose`。
+
+**第一步：获取 API 密钥**
+
+您需要准备以下 API 密钥：
+
+-   **大语言模型 API**：推荐使用[阿里云通义千问](https://dashscope.console.aliyun.com/)或[OpenAI API](https://platform.openai.com/)
+-   **嵌入模型 API**：推荐使用阿里云通义千问的嵌入模型
+
+**第二步：配置和部署**
 
 知识库部署：
 
@@ -47,10 +58,15 @@ GC-QA-RAG 是一个**企业级的检索增强生成（RAG）系统**。我们通
 git clone https://github.com/GrapeCity-AI/gc-qa-rag.git
 cd gc-qa-rag
 
-# 2. 进入部署目录
+# 2. 配置API密钥 (必须！)
+# 编辑 sources/gc-qa-rag-etl/.config.production.json
+# 编辑 sources/gc-qa-rag-server/.config.production.json
+# 填入您的API密钥
+
+# 3. 进入部署目录
 cd sources/gc-qa-rag-server/deploy
 
-# 3. 启动所有服务
+# 4. 启动所有服务
 docker compose up -d --build
 ```
 
@@ -71,10 +87,23 @@ docker run -d \
   rag-etl:latest
 ```
 
-启动成功后，即可访问：
+**第三步：上传数据并开始使用**
 
--   **RAG 问答主页**: `http://localhost:80`
--   **ETL 管理后台**: `http://localhost:8001`
+1. **访问 ETL 管理后台**: `http://localhost:8001`
+
+    - 上传您的 PDF、Word、Markdown 等文档
+    - 等待系统处理并生成问答对
+    - 发布数据到知识库
+
+2. **访问 RAG 问答主页**: `http://localhost:80`
+    - 基于您上传的文档内容开始提问
+    - 享受智能问答体验！
+
+**完整操作流程**：
+
+```
+准备API密钥 → 配置系统 → Docker部署 → 上传文档 → ETL处理 → 发布数据 → 前端测试 → 开始使用
+```
 
 更加详细的部署指南，请参考[《Docker 部署教程》](https://grapecity-ai.github.io/gc-qa-rag/2-%E5%BC%80%E5%8F%91%E6%95%99%E7%A8%8B/1-Docker%E9%83%A8%E7%BD%B2/)
 
@@ -88,6 +117,8 @@ docker run -d \
 -   Node.js 16+ (及 pnpm)
 -   MySQL
 -   Qdrant
+
+**重要**：无论选择哪种部署方式，都需要先配置 API 密钥！
 
 详细步骤请参考我们的[《快速开始指南》](./quickstart.md)。
 
