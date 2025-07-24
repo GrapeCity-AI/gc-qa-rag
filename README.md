@@ -12,7 +12,7 @@ GC-QA-RAG 是一个**企业级的检索增强生成（RAG）系统**。我们通
 
 **在线体验 Demo:** [**https://ai-assist.grapecity.com.cn/**](https://ai-assist.grapecity.com.cn/)
 
-![GC-QA-RAG Demo](./docs/image-1.png)
+![GC-QA-RAG Demo](./docs/zh/image-1.png)
 
 ## ✨ 核心特性
 

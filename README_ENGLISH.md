@@ -12,7 +12,7 @@ GC-QA-RAG is an **enterprise-grade Retrieval-Augmented Generation (RAG) system**
 
 **Online Demo:** [**https://ai-assist.grapecity.com.cn/**](https://ai-assist.grapecity.com.cn/)
 
-![GC-QA-RAG Demo](./docs/image-1.png)
+![GC-QA-RAG Demo](./docs/en/image-1.png)
 
 ## ✨ Core Features
 
