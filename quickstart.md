@@ -107,5 +107,5 @@ pnpm run build
 
 ## 3. 其他说明
 
--   各模块均支持 Docker 部署，建议生产环境使用容器化。具体请参阅：[Docker 部署](https://grapecity-ai.github.io/gc-qa-rag/2-%E5%BC%80%E5%8F%91%E6%95%99%E7%A8%8B/1-Docker%E9%83%A8%E7%BD%B2/)
+-   各模块均支持 Docker 部署，建议生产环境使用容器化。具体请参阅：[Docker 部署](https://grapecity-ai.github.io/gc-qa-rag/zh/2-%E5%BC%80%E5%8F%91%E6%95%99%E7%A8%8B/1-Docker%E9%83%A8%E7%BD%B2/)
 -   配置文件请根据实际环境修改。

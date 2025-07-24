@@ -105,7 +105,7 @@ docker run -d \
 准备API密钥 → 配置系统 → Docker部署 → 上传文档 → ETL处理 → 发布数据 → 前端测试 → 开始使用
 ```
 
-更加详细的部署指南，请参考[《Docker 部署教程》](https://grapecity-ai.github.io/gc-qa-rag/2-%E5%BC%80%E5%8F%91%E6%95%99%E7%A8%8B/1-Docker%E9%83%A8%E7%BD%B2/)
+更加详细的部署指南，请参考[《Docker 部署教程》](https://grapecity-ai.github.io/gc-qa-rag/zh2-%E5%BC%80%E5%8F%91%E6%95%99%E7%A8%8B/1-Docker%E9%83%A8%E7%BD%B2/)
 
 ### 🔧 手动部署
 
@@ -167,7 +167,7 @@ docker run -d \
 2.  **检索层 (Retrieval)**: 接收用户查询，通过 **问题改写**、**混合检索** 和 **RRF 排序**，高效、精准地从知识库中召回最相关的信息。
 3.  **生成层 (Generation)**: 将检索到的信息整合，交由大语言模型（LLM）生成最终流畅、准确的答案，并支持多轮对话。
 
-更多细节请查阅[《技术架构详解》](https://grapecity-ai.github.io/gc-qa-rag/0-%E9%A1%B9%E7%9B%AE%E6%A6%82%E8%BF%B0/3_%E6%8A%80%E6%9C%AF%E6%9E%B6%E6%9E%84/)。
+更多细节请查阅[《技术架构详解》](https://grapecity-ai.github.io/gc-qa-rag/zh/0-%E9%A1%B9%E7%9B%AE%E6%A6%82%E8%BF%B0/3_%E6%8A%80%E6%9C%AF%E6%9E%B6%E6%9E%84/)。
 
 ## 📚 详细文档
 
@@ -177,10 +177,10 @@ docker run -d \
 
 主要内容包括：
 
--   [项目背景](https://grapecity-ai.github.io/gc-qa-rag/0-%E9%A1%B9%E7%9B%AE%E6%A6%82%E8%BF%B0/1_%E9%A1%B9%E7%9B%AE%E8%83%8C%E6%99%AF/)
--   [产品设计](https://grapecity-ai.github.io/gc-qa-rag/0-%E9%A1%B9%E7%9B%AE%E6%A6%82%E8%BF%B0/2_%E4%BA%A7%E5%93%81%E8%AE%BE%E8%AE%A1/)
--   [技术原理](https://grapecity-ai.github.io/gc-qa-rag/1-%E6%8A%80%E6%9C%AF%E5%8E%9F%E7%90%86/1-%E5%88%87%E7%89%87%E6%96%B9%E6%A1%88/)
--   [落地效果](https://grapecity-ai.github.io/gc-qa-rag/0-%E9%A1%B9%E7%9B%AE%E6%A6%82%E8%BF%B0/5_%E8%90%BD%E5%9C%B0%E6%95%88%E6%9E%9C/)
+-   [项目背景](https://grapecity-ai.github.io/gc-qa-rag/zh/0-%E9%A1%B9%E7%9B%AE%E6%A6%82%E8%BF%B0/1_%E9%A1%B9%E7%9B%AE%E8%83%8C%E6%99%AF/)
+-   [产品设计](https://grapecity-ai.github.io/gc-qa-rag/zh/0-%E9%A1%B9%E7%9B%AE%E6%A6%82%E8%BF%B0/2_%E4%BA%A7%E5%93%81%E8%AE%BE%E8%AE%A1/)
+-   [技术原理](https://grapecity-ai.github.io/gc-qa-rag/zh/1-%E6%8A%80%E6%9C%AF%E5%8E%9F%E7%90%86/1-%E5%88%87%E7%89%87%E6%96%B9%E6%A1%88/)
+-   [落地效果](https://grapecity-ai.github.io/gc-qa-rag/zh/0-%E9%A1%B9%E7%9B%AE%E6%A6%82%E8%BF%B0/5_%E8%90%BD%E5%9C%B0%E6%95%88%E6%9E%9C/)
 
 ## 🤝 参与贡献
 
