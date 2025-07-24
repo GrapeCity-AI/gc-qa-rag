@@ -1,5 +1,5 @@
 from typing import Generator, List, Dict, Any
-from datetime import datetime
+from datetime import datetime, timedelta
 from sqlalchemy import (
     create_engine,
     Column,
@@ -145,18 +145,31 @@ class Database:
 
     def get_search_history_by_date(self, date: str) -> List[Dict[str, Any]]:
         """Get search history records for a specific date.
-
+    
         Args:
-            date: The date to query for
-
+            date: The date to query for in format 'YYYY/MM/DD' or 'YYYY-MM-DD'
+    
         Returns:
             List[Dict[str, Any]]: List of search history records
         """
         try:
+            # Convert input date to datetime object
+            try:
+                # Try with / format first
+                date_obj = datetime.strptime(date, "%Y/%m/%d").date()
+            except ValueError:
+                # Try with - format if / fails
+                date_obj = datetime.strptime(date, "%Y-%m-%d").date()
+                
+            next_day = date_obj + timedelta(days=1)
+            
             with self.get_session() as session:
                 results = (
                     session.query(SearchHistory)
-                    .filter(SearchHistory.create_time.cast(String).like(f"{date}%"))
+                    .filter(
+                        SearchHistory.create_time >= date_obj,
+                        SearchHistory.create_time < next_day
+                    )
                     .all()
                 )
                 return [
