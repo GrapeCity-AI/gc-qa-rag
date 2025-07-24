@@ -6,6 +6,10 @@
 ![RAG](https://img.shields.io/badge/tech-RAG-important)
 ![Enterprise](https://img.shields.io/badge/validated-Enterprise-success)
 
+GC-QA-RAG is an **enterprise-grade Retrieval-Augmented Generation (RAG) system**. Through our innovative **Advanced QA Pre-generation Technology**, we intelligently transform unstructured product documentation, community posts, and other content into high-quality Q&A knowledge bases, significantly improving retrieval accuracy and user experience.
+
+**This project has completed comprehensive open-source adaptation**. Thanks to its advanced QA pre-generation technology, it can adapt to documents in almost any domain, building precise and efficient intelligent Q&A systems. We welcome you to deploy it immediately and quickly validate its effectiveness on your data. See also: [English README.md](./README_ENGLISH.md)
+
 GC-QA-RAG 是一个**企业级的检索增强生成（RAG）系统**。我们通过创新的 **高级 QA 预生成技术**，将非结构化的产品文档、社区帖子等内容，智能地转化为高质量的问答知识库，显著提升了检索的精准度和用户体验。
 
 **本项目已完成全面的开源适配改造**。得益于其高级 QA 预生成技术的特性，它几乎可以适配任何领域的文档，构建精准、高效的智能问答系统。欢迎你立即部署，快速验证其在你的数据上的效果。
