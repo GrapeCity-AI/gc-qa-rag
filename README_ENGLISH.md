@@ -46,7 +46,7 @@ Ensure your machine has `Docker` and `Docker Compose` installed.
 
 You need to prepare the following API keys:
 
--   **Large Language Model API**: We recommend [Alibaba Cloud Qwen](https://dashscope.console.aliyun.com/) or [OpenAI API](https://platform.openai.com/)
+-   **Large Language Model API**: We recommend [Alibaba Cloud Platform](https://bailian.console.aliyun.com/) or [OpenAI API](https://platform.openai.com/)
 -   **Embedding Model API**: We recommend using Alibaba Cloud Qwen's embedding model
 
 **Step 2: Configuration and Deployment**
