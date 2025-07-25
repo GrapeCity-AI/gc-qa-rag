@@ -73,18 +73,11 @@ docker compose up -d --build
 ETL management backend deployment:
 
 ```bash
-# Enter ETL directory
+# 1. Enter ETL directory
 cd sources/gc-qa-rag-etl
 
-# Build Docker image
-docker build -t rag-etl:latest .
-
-# Run container
-docker run -d \
-  --name rag-etl \
-  -p 8001:8001 \
-  -e GC_QA_RAG_ENV=production \
-  rag-etl:latest
+# 2. Start all services
+docker compose up -d --build
 ```
 
 **Step 3: Upload Data and Start Using**

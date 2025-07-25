@@ -77,18 +77,11 @@ docker compose up -d --build
 ETL 管理后台部署：
 
 ```bash
-# 进入 ETL 目录
+# 1. 进入 ETL 目录
 cd sources/gc-qa-rag-etl
 
-# 构建 Docker 镜像
-docker build -t rag-etl:latest .
-
-# 运行容器
-docker run -d \
-  --name rag-etl \
-  -p 8001:8001 \
-  -e GC_QA_RAG_ENV=production \
-  rag-etl:latest
+# 2. 构建 Docker 镜像
+docker compose up -d --build
 ```
 
 **第三步：上传数据并开始使用**
