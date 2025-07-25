@@ -1,5 +1,5 @@
 from pydantic import BaseModel
-from fastapi import FastAPI, HTTPException
+from fastapi import FastAPI, HTTPException, Response
 from fastapi.responses import StreamingResponse
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi import BackgroundTasks
@@ -7,6 +7,7 @@ from qdrant_client import QdrantClient
 import logging
 import time
 from typing import Dict, Any, Optional
+import requests
 
 from ragapp.common.config import app_config
 from ragapp.common.db import db
@@ -313,3 +314,10 @@ def get_products(mode: str = "fixed", background_tasks: BackgroundTasks = None):
     _set_cached_products(mode, result)
 
     return result
+
+
+@app.get("/api/raw_file/{product}/{filename:path}")
+def proxy_raw_file(product: str, filename: str):
+    etl_url = f"{app_config.etl_base_url}/api/raw_file/{product}/{filename}"
+    resp = requests.get(etl_url)
+    return Response(content=resp.content, media_type=resp.headers.get("content-type"))

@@ -63,6 +63,7 @@ class Config:
     vector_db: VectorDbConfig
     db: DbConfig
     log_path: str
+    etl_base_url: str
 
     @classmethod
     def from_environment(cls, environment: str) -> "Config":
@@ -97,6 +98,7 @@ class Config:
             log_path=config_raw.get(
                 "log_path", user_log_dir("gc-qa-rag-server", ensure_exists=True)
             ),
+            etl_base_url=config_raw.get("etl_base_url", "http://host.docker.internal:8001"),
         )
 
 

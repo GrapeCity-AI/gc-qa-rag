@@ -13,7 +13,7 @@
         "api_key": ""
     },
     "vector_db": {
-        "host": "http://localhost:6333"
+        "host": "http://host.docker.internal:6333"
     },
     "root_path": "./.rag-cache",
     "log_path": "./"

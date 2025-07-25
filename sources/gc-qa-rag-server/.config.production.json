@@ -17,5 +17,6 @@
     },
     "db": {
         "connection_string": "mysql+mysqlconnector://root:12345678@rag_mysql_container:3306/search_db"
-    }
+    },
+    "etl_base_url": "http://host.docker.internal:8001"
 }
