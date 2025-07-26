@@ -128,13 +128,19 @@ def process_group(
     is_root: bool = True,
 ) -> List[PointStruct]:
     points = []
+    # 去除 hash 后缀，假设 file_index 形如 'xxx_xxxxxxxx'，去掉最后一个下划线及其后内容再加 .md
+    if "_" in file_index:
+        original_filename = "_".join(file_index.split("_")[:-1])
+    else:
+        original_filename = file_index
     for qa_index, qa in enumerate(group.possible_qa):
+        url = f"/api/raw_file/{doc.product}/{original_filename}"
         metadata = {
             "file_index": file_index,
             "group_index": group_index,
             "question_index": qa_index if is_root else 0,
             "product": doc.product,
-            "url": doc.url,
+            "url": url,
             "title": doc.title,
             "category": doc.category,
             "summary": group.summary,

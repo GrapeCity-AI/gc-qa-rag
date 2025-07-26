@@ -1,5 +1,5 @@
 from fastapi import APIRouter, UploadFile, File, Form
-from fastapi.responses import JSONResponse
+from fastapi.responses import JSONResponse, PlainTextResponse
 import os
 import shutil
 import threading
@@ -8,6 +8,7 @@ import json
 from etlapp.common.file import ensure_folder_exists
 from etlapp.common.config import app_config
 from etlapp.das.das_generic import das_generic_single_file
+from fastapi import HTTPException
 
 das_router = APIRouter(prefix="/api")
 
@@ -67,6 +68,28 @@ def das_get_result_content(product: str, filename: str):
         content = json.load(f)
     return content
 
+@das_router.get("/raw_file/{product}/{filename:path}")
+def get_raw_file(product: str, filename: str):
+    # 只允许访问 generic_input/{product}/ 下的文件, 防止目录穿越
+    output_dir = os.path.join(app_config.root_path, f"das/.temp/generic_input/{product}")
+    file_path = os.path.abspath(os.path.join(output_dir, filename))
+    # 校验路径必须在 output_dir 下
+    if not file_path.startswith(os.path.abspath(output_dir)):
+        raise HTTPException(status_code=403, detail="非法路径")
+    if not os.path.exists(file_path) or not os.path.isfile(file_path):
+        raise HTTPException(status_code=404, detail="文件不存在")
+    # 判断文件类型
+    ext = os.path.splitext(file_path)[1].lower()
+    if ext in [".md", ".markdown"]:
+        media_type = "text/markdown"
+    elif ext in [".json"]:
+        media_type = "application/json"
+    else:
+        media_type = "text/plain"
+    with open(file_path, "r", encoding="utf-8") as f:
+        content = f.read()
+    return PlainTextResponse(content, media_type=media_type)
+
 @das_router.get("/products")
 def list_products():
     input_root = os.path.join(app_config.root_path, "das/.temp/generic_input")
@@ -83,7 +106,6 @@ def list_products():
 def create_product(product: str = Form(...)):
     input_dir = os.path.join(app_config.root_path, f"das/.temp/generic_input/{product}")
     if os.path.exists(input_dir):
-        from fastapi import HTTPException
         raise HTTPException(status_code=400, detail="Product already exists")
     ensure_folder_exists(input_dir)
-    return {"msg": "Product created", "product": product} 
+    return {"msg": "Product created", "product": product}
