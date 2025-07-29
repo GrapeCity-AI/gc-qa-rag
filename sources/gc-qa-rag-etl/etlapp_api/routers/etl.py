@@ -14,8 +14,9 @@ etl_progress_status = {}
 def etl_process_single_file(product: str, etl_type: str, filename: str):
     """Process a single file with ETL for the given product."""
     from etlapp.common.context import EtlContext
-    from etlapp.etl.flow import etl_generic_embedding_flow, etl_generic_full_flow
+    from etlapp.etl.flow import etl_generic_full_flow
     from etlapp.etl.etl_generic.generate import start_generate_generic
+    from etlapp.etl.etl_generic.embedding import start_embedding_generic
 
     # Remove file extension to get the base filename
     file_base = os.path.splitext(filename)[0]
@@ -34,7 +35,7 @@ def etl_process_single_file(product: str, etl_type: str, filename: str):
         start_generate_generic(context)
     elif etl_type == "embedding":
         # Full embedding flow (generate, merge, embedding)
-        etl_generic_embedding_flow(context)
+        start_embedding_generic(context)
     elif etl_type == "full":
         # Full answer generation
         etl_generic_full_flow(context)
@@ -50,7 +51,7 @@ def etl_start_execution(
 ):
     # 检查配置完整性
     config_errors = []
-    
+
     # 检查LLM配置
     if not app_config.llm.api_key:
         config_errors.append("LLM API密钥未配置")
@@ -58,18 +59,17 @@ def etl_start_execution(
         config_errors.append("LLM API基础地址未配置")
     if not app_config.llm.model_name:
         config_errors.append("LLM模型名称未配置")
-    
+
     # 检查Embedding配置
     if not app_config.embedding.api_key:
         config_errors.append("Embedding API密钥未配置")
-    
+
     # 如果有配置错误，返回错误信息
     if config_errors:
         return JSONResponse(
-            status_code=400, 
-            content={"error": "配置不完整", "details": config_errors}
+            status_code=400, content={"error": "配置不完整", "details": config_errors}
         )
-    
+
     task_id = f"etl_{product}_{etl_type}_{filename}_{int(time.time())}"
     etl_progress_status[task_id] = {"status": "running", "progress": 0, "msg": ""}
 
