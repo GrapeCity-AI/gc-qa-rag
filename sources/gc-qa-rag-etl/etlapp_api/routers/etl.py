@@ -16,6 +16,7 @@ def etl_process_single_file(product: str, etl_type: str, filename: str):
     from etlapp.common.context import EtlContext
     from etlapp.etl.flow import etl_generic_full_flow
     from etlapp.etl.etl_generic.generate import start_generate_generic
+    from etlapp.etl.etl_generic.merge import start_merge_generic
     from etlapp.etl.etl_generic.embedding import start_embedding_generic
 
     # Remove file extension to get the base filename
@@ -35,6 +36,7 @@ def etl_process_single_file(product: str, etl_type: str, filename: str):
         start_generate_generic(context)
     elif etl_type == "embedding":
         # Full embedding flow (generate, merge, embedding)
+        start_merge_generic(context)
         start_embedding_generic(context)
     elif etl_type == "full":
         # Full answer generation
