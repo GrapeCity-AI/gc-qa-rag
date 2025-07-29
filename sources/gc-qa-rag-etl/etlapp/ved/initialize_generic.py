@@ -185,7 +185,7 @@ def start_initialize_generic(context: EtlRagContext) -> None:
                 file_index=file_index,
                 group_index=group_index,
                 doc=doc,
-                folder_path_full=os.path.join(folder_path_full, product),
+                folder_path_full=folder_path_full,
             )
             if points:
                 client.insert_to_collection(collection_name, points)
