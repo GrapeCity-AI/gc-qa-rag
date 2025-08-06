@@ -45,32 +45,60 @@ class EvaluationEngine:
         parallel_count: int = 1,
         max_questions: int = 100,
         with_context: bool = False,
+        agentic_mode: bool = False,
     ) -> Dict:
         """Evaluate the model for a specific subject"""
+        mode_str = (
+            "agentic"
+            if agentic_mode
+            else ("with_context" if with_context else "no_context")
+        )
         self.logger.info(
-            f"Start evaluating model: {llm.model_display_name}, subject: {subject}"
+            f"Start evaluating model: {llm.model_display_name}, subject: {subject}, mode: {mode_str}"
         )
         results = []
         try:
             questions = self.question_bank.get_questions_by_subject(subject)[
                 :max_questions
             ]
+
             self.logger.info(f"Subject [{subject}] fetched {len(questions)} questions")
 
             def process_question(idx_question):
                 idx, question = idx_question
                 context = {}
-                if with_context:
+                answer = ""
+
+                if agentic_mode:
+                    # Use agentic mode - let the model decide when and how to search
+                    self.logger.debug(
+                        f"[{llm.model_display_name}] Question {idx} (agentic): {question.content}"
+                    )
+                    answer = llm.generate_answer_agentic(question, self.kb_client)
+                    context = "agentic_mode"  # Mark that agentic mode was used
+                elif with_context:
+                    # Traditional mode with pre-search
                     context = self.kb_client.search(
                         question.content
                         + json.dumps(question.options, ensure_ascii=False),
                         question.product,
                     )
-                self.logger.debug(
-                    f"[{llm.model_display_name}] Question {idx}: {question.content}"
-                )
-                answer = llm.generate_answer(question, context)
+                    self.logger.debug(
+                        f"[{llm.model_display_name}] Question {idx}: {question.content}"
+                    )
+                    answer = llm.generate_answer(question, context)
+                else:
+                    # No context mode
+                    self.logger.debug(
+                        f"[{llm.model_display_name}] Question {idx}: {question.content}"
+                    )
+                    answer = llm.generate_answer(question, context)
+
                 score, feedback = self._score_answer(question, answer)
+
+                self.logger.info(
+                    f"[{llm.model_display_name}] Question {idx},  score: {score}"
+                )
                 result = {
                     "question_id": question.id,
                     "question": question.content,
@@ -80,10 +108,12 @@ class EvaluationEngine:
                     "feedback": feedback,
                     "context_used": context,
                     "subject": subject,
+                    "evaluation_mode": mode_str,
                 }
                 self.logger.debug(
                     f"[{llm.model_display_name}] Question {idx} score: {score}, feedback: {feedback}"
                 )
+
                 return result
 
             with concurrent.futures.ThreadPoolExecutor(
@@ -93,7 +123,7 @@ class EvaluationEngine:
 
             metrics = self._calculate_metrics(results)
             self.logger.info(
-                f"Model {llm.model_display_name} evaluation completed, subject [{subject}], accuracy: {metrics['accuracy']:.2%}"
+                f"Model {llm.model_display_name} evaluation completed, subject [{subject}], mode: {mode_str}, accuracy: {metrics['accuracy']:.2%}"
             )
             return {
                 "model": str(llm.model_display_name),
@@ -101,6 +131,7 @@ class EvaluationEngine:
                 "results": results,
                 "metrics": metrics,
                 "subject": subject,
+                "evaluation_mode": mode_str,
             }
         except Exception as e:
             self.logger.exception(
@@ -109,14 +140,18 @@ class EvaluationEngine:
             raise
 
     def evaluate_model_all_subjects(
-        self, llm: LLMInterface, parallel_count: int = 1, max_questions: int = 100
+        self,
+        llm: LLMInterface,
+        parallel_count: int = 1,
+        max_questions: int = 100,
+        agentic_mode: bool = False,
     ) -> List[Dict]:
         """Batch evaluation for all subjects, return evaluation results for each subject"""
         subjects = self.question_bank.get_subjects()
         all_results = []
         for subject in subjects:
             result = self.evaluate_model_by_subject(
-                llm, subject, parallel_count, max_questions
+                llm, subject, parallel_count, max_questions, agentic_mode=agentic_mode
             )
             all_results.append(result)
         return all_results

@@ -2,7 +2,11 @@ import argparse
 import logging
 from app.analyze import ResultAnalyzer
 from app.eval import EvaluationEngine
-from app.llm import DashScopeImplementation, OpenRouterImplementation
+from app.llm import (
+    DashScopeImplementation,
+    OpenRouterImplementation,
+    OpenAIImplementation,
+)
 from app.query import KnowledgeBaseClient
 from app.question import QuestionBank
 
@@ -21,7 +25,7 @@ def parse_args():
     parser.add_argument(
         "--models",
         type=str,
-        default="dashscope/qwen-plus",
+        default="bigmodel/glm-4.5",
         help="Model names (comma separated)",
     )
     parser.add_argument(
@@ -38,6 +42,18 @@ def parse_args():
     )
     parser.add_argument(
         "--output", type=str, default=".reports/", help="Report output directory"
+    )
+    parser.add_argument(
+        "--agentic",
+        action="store_true",
+        help="Enable agentic mode where models autonomously use search tools",
+        default=True,
+    )
+    parser.add_argument(
+        "--with_context",
+        action="store_true",
+        help="Enable context mode where questions are pre-searched before answering",
+        default=False,
     )
     return parser.parse_args()
 
@@ -56,7 +72,17 @@ def get_models(model_names: str):
             )
         elif name.startswith("dashscope/"):
             models.append(
-                DashScopeImplementation(model_name=name.split("dashscope/")[1])
+                DashScopeImplementation(
+                    model_name=name.split("dashscope/")[1], api_key=""
+                )
+            )
+        elif name.startswith("bigmodel/"):
+            models.append(
+                OpenAIImplementation(
+                    model_name=name.split("bigmodel/")[1],
+                    api_key="",
+                    api_base="https://open.bigmodel.cn/api/paas/v4",
+                )
             )
         else:
             models.append(OpenRouterImplementation(model_name=name))
@@ -75,7 +101,13 @@ def main():
     all_subjects = question_bank.get_subjects()
     subjects_str = args.subjects
 
-    # subjects_str = "活字格认证工程师-科目一"
+    # subjects_str = (
+    #     "活字格认证工程师-科目一"
+    # )
+
+    # subjects_str = (
+    #     "活字格认证工程师-科目一,活字格认证工程师-科目二,活字格高级认证工程师-科目一"
+    # )
 
     if subjects_str:
         subjects = [s for s in subjects_str.split(",") if s in all_subjects]
@@ -95,7 +127,8 @@ def main():
                 subject,
                 parallel_count=args.parallel,
                 max_questions=args.max_questions,
-                with_context=True,
+                with_context=args.with_context,
+                agentic_mode=args.agentic,
             )
             all_results.append(result)
 

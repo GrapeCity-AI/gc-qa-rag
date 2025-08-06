@@ -35,6 +35,7 @@ class ResultAnalyzer:
                         "correct": r["metrics"]["correct_answers"],
                         "total": r["metrics"]["total_questions"],
                         "subject": r.get("subject", "Unknown Subject"),
+                        "evaluation_mode": r.get("evaluation_mode", "unknown"),
                     }
                     for r in flat_results
                 ]
