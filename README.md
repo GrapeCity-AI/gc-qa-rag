@@ -51,7 +51,7 @@ GC-QA-RAG 是一个**企业级的检索增强生成（RAG）系统**。我们通
 您需要准备以下 API 密钥：
 
 -   **大语言模型 API**：推荐使用[阿里云百炼](https://bailian.console.aliyun.com/)或[OpenAI API](https://platform.openai.com/)
--   **嵌入模型 API**：推荐使用阿里云通的文本嵌入模型（目前仅支持 text-embedding-v4）
+-   **嵌入模型 API**：推荐使用阿里云的文本嵌入模型（目前仅支持 text-embedding-v4）
 
 **第二步：配置和部署**
 
