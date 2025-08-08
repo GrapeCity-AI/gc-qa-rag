@@ -1,22 +1,40 @@
 {
     "llm_default": {
-        "api_key": "",
+        "api_key": "sk-b361a1a1dcae428191060ade4c27c3bc",
         "api_base": "https://dashscope.aliyuncs.com/compatible-mode/v1",
-        "model_name": "qwen-plus"
+        "model_name": "qwen-plus-2025-07-14"
     },
     "llm_think": {
-        "api_key": "",
+        "api_key": "sk-b361a1a1dcae428191060ade4c27c3bc",
         "api_base": "https://dashscope.aliyuncs.com/compatible-mode/v1",
         "model_name": "deepseek-r1"
     },
     "embedding": {
-        "api_key": ""
+        "api_key": "sk-b361a1a1dcae428191060ade4c27c3bc"
     },
     "vector_db": {
-        "host": "http://rag_qdrant_container:6333"
+        "host": "http://rag_pgvector_adapter:6333",
+        "adapter": "pgvector",
+        "config": {
+            "host": "rag_postgres_container",
+            "port": 5432,
+            "user": "postgres",
+            "password": "postgres",
+            "database": "unified_rag_db",
+            "min_connections": 5,
+            "max_connections": 20
+        }
     },
     "db": {
-        "connection_string": "mysql+mysqlconnector://root:12345678@rag_mysql_container:3306/search_db"
+        "connection_string": "postgresql+psycopg2://postgres:postgres@rag_postgres_container:5432/unified_rag_db",
+        "type": "postgresql",
+        "config": {
+            "host": "rag_postgres_container",
+            "port": 5432,
+            "user": "postgres",
+            "password": "postgres",
+            "database": "unified_rag_db"
+        }
     },
     "etl_base_url": "http://host.docker.internal:8001"
 }

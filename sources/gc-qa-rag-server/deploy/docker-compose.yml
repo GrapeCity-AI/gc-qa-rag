@@ -1,40 +1,167 @@
 version: "3.8"
 
 services:
-    mysql:
-        image: mysql:latest
-        container_name: rag_mysql_container
-        restart: unless-stopped
-        environment:
-            MYSQL_ROOT_PASSWORD: 12345678
-            MYSQL_DATABASE: search_db
-            MYSQL_USER: search_db_user
-            MYSQL_PASSWORD: 12345678
-        volumes:
-            - rag-mysql-data:/var/lib/mysql
-        ports:
-            - "3306:3306"
-        networks:
-            - rag_network
+    # MySQL - 关系型数据库（用户会话、搜索历史等）
+    # mysql:
+    #     image: mysql:latest
+    #     container_name: rag_mysql_container
+    #     restart: unless-stopped
+    #     environment:
+    #         MYSQL_ROOT_PASSWORD: 12345678
+    #         MYSQL_DATABASE: search_db
+    #         MYSQL_USER: search_db_user
+    #         MYSQL_PASSWORD: 12345678
+    #     volumes:
+    #         - rag-mysql-data:/var/lib/mysql
+    #     ports:
+    #         - "3306:3306"
+    #     networks:
+    #         - rag_network
+    #     deploy:
+    #         resources:
+    #             limits:
+    #                 memory: 2G
 
-    qdrant:
-        image: qdrant/qdrant:latest
-        container_name: rag_qdrant_container
+    # Qdrant - 向量数据库（文档向量、语义搜索）
+    # qdrant:
+    #     image: qdrant/qdrant:latest
+    #     container_name: rag_qdrant_container
+    #     restart: unless-stopped
+    #     environment:
+    #         QDRANT__SERVICE__GRPC_PORT: 6334
+    #         QDRANT__SERVICE__HTTP_PORT: 6333
+    #     volumes:
+    #         - rag-qdrant-data:/qdrant/storage
+    #     ports:
+    #         - "6333:6333"
+    #         - "6334:6334"
+    #     networks:
+    #         - rag_network
+    #     deploy:
+    #         resources:
+    #             limits:
+    #                 memory: 8G
+
+    # 可选：PostgreSQL 替代方案（同时作为关系型和向量数据库）
+    postgres:
+        image: ankane/pgvector:latest
+        container_name: rag_postgres_container
         restart: unless-stopped
         environment:
-            QDRANT__SERVICE__GRPC_PORT: 6334
-            QDRANT__SERVICE__HTTP_PORT: 6333
+            POSTGRES_DB: unified_rag_db
+            POSTGRES_USER: postgres
+            POSTGRES_PASSWORD: postgres
+            POSTGRES_HOST_AUTH_METHOD: trust
         volumes:
-            - rag-qdrant-data:/qdrant/storage
+            - rag-postgres-data:/var/lib/postgresql/data
         ports:
-            - "6333:6333" # HTTP port for REST API
-            - "6334:6334" # gRPC port
+            - "5432:5432"
         networks:
             - rag_network
         deploy:
             resources:
                 limits:
-                    memory: 8G
+                    memory: 4G
+
+    # PostgreSQL 初始化服务（仅在首次启动时执行）
+    postgres-init:
+        image: ankane/pgvector:latest
+        container_name: rag_postgres_init
+        restart: "no"
+        depends_on:
+            - postgres
+        networks:
+            - rag_network
+        environment:
+            PGPASSWORD: postgres
+        command:
+            - bash
+            - -c
+            - |
+                echo 'Waiting for PostgreSQL to be ready...'
+                until pg_isready -h postgres -p 5432 -U postgres; do sleep 2; done
+                echo 'PostgreSQL is ready! Initializing...'
+
+                psql -h postgres -U postgres -d unified_rag_db << 'EOF'
+                CREATE EXTENSION IF NOT EXISTS vector;
+                CREATE EXTENSION IF NOT EXISTS pg_trgm;
+                CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
+
+                CREATE TABLE IF NOT EXISTS user_sessions (
+                    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+                    session_id VARCHAR(255) UNIQUE NOT NULL,
+                    user_id VARCHAR(255),
+                    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                    last_access TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                    metadata JSONB
+                );
+
+                CREATE TABLE IF NOT EXISTS search_history (
+                    id SERIAL PRIMARY KEY,
+                    session_id VARCHAR(255),
+                    query TEXT NOT NULL,
+                    product VARCHAR(100),
+                    category VARCHAR(100),
+                    result_count INTEGER,
+                    search_time_ms INTEGER,
+                    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+                );
+
+                CREATE TABLE IF NOT EXISTS feedback (
+                    id SERIAL PRIMARY KEY,
+                    session_id VARCHAR(255),
+                    query TEXT,
+                    result_id VARCHAR(255),
+                    feedback_type VARCHAR(50),
+                    comment TEXT,
+                    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+                );
+
+                CREATE INDEX IF NOT EXISTS idx_sessions_session_id ON user_sessions(session_id);
+                CREATE INDEX IF NOT EXISTS idx_search_history_created_at ON search_history(created_at);
+                CREATE INDEX IF NOT EXISTS idx_feedback_session_id ON feedback(session_id);
+
+                INSERT INTO user_sessions (session_id, user_id, metadata)
+                VALUES ('system', 'system', '{"type": "system", "initialized": true}')
+                ON CONFLICT (session_id) DO NOTHING;
+                EOF
+
+                echo 'PostgreSQL initialization completed!'
+
+    # PgVector HTTP 适配器 - 提供Qdrant兼容的HTTP API
+    pgvector-adapter:
+        build:
+            context: ../../pgvector-http-adapter
+            dockerfile: Dockerfile
+        container_name: rag_pgvector_adapter
+        restart: unless-stopped
+        depends_on:
+            - postgres
+            - postgres-init
+        ports:
+            - "6333:6333"  # 使用Qdrant的默认端口，确保ETL系统兼容
+        networks:
+            - rag_network
+        environment:
+            POSTGRES_HOST: postgres
+            POSTGRES_PORT: 5432
+            POSTGRES_USER: postgres
+            POSTGRES_PASSWORD: postgres
+            POSTGRES_DATABASE: unified_rag_db
+            POSTGRES_MIN_CONNECTIONS: 5
+            POSTGRES_MAX_CONNECTIONS: 20
+            DEFAULT_VECTOR_DIMENSION: 384
+            LOG_LEVEL: INFO
+        deploy:
+            resources:
+                limits:
+                    memory: 2G
+        healthcheck:
+            test: ["CMD", "python", "-c", "import requests; requests.get('http://localhost:6333/health')"]
+            interval: 30s
+            timeout: 10s
+            retries: 3
+            start_period: 60s
 
     server:
         build:
@@ -43,8 +170,9 @@ services:
         container_name: rag_server_container
         restart: on-failure
         depends_on:
-            - mysql
-            - qdrant
+            # - mysql
+            # - qdrant
+            - postgres
         ports:
             - "8000:8000"
         environment:
@@ -66,8 +194,9 @@ services:
             - rag_network
 
 volumes:
-    rag-mysql-data:
-    rag-qdrant-data:
+    # rag-mysql-data:      # MySQL 数据卷
+    # rag-qdrant-data:     # Qdrant 数据卷
+    rag-postgres-data:     # PostgreSQL 数据卷
 
 networks:
     rag_network:

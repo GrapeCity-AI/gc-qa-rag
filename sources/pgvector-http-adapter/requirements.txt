@@ -1,0 +1,14 @@
+# FastAPI和服务器
+fastapi==0.104.1
+uvicorn[standard]==0.24.0
+
+# PostgreSQL连接
+asyncpg==0.29.0
+
+# 轻量级数据处理
+numpy==1.24.3
+
+# 基础工具
+pydantic==2.5.0
+pydantic-settings==2.1.0
+requests==2.31.0

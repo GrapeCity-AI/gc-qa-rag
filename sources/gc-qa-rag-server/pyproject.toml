@@ -13,8 +13,13 @@ dependencies = [
     "platformdirs>=4.3.7",
     "SQLAlchemy>=2.0.40",
     "mysql-connector-python>=9.3.0",
+    # 向量数据库抽象层依赖（仅 HTTP 调用，无本地计算）
+    "asyncpg>=0.30.0",
+    "pyyaml>=6.0.0",
+    "psycopg2-binary>=2.9.0",
+    "requests>=2.31.0",
 ]
-requires-python = "==3.13.*"
+requires-python = "==3.11.*"
 readme = "README.md"
 license = { text = "MIT" }
 

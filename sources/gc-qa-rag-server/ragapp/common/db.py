@@ -63,7 +63,7 @@ class Database:
             # Create all tables
             Base.metadata.create_all(bind=self.engine)
         except Exception as e:
-            logger.exception("Initilized database failed", e)
+            logger.exception("Initialized database failed: %s", str(e))
 
     @contextmanager
     def get_session(self) -> Generator[Session, None, None]:
@@ -145,10 +145,10 @@ class Database:
 
     def get_search_history_by_date(self, date: str) -> List[Dict[str, Any]]:
         """Get search history records for a specific date.
-    
+
         Args:
             date: The date to query for in format 'YYYY/MM/DD' or 'YYYY-MM-DD'
-    
+
         Returns:
             List[Dict[str, Any]]: List of search history records
         """
@@ -160,9 +160,9 @@ class Database:
             except ValueError:
                 # Try with - format if / fails
                 date_obj = datetime.strptime(date, "%Y-%m-%d").date()
-                
+
             next_day = date_obj + timedelta(days=1)
-            
+
             with self.get_session() as session:
                 results = (
                     session.query(SearchHistory)

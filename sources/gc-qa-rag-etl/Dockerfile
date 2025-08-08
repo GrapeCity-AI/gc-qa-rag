@@ -15,14 +15,14 @@ COPY etlapp-web/ ./
 RUN pnpm build
 
 # Final stage
-FROM python:3.13-slim
+FROM python:3.11-slim
 WORKDIR /app
 
 # Install PDM
 RUN pip install pdm
 
-# Copy pdm files
-COPY pyproject.toml pdm.lock ./
+# Copy pdm file (skip lock to resolve for Python 3.11)
+COPY pyproject.toml ./
 
 # Install dependencies
 RUN pdm install --prod --no-editable
@@ -40,6 +40,9 @@ COPY --from=frontend-builder /app/dist ./etlapp-web/dist
 EXPOSE 8001
 
 ENV GC_QA_RAG_ENV=production
+
+# Set Python path for PDM virtual environment
+ENV PYTHONPATH=/app/.venv/lib/python3.11/site-packages
 
 # Run the application
 CMD ["pdm", "run", "uvicorn", "etlapp_api.server:app", "--host", "0.0.0.0", "--port", "8001"]

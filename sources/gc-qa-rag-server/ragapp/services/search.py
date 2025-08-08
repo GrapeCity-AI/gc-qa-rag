@@ -1,9 +1,12 @@
-from typing import List
+from typing import List, Optional
 from http import HTTPStatus
 from qdrant_client import QdrantClient, models
+import asyncio
 import logging
+import requests
 
 from ragapp.common.embedding import create_embedding
+from ragapp.common.config import app_config
 
 # Initialize logger
 logger = logging.getLogger(__name__)
@@ -128,3 +131,4 @@ def search_sementic_hybrid_single(client: QdrantClient, query, collection):
         score_threshold=0.4,
     )
     return distinct_clean_search_hits(result.points)
+

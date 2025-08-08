@@ -1,4 +1,4 @@
-FROM python:3.13-slim
+FROM python:3.11-slim
 
 WORKDIR /code
 
@@ -10,14 +10,14 @@ RUN apt-get update && apt-get install -y \
 # Install PDM
 RUN pip install --no-cache-dir pdm
 
-# Copy dependency files
-COPY ./pyproject.toml ./pdm.lock /code/
+# Copy dependency file (skip lock to resolve for Python 3.11)
+COPY ./pyproject.toml /code/
 
 # Install project dependencies
 RUN pdm install --prod --no-editable
 
 # Enable PEP 582
-ENV PYTHONPATH=/code/__pypackages__/3.13/lib
+ENV PYTHONPATH=/code/__pypackages__/3.11/lib
 ENV PYTHONPATH=${PYTHONPATH}:/code
 
 # Copy application code and configurations
