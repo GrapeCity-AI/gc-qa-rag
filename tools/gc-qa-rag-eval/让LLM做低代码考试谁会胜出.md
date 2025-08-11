@@ -110,7 +110,8 @@ AI 在处理**基础理论知识**时表现出色，最高取得了 88.51%的正
 
 不论如何， **Agentic RAG** 这一技术范式的表现还是足够惊艳的。它验证了一条有效的路径：通过为通用大模型配备高质量的外部知识库和智能的检索工具，可以有效解决垂直领域的复杂问题。这对企业在知识管理、技术支持和客户服务等场景的智能化升级，提供了有价值的参考。
 
-对该技术方案感兴趣的读者，可以进一步了解其开源项目：
+对该技术方案感兴趣的读者，可以进一步了解其开源项目（MIT License）：
 
 -   **项目开源地址**: [https://github.com/GrapeCity-AI/gc-qa-rag](https://github.com/GrapeCity-AI/gc-qa-rag)
+-   **测评代码地址**: [https://github.com/GrapeCity-AI/gc-qa-rag/tree/main/tools/gc-qa-rag-eval](https://github.com/GrapeCity-AI/gc-qa-rag/tree/main/tools/gc-qa-rag-eval)
 -   **在线体验 Demo**: [https://ai-assist.grapecity.com.cn/](https://ai-assist.grapecity.com.cn/)
