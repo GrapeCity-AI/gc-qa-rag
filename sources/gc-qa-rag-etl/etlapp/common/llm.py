@@ -1,5 +1,6 @@
 from openai import OpenAI
 from etlapp.common.config import app_config
+from etlapp.common.rate_limiter import RateLimiter
 from typing import List, Dict
 
 
@@ -9,6 +10,7 @@ class LLMClient:
         api_key: str = app_config.llm.api_key,
         api_base: str = app_config.llm.api_base,
         model_name: str = app_config.llm.model_name,
+        max_rpm: int = app_config.llm.max_rpm,
         system_prompt: str = "你是一个乐于解答各种问题的助手。",
         temperature: float = 0.7,
         top_p: float = 0.7,
@@ -18,8 +20,13 @@ class LLMClient:
         self.system_prompt = system_prompt
         self.temperature = temperature
         self.top_p = top_p
+        # 初始化限流器
+        self.rate_limiter = RateLimiter(max_requests=max_rpm, window_seconds=60)
 
     def _create_completion(self, messages: List[Dict[str, str]]) -> str:
+        # 在发送请求前进行限流
+        self.rate_limiter.wait_and_acquire()
+        
         completion = self.client.chat.completions.create(
             model=self.model_name,
             messages=messages,
@@ -37,6 +44,23 @@ class LLMClient:
 
     def chat_with_messages(self, messages: List[Dict[str, str]]) -> str:
         return self._create_completion(messages)
+    
+    def get_rate_limit_status(self) -> dict:
+        """
+        获取当前限流状态
+        
+        Returns:
+            dict: 包含剩余请求数和重置时间的状态信息
+        """
+        remaining = self.rate_limiter.get_remaining_requests()
+        reset_time = self.rate_limiter.get_reset_time()
+        
+        return {
+            "remaining_requests": remaining,
+            "reset_time": reset_time,
+            "max_rpm": self.rate_limiter.max_requests,
+            "window_seconds": self.rate_limiter.window_seconds
+        }
 
 
 # Create a default instance
