@@ -33,17 +33,59 @@ class QAGenerator:
 
     def _generate_single_qa(self, prompt: str) -> Dict[str, Any]:
         try:
+            print("🤖 [QA-GEN] Starting single QA generation...")
+            print(f"📝 [QA-GEN] Prompt length: {len(prompt)} characters")
+            print(f"🔍 [QA-GEN] Prompt preview: {prompt[:200]}...")
+
             response = chat_to_llm(prompt)
-            return extract_qa_object(response)
+
+            print(f"✅ [QA-GEN] LLM response received, length: {len(response)} characters")
+            print(f"📄 [QA-GEN] Response preview: {response[:300]}...")
+
+            qa_result = extract_qa_object(response)
+            qa_count = len(qa_result.get("PossibleQA", []))
+
+            print(f"🎯 [QA-GEN] Extracted {qa_count} QA pairs")
+            print(f"📊 [QA-GEN] Summary: {qa_result.get('Summary', 'N/A')[:100]}...")
+
+            if qa_count == 0:
+                print("⚠️ [QA-GEN] WARNING: No QA pairs generated!")
+                print(f"🔍 [QA-GEN] Full LLM response: {response}")
+
+            return qa_result
         except Exception as e:
+            print(f"❌ [QA-GEN] ERROR in _generate_single_qa: {str(e)}")
+            print(f"💣 [QA-GEN] Exception type: {type(e).__name__}")
             logger.error(f"Error generating QA: {e}")
             return {"Summary": "", "PossibleQA": []}
 
     def _generate_multi_qa(self, messages: List[Dict[str, str]]) -> Dict[str, Any]:
         try:
+            print("🤖 [QA-MULTI] Starting multi-turn QA generation...")
+            print(f"💬 [QA-MULTI] Message count: {len(messages)}")
+            for i, msg in enumerate(messages):
+                content_preview = msg.get("content", "")[:150] + "..." if len(msg.get("content", "")) > 150 else msg.get("content", "")
+                print(f"📝 [QA-MULTI] Message {i+1} ({msg.get('role', 'unknown')}): {content_preview}")
+
             response = chat_to_llm_with_messages(messages)
-            return extract_qa_object(response)
+
+            print(f"✅ [QA-MULTI] LLM response received, length: {len(response)} characters")
+            print(f"📄 [QA-MULTI] Response preview: {response[:300]}...")
+
+            qa_result = extract_qa_object(response)
+            qa_count = len(qa_result.get("PossibleQA", []))
+
+            print(f"🎯 [QA-MULTI] Extracted {qa_count} QA pairs")
+            print(f"📊 [QA-MULTI] Summary: {qa_result.get('Summary', 'N/A')[:100]}...")
+
+            if qa_count == 0:
+                print("⚠️ [QA-MULTI] WARNING: No QA pairs generated!")
+                print(f"🔍 [QA-MULTI] Full LLM response: {response}")
+
+            return qa_result
         except Exception as e:
+            print(f"❌ [QA-MULTI] ERROR in _generate_multi_qa: {str(e)}")
+            print(f"💣 [QA-MULTI] Exception type: {type(e).__name__}")
             logger.error(f"Error generating QA: {e}")
             return {"Summary": "", "PossibleQA": []}
 
@@ -94,6 +136,10 @@ class QAGenerator:
 
 
 def start_generate_generic(context: EtlContext) -> None:
+    print(f"🚀 [ETL-GEN] Starting QA generation for file: {context.index}")
+    print(f"📁 [ETL-GEN] Product: {context.product}")
+    print(f"📂 [ETL-GEN] Root path: {context.root}")
+
     root_path = context.root
     product = context.product
     file_index = context.index
@@ -101,19 +147,50 @@ def start_generate_generic(context: EtlContext) -> None:
     folder_path_r = os.path.join(
         root_path, f"etl_generic/.temp/outputs_generate_qa/{product}"
     )
+
+    print(f"📂 [ETL-GEN] Input folder: {folder_path}")
+    print(f"📂 [ETL-GEN] Output folder: {folder_path_r}")
+
     ensure_folder_exists(folder_path)
     ensure_folder_exists(folder_path_r)
+
     try:
         file_path = os.path.join(folder_path, str(file_index) + ".json")
+        print(f"📄 [ETL-GEN] Looking for input file: {file_path}")
+
         if not os.path.exists(file_path):
+            print(f"❌ [ETL-GEN] Input file not found: {file_path}")
             return
+
+        print("✅ [ETL-GEN] Input file found, reading content...")
         logger.info(f"generate---{file_index}")
+
         doc_obj = json.loads(read_text_from_file(file_path))
         content = doc_obj["content"]
+
+        print(f"📄 [ETL-GEN] Document content loaded, length: {len(content)} characters")
+        print(f"🔍 [ETL-GEN] Content preview: {content[:200]}...")
+
         generator = QAGenerator()
+        print("🤖 [ETL-GEN] Starting QA generation process...")
         result = generator.generate(content)
+
+        total_qa_count = sum(len(group.get("PossibleQA", [])) for group in result.get("Groups", []))
+        print(f"🎯 [ETL-GEN] QA generation completed! Total QA pairs: {total_qa_count}")
+        print(f"📊 [ETL-GEN] Groups generated: {len(result.get('Groups', []))}")
+
         filename_r = os.path.basename(file_path)
         file_path_r = os.path.join(folder_path_r, filename_r)
+
+        print(f"💾 [ETL-GEN] Saving results to: {file_path_r}")
         write_text_to_file(file_path_r, json.dumps(result, ensure_ascii=False))
+
+        print(f"✅ [ETL-GEN] QA generation completed successfully for {file_index}")
+        print(f"🔍 [ETL-GEN] Result preview: {json.dumps(result, ensure_ascii=False)[:500]}...")
+
     except Exception as e:
+        print(f"❌ [ETL-GEN] FATAL ERROR in start_generate_generic: {str(e)}")
+        print(f"💣 [ETL-GEN] Exception type: {type(e).__name__}")
+        print("🔍 [ETL-GEN] Full traceback will be in logs")
         logger.error(f"Error in generic document generation: {e}")
+        raise

@@ -7,7 +7,7 @@
     "llm": {
         "api_key": "sk-b361a1a1dcae428191060ade4c27c3bc",
         "api_base": "https://dashscope.aliyuncs.com/compatible-mode/v1",
-        "model_name": "qwen-plus-2025-07-14"
+        "model_name": "qwen-plus-2025-07-28"
     },
     "embedding": {
         "api_key": "sk-b361a1a1dcae428191060ade4c27c3bc"

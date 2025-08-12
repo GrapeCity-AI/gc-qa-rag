@@ -90,10 +90,20 @@ def get_config() -> Config:
 # Initialize configuration
 app_config: Optional[Config] = None
 try:
+    print("⚙️ [CONFIG] Loading application configuration...")
     app_config = get_config()
-    print(f"The current environment is: {app_config.environment}")
+    print("✅ [CONFIG] Configuration loaded successfully!")
+    print(f"🌍 [CONFIG] Environment: {app_config.environment}")
+    print(f"🔑 [CONFIG] LLM API Key: {'***' + app_config.llm.api_key[-4:] if app_config.llm.api_key and len(app_config.llm.api_key) > 4 else 'MISSING'}")
+    print(f"🔗 [CONFIG] LLM API Base: {app_config.llm.api_base if app_config.llm.api_base else 'MISSING'}")
+    print(f"🤖 [CONFIG] LLM Model: {app_config.llm.model_name if app_config.llm.model_name else 'MISSING'}")
+    print(f"🔑 [CONFIG] Embedding API Key: {'***' + app_config.embedding.api_key[-4:] if app_config.embedding.api_key and len(app_config.embedding.api_key) > 4 else 'MISSING'}")
+    print(f"🗄️ [CONFIG] Vector DB Host: {app_config.vector_db.host if app_config.vector_db.host else 'MISSING'}")
+    print(f"📂 [CONFIG] Root Path: {app_config.root_path}")
+    print(f"📝 [CONFIG] Log Path: {app_config.log_path}")
 except Exception as e:
-    print(f"Failed to load configuration: {e}")
+    print(f"❌ [CONFIG] Failed to load configuration: {e}")
+    print(f"💣 [CONFIG] Exception type: {type(e).__name__}")
     raise
 
 

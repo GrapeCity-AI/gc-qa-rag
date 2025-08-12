@@ -13,7 +13,18 @@ def extract_qa_object(text: str) -> Dict[str, Union[str, List[Dict[str, str]]]]:
     Returns:
         Dictionary containing Summary and PossibleQA list
     """
+    print("🔍 [PARSE] Starting QA object extraction...")
+    print(f"📄 [PARSE] Input text length: {len(text)} characters")
+    print(f"🔍 [PARSE] Input preview: {text[:300]}...")
+
     extracted_content = extract_json_content(text)
+    print(f"📋 [PARSE] JSON content extracted, length: {len(extracted_content)} characters")
+
+    if extracted_content != text:
+        print(f"✂️ [PARSE] Found JSON code block, extracted content: {extracted_content[:200]}...")
+    else:
+        print("📝 [PARSE] No JSON code block found, using original text")
+
     parsed_json: Dict[str, Union[str, List[Dict[str, str]]]] = {
         "Summary": "",
         "PossibleQA": [],
@@ -21,16 +32,38 @@ def extract_qa_object(text: str) -> Dict[str, Union[str, List[Dict[str, str]]]]:
 
     try:
         if extracted_content:
+            print("🔧 [PARSE] Attempting JSON parsing...")
             parsed_json = json.loads(extracted_content)
+
+            qa_count = len(parsed_json.get("PossibleQA", []))
+            summary = parsed_json.get("Summary", "")
+
+            print("✅ [PARSE] JSON parsing successful!")
+            print(f"🎯 [PARSE] Found {qa_count} QA pairs")
+            print(f"📊 [PARSE] Summary: {summary[:100]}..." if summary else "📊 [PARSE] No summary found")
+
+            if qa_count == 0:
+                print("⚠️ [PARSE] WARNING: No QA pairs found in parsed JSON!")
+                print(f"🔍 [PARSE] Parsed structure: {list(parsed_json.keys())}")
+
     except json.JSONDecodeError as e:
-        print(f"JSON parsing failed: {str(e)}")
+        print(f"❌ [PARSE] JSON parsing failed: {str(e)}")
+        print(f"🔍 [PARSE] Failed content: {extracted_content[:500]}...")
         try:
-            print("Attempting manual extraction...")
-            parsed_json = extract_json_manually(text)
-            print("Manual extraction successful")
+            print("🔧 [PARSE] Attempting manual extraction...")
+            manual_result = extract_json_manually(text)
+            if manual_result:
+                parsed_json = manual_result
+                qa_count = len(parsed_json.get("PossibleQA", []))
+                print(f"✅ [PARSE] Manual extraction successful! Found {qa_count} QA pairs")
+            else:
+                print("❌ [PARSE] Manual extraction returned None")
         except Exception as e:
-            print(f"Manual extraction failed: {str(e)}")
-            print("Returning default empty object")
+            print(f"❌ [PARSE] Manual extraction failed: {str(e)}")
+            print("💀 [PARSE] Returning default empty object")
+
+    final_qa_count = len(parsed_json.get("PossibleQA", []))
+    print(f"🏁 [PARSE] Final result: {final_qa_count} QA pairs extracted")
 
     return parsed_json
 

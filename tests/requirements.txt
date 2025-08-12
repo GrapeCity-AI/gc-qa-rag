@@ -1,0 +1,6 @@
+aiohttp>=3.9.0
+numpy>=1.24.0
+pandas>=2.0.0
+docker>=6.0.0
+psutil>=5.9.0
+asyncio-throttle>=1.0.0
