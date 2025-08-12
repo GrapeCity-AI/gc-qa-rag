@@ -20,11 +20,11 @@ class LLMClient:
         self.system_prompt = system_prompt
         self.temperature = temperature
         self.top_p = top_p
-        # 初始化限流器
+        # Initialize rate limiter
         self.rate_limiter = RateLimiter(max_requests=max_rpm, window_seconds=60)
 
     def _create_completion(self, messages: List[Dict[str, str]]) -> str:
-        # 在发送请求前进行限流
+        # Apply rate limiting before sending request
         self.rate_limiter.wait_and_acquire()
         
         completion = self.client.chat.completions.create(
@@ -47,10 +47,10 @@ class LLMClient:
     
     def get_rate_limit_status(self) -> dict:
         """
-        获取当前限流状态
+        Get current rate limit status
         
         Returns:
-            dict: 包含剩余请求数和重置时间的状态信息
+            dict: Status information containing remaining requests and reset time
         """
         remaining = self.rate_limiter.get_remaining_requests()
         reset_time = self.rate_limiter.get_reset_time()

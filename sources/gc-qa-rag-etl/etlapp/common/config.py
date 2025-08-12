@@ -19,7 +19,7 @@ class LlmConfig:
     api_key: str
     api_base: str
     model_name: str
-    max_rpm: int = 100  # 每分钟最大请求数，默认100
+    max_rpm: int = 100  # Maximum requests per minute, default 100
 
 
 @dataclass
@@ -66,7 +66,7 @@ class Config:
                 api_key=config_raw["llm"]["api_key"],
                 api_base=config_raw["llm"]["api_base"],
                 model_name=config_raw["llm"]["model_name"],
-                max_rpm=config_raw["llm"].get("max_rpm", 60),  # 默认60 RPM
+                max_rpm=config_raw["llm"].get("max_rpm", 100),
             ),
             embedding=EmbeddingConfig(api_key=config_raw["embedding"]["api_key"]),
             vector_db=VectorDbConfig(host=config_raw["vector_db"]["host"]),
