@@ -1,0 +1,483 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>搜索引擎对比分析 - Qdrant vs PGVector</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+            min-height: 100vh;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+            padding: 30px;
+        }
+
+        h1 {
+            text-align: center;
+            color: #2c3e50;
+            margin-bottom: 30px;
+            font-size: 2.5em;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.1);
+        }
+
+        .stats-section {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 30px;
+            margin-bottom: 40px;
+        }
+
+        .stats-card {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 25px;
+            border-radius: 12px;
+            box-shadow: 0 8px 25px rgba(0,0,0,0.15);
+        }
+
+        .stats-card h3 {
+            margin: 0 0 20px 0;
+            font-size: 1.4em;
+            text-align: center;
+        }
+
+        .stat-row {
+            display: flex;
+            justify-content: space-between;
+            margin: 8px 0;
+            padding: 8px 12px;
+            background: rgba(255,255,255,0.1);
+            border-radius: 6px;
+            backdrop-filter: blur(10px);
+        }
+
+        .question-selector {
+            margin: 30px 0;
+            padding: 20px;
+            background: #f8f9fa;
+            border-radius: 10px;
+            border: 2px solid #e9ecef;
+        }
+
+        .question-selector label {
+            font-weight: bold;
+            color: #495057;
+            display: block;
+            margin-bottom: 10px;
+        }
+
+        #questionSelect {
+            width: 100%;
+            padding: 12px;
+            font-size: 16px;
+            border: 2px solid #ced4da;
+            border-radius: 8px;
+            background: white;
+        }
+
+        .results-container {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 30px;
+            margin-top: 30px;
+        }
+
+        .result-panel {
+            background: #fff;
+            border-radius: 12px;
+            box-shadow: 0 5px 20px rgba(0,0,0,0.08);
+            overflow: hidden;
+        }
+
+        .panel-header {
+            padding: 20px;
+            color: white;
+            font-weight: bold;
+            font-size: 1.2em;
+            text-align: center;
+        }
+
+        .qdrant-header {
+            background: linear-gradient(135deg, #ff6b6b 0%, #ee5a52 100%);
+        }
+
+        .pgvector-header {
+            background: linear-gradient(135deg, #4ecdc4 0%, #44a08d 100%);
+        }
+
+        .result-item {
+            padding: 20px;
+            border-bottom: 1px solid #eee;
+            transition: background-color 0.3s ease;
+        }
+
+        .result-item:hover {
+            background-color: #f8f9fa;
+        }
+
+        .result-item:last-child {
+            border-bottom: none;
+        }
+
+        .result-rank {
+            display: inline-block;
+            background: #007bff;
+            color: white;
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            text-align: center;
+            line-height: 30px;
+            font-weight: bold;
+            margin-right: 15px;
+        }
+
+        .result-score {
+            float: right;
+            background: #28a745;
+            color: white;
+            padding: 4px 12px;
+            border-radius: 15px;
+            font-size: 0.9em;
+            font-weight: bold;
+        }
+
+        .result-title {
+            font-weight: bold;
+            color: #2c3e50;
+            margin: 8px 0;
+        }
+
+        .result-answer {
+            color: #6c757d;
+            line-height: 1.6;
+            margin: 10px 0;
+            font-style: italic;
+        }
+
+        .result-summary {
+            color: #495057;
+            font-size: 0.9em;
+            line-height: 1.5;
+            max-height: 100px;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .comparison-section {
+            margin-top: 40px;
+            padding: 25px;
+            background: #f8f9fa;
+            border-radius: 12px;
+            border: 2px solid #dee2e6;
+        }
+
+        .comparison-title {
+            text-align: center;
+            color: #495057;
+            margin-bottom: 20px;
+            font-size: 1.3em;
+            font-weight: bold;
+        }
+
+        .document-comparison {
+            display: grid;
+            gap: 15px;
+        }
+
+        .doc-comparison-item {
+            display: grid;
+            grid-template-columns: 2fr 1fr 1fr;
+            gap: 20px;
+            padding: 15px;
+            background: white;
+            border-radius: 8px;
+            border: 1px solid #dee2e6;
+            align-items: center;
+        }
+
+        .doc-title {
+            font-weight: bold;
+            color: #2c3e50;
+        }
+
+        .rank-badge {
+            text-align: center;
+            padding: 8px;
+            border-radius: 20px;
+            font-weight: bold;
+            color: white;
+        }
+
+        .rank-qdrant {
+            background: #ff6b6b;
+        }
+
+        .rank-pgvector {
+            background: #4ecdc4;
+        }
+
+        .no-results {
+            text-align: center;
+            color: #6c757d;
+            padding: 40px;
+            font-style: italic;
+        }
+
+        .loading {
+            text-align: center;
+            padding: 40px;
+            color: #6c757d;
+        }
+
+        @media (max-width: 768px) {
+            .stats-section,
+            .results-container {
+                grid-template-columns: 1fr;
+            }
+
+            .doc-comparison-item {
+                grid-template-columns: 1fr;
+                text-align: center;
+            }
+        }
+    </style>
+
+    <script src="qdrant_result.js"></script>
+    <script src="pgvector_results.js"></script>
+</head>
+<body>
+    <div class="container">
+        <h1>🔍 搜索引擎对比分析</h1>
+        <p style="text-align: center; color: #6c757d; font-size: 1.1em;">Qdrant vs PGVector 搜索结果对比</p>
+
+        <div class="stats-section">
+            <div class="stats-card">
+                <h3>🚀 Qdrant 统计信息</h3>
+                <div id="qdrant-stats"></div>
+            </div>
+            <div class="stats-card">
+                <h3>🗃️ PGVector 统计信息</h3>
+                <div id="pgvector-stats"></div>
+            </div>
+        </div>
+
+        <div class="question-selector">
+            <label for="questionSelect">📋 选择问题进行对比：</label>
+            <select id="questionSelect">
+                <option value="">正在加载问题...</option>
+            </select>
+        </div>
+
+        <div id="question-info" style="display: none; margin: 20px 0; padding: 15px; background: #e7f3ff; border-radius: 8px; border-left: 4px solid #007bff;">
+            <strong>当前问题:</strong> <span id="current-question"></span>
+        </div>
+
+        <div class="results-container">
+            <div class="result-panel">
+                <div class="panel-header qdrant-header">
+                    🚀 Qdrant 搜索结果
+                </div>
+                <div id="qdrant-results">
+                    <div class="no-results">请选择一个问题查看搜索结果</div>
+                </div>
+            </div>
+
+            <div class="result-panel">
+                <div class="panel-header pgvector-header">
+                    🗃️ PGVector 搜索结果
+                </div>
+                <div id="pgvector-results">
+                    <div class="no-results">请选择一个问题查看搜索结果</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="comparison-section" id="comparison-section" style="display: none;">
+            <div class="comparison-title">📊 相同文档排名对比</div>
+            <div id="document-comparison"></div>
+        </div>
+    </div>
+
+    <script>
+        // Initialize the app with embedded data
+        document.addEventListener('DOMContentLoaded', function() {
+            initializeApp(qdrantData, pgvectorData);
+        });
+
+        function initializeApp(qdrantData, pgvectorData) {
+            displayStats(qdrantData.test_info, pgvectorData.test_info);
+            populateQuestions(qdrantData.detailed_results, pgvectorData.detailed_results);
+
+            document.getElementById('questionSelect').addEventListener('change', function() {
+                const selectedIndex = parseInt(this.value);
+                if (!isNaN(selectedIndex)) {
+                    displayResults(
+                        qdrantData.detailed_results[selectedIndex],
+                        pgvectorData.detailed_results[selectedIndex]
+                    );
+                } else {
+                    clearResults();
+                }
+            });
+        }
+
+        function displayStats(qdrantStats, pgvectorStats) {
+            const qdrantStatsDiv = document.getElementById('qdrant-stats');
+            const pgvectorStatsDiv = document.getElementById('pgvector-stats');
+
+            const formatStat = (label, value, unit = '') => {
+                let formattedValue = value;
+                if (typeof value === 'number') {
+                    formattedValue = value % 1 === 0 ? value : value.toFixed(2);
+                }
+                return `<div class="stat-row"><span>${label}</span><span><strong>${formattedValue}${unit}</strong></span></div>`;
+            };
+
+            qdrantStatsDiv.innerHTML = `
+                ${formatStat('总问题数', qdrantStats.total_questions)}
+                ${formatStat('成功查询', qdrantStats.successful_queries)}
+                ${formatStat('成功率', (qdrantStats.success_rate * 100).toFixed(1), '%')}
+                ${formatStat('平均响应时间', qdrantStats.average_response_time_ms, 'ms')}
+                ${formatStat('平均命中数', qdrantStats.average_hits_count)}
+                ${formatStat('文档匹配率', (qdrantStats.average_document_match_rate * 100).toFixed(1), '%')}
+            `;
+
+            pgvectorStatsDiv.innerHTML = `
+                ${formatStat('总问题数', pgvectorStats.total_questions)}
+                ${formatStat('成功查询', pgvectorStats.successful_queries)}
+                ${formatStat('成功率', (pgvectorStats.success_rate * 100).toFixed(1), '%')}
+                ${formatStat('平均响应时间', pgvectorStats.average_response_time_ms, 'ms')}
+                ${formatStat('平均命中数', pgvectorStats.average_hits_count)}
+                ${formatStat('文档匹配率', (pgvectorStats.average_document_match_rate * 100).toFixed(1), '%')}
+            `;
+        }
+
+        function populateQuestions(qdrantResults, pgvectorResults) {
+            const select = document.getElementById('questionSelect');
+            select.innerHTML = '<option value="">请选择一个问题...</option>';
+
+            qdrantResults.forEach((result, index) => {
+                const option = document.createElement('option');
+                option.value = index;
+                option.textContent = `${index + 1}. ${result.question.substring(0, 60)}${result.question.length > 60 ? '...' : ''}`;
+                select.appendChild(option);
+            });
+        }
+
+        function displayResults(qdrantResult, pgvectorResult) {
+            document.getElementById('question-info').style.display = 'block';
+            document.getElementById('current-question').textContent = qdrantResult.question;
+
+            const qdrantResultsDiv = document.getElementById('qdrant-results');
+            const pgvectorResultsDiv = document.getElementById('pgvector-results');
+
+            qdrantResultsDiv.innerHTML = qdrantResult.top_8_results.map(result => `
+                <div class="result-item">
+                    <span class="result-rank">${result.rank}</span>
+                    <span class="result-score">${result.score.toFixed(4)}</span>
+                    <div class="result-title">${result.title}</div>
+                    <div class="result-answer">"${result.answer}"</div>
+                    <div class="result-summary">${result.summary.substring(0, 200)}${result.summary.length > 200 ? '...' : ''}</div>
+                </div>
+            `).join('');
+
+            pgvectorResultsDiv.innerHTML = pgvectorResult.top_8_results.map(result => `
+                <div class="result-item">
+                    <span class="result-rank">${result.rank}</span>
+                    <span class="result-score">${result.score.toFixed(6)}</span>
+                    <div class="result-title">${result.title}</div>
+                    <div class="result-answer">"${result.answer}"</div>
+                    <div class="result-summary">${result.summary.substring(0, 200)}${result.summary.length > 200 ? '...' : ''}</div>
+                </div>
+            `).join('');
+
+            showDocumentComparison(qdrantResult.top_8_results, pgvectorResult.top_8_results);
+        }
+
+                function showDocumentComparison(qdrantResults, pgvectorResults) {
+            const comparisonSection = document.getElementById('comparison-section');
+            const comparisonDiv = document.getElementById('document-comparison');
+
+            // Use Map to group by document title and collect all rankings
+            const docMap = new Map();
+
+            // Process Qdrant results
+            qdrantResults.forEach(qResult => {
+                const key = qResult.title;
+                if (!docMap.has(key)) {
+                    docMap.set(key, {
+                        title: key,
+                        qdrantRanks: [],
+                        pgvectorRanks: []
+                    });
+                }
+                docMap.get(key).qdrantRanks.push({
+                    rank: qResult.rank,
+                    score: qResult.score
+                });
+            });
+
+            // Process PGVector results and match with existing documents
+            pgvectorResults.forEach(pResult => {
+                const key = pResult.title;
+                if (docMap.has(key)) {
+                    docMap.get(key).pgvectorRanks.push({
+                        rank: pResult.rank,
+                        score: pResult.score
+                    });
+                }
+            });
+
+            // Filter only documents that appear in both results
+            const commonDocs = Array.from(docMap.values()).filter(doc =>
+                doc.qdrantRanks.length > 0 && doc.pgvectorRanks.length > 0
+            );
+
+            if (commonDocs.length > 0) {
+                comparisonSection.style.display = 'block';
+                comparisonDiv.innerHTML = commonDocs.map(doc => {
+                    const qdrantRanksStr = doc.qdrantRanks
+                        .map(r => `#${r.rank} (${r.score.toFixed(4)})`)
+                        .join(', ');
+                    const pgvectorRanksStr = doc.pgvectorRanks
+                        .map(r => `#${r.rank} (${r.score.toFixed(6)})`)
+                        .join(', ');
+
+                    return `
+                        <div class="doc-comparison-item">
+                            <div class="doc-title">${doc.title}</div>
+                            <div class="rank-badge rank-qdrant">Qdrant: ${qdrantRanksStr}</div>
+                            <div class="rank-badge rank-pgvector">PGVector: ${pgvectorRanksStr}</div>
+                        </div>
+                    `;
+                }).join('');
+            } else {
+                comparisonSection.style.display = 'none';
+            }
+        }
+
+        function clearResults() {
+            document.getElementById('question-info').style.display = 'none';
+            document.getElementById('qdrant-results').innerHTML = '<div class="no-results">请选择一个问题查看搜索结果</div>';
+            document.getElementById('pgvector-results').innerHTML = '<div class="no-results">请选择一个问题查看搜索结果</div>';
+            document.getElementById('comparison-section').style.display = 'none';
+        }
+
+    </script>
+</body>
+</html>
+
+
+
+

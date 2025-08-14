@@ -327,7 +327,7 @@ class DatabaseService:
         score_threshold: Optional[float] = None,
         filter_conditions: Optional[Dict[str, Any]] = None
     ) -> List[Dict[str, Any]]:
-        """Search for similar vectors"""
+        """Search for similar vectors using 4-way dense vector search (question_dense + answer_dense)"""
         try:
             # Resolve alias to actual collection name
             normalized_name = await self.resolve_collection_name(collection_name)
@@ -335,39 +335,66 @@ class DatabaseService:
             async with self.get_connection() as conn:
                 vector_str = "[" + ",".join(map(str, query_vector)) + "]"
 
-                # Build query
-                query_parts = [f"""
-                    SELECT id, vector, payload,
-                           1 - (vector <=> '{vector_str}') as score
+                                # Query both question_dense and answer_dense vectors with improved scoring
+                question_dense_query = f"""
+                    SELECT id, payload, 'question_dense' as vector_type,
+                           CASE
+                               WHEN (question_dense <=> '{vector_str}') <= 0.001 THEN 1.0
+                               WHEN (question_dense <=> '{vector_str}') <= 0.3 THEN 0.9 - 2.0 * (question_dense <=> '{vector_str}')
+                               WHEN (question_dense <=> '{vector_str}') <= 0.7 THEN 0.6 - 0.5 * (question_dense <=> '{vector_str}')
+                               ELSE GREATEST(0.05, 0.3 - 0.2 * (question_dense <=> '{vector_str}'))
+                           END as score
                     FROM {normalized_name}
-                """]
+                    WHERE question_dense IS NOT NULL
+                    ORDER BY question_dense <=> '{vector_str}' ASC
+                """
 
-                conditions = []
+                answer_dense_query = f"""
+                    SELECT id, payload, 'answer_dense' as vector_type,
+                           CASE
+                               WHEN (answer_dense <=> '{vector_str}') <= 0.001 THEN 1.0
+                               WHEN (answer_dense <=> '{vector_str}') <= 0.3 THEN 0.9 - 2.0 * (answer_dense <=> '{vector_str}')
+                               WHEN (answer_dense <=> '{vector_str}') <= 0.7 THEN 0.6 - 0.5 * (answer_dense <=> '{vector_str}')
+                               ELSE GREATEST(0.05, 0.3 - 0.2 * (answer_dense <=> '{vector_str}'))
+                           END as score
+                    FROM {normalized_name}
+                    WHERE answer_dense IS NOT NULL
+                    ORDER BY answer_dense <=> '{vector_str}' ASC
+                """
+
                 params = []
                 param_count = 1
 
-                # Add score threshold
+                                # Add score threshold conditions for new scoring system
                 if score_threshold is not None:
-                    conditions.append(f"(1 - (vector <=> '{vector_str}')) >= ${param_count}")
-                    params.append(score_threshold)
-                    param_count += 1
+                    question_dense_query = question_dense_query.replace("WHERE question_dense IS NOT NULL",
+                        f"WHERE question_dense IS NOT NULL AND (CASE WHEN (question_dense <=> '{vector_str}') <= 0.001 THEN 1.0 WHEN (question_dense <=> '{vector_str}') <= 0.3 THEN 0.9 - 2.0 * (question_dense <=> '{vector_str}') WHEN (question_dense <=> '{vector_str}') <= 0.7 THEN 0.6 - 0.5 * (question_dense <=> '{vector_str}') ELSE GREATEST(0.05, 0.3 - 0.2 * (question_dense <=> '{vector_str}')) END) >= {score_threshold}")
+                    answer_dense_query = answer_dense_query.replace("WHERE answer_dense IS NOT NULL",
+                        f"WHERE answer_dense IS NOT NULL AND (CASE WHEN (answer_dense <=> '{vector_str}') <= 0.001 THEN 1.0 WHEN (answer_dense <=> '{vector_str}') <= 0.3 THEN 0.9 - 2.0 * (answer_dense <=> '{vector_str}') WHEN (answer_dense <=> '{vector_str}') <= 0.7 THEN 0.6 - 0.5 * (answer_dense <=> '{vector_str}') ELSE GREATEST(0.05, 0.3 - 0.2 * (answer_dense <=> '{vector_str}')) END) >= {score_threshold}")
 
-                # Add filter conditions (basic implementation)
+                # Add filter conditions
                 if filter_conditions:
                     for key, value in filter_conditions.items():
-                        conditions.append(f"payload->>'{key}' = ${param_count}")
-                        params.append(str(value))
-                        param_count += 1
+                        filter_condition = f"payload->>'{key}' = '{str(value)}'"
+                        question_dense_query = question_dense_query.replace("WHERE question_dense IS NOT NULL", f"WHERE question_dense IS NOT NULL AND {filter_condition}")
+                        answer_dense_query = answer_dense_query.replace("WHERE answer_dense IS NOT NULL", f"WHERE answer_dense IS NOT NULL AND {filter_condition}")
 
-                if conditions:
-                    query_parts.append("WHERE " + " AND ".join(conditions))
+                # Combine both queries with UNION ALL, maintaining individual ordering
+                combined_query = f"""
+                    (
+                        {question_dense_query}
+                        LIMIT {limit}
+                    )
+                    UNION ALL
+                    (
+                        {answer_dense_query}
+                        LIMIT {limit}
+                    )
+                    ORDER BY score DESC
+                    LIMIT {limit * 2} OFFSET {offset}
+                """
 
-                query_parts.append(f"ORDER BY vector <=> '{vector_str}'")
-                query_parts.append(f"LIMIT {limit} OFFSET {offset}")
-
-                query = " ".join(query_parts)
-
-                rows = await conn.fetch(query, *params)
+                rows = await conn.fetch(combined_query)
 
                 results = []
                 for row in rows:
@@ -375,9 +402,10 @@ class DatabaseService:
                         "id": row["id"],
                         "score": float(row["score"]),
                         "payload": row["payload"] if row["payload"] else {},
-                        "vector": list(map(float, row["vector"])) if row["vector"] else None
+                        "vector_type": row["vector_type"]  # Track which vector type matched
                     })
 
+                logger.debug(f"Dense vector search returned {len(results)} results from {normalized_name}")
                 return results
 
         except Exception as e:
@@ -391,64 +419,54 @@ class DatabaseService:
         limit: int = 10,
         offset: int = 0
     ) -> List[Dict[str, Any]]:
-        """BM25 text search using plpgsql_bm25 or PostgreSQL FTS fallback"""
+        """BM25 text search using 4-way sparse search (question_sparse + answer_sparse) with FTS fallback"""
         try:
             # Resolve alias to actual collection name
             normalized_name = await self.resolve_collection_name(collection_name)
 
             async with self.get_connection() as conn:
-                # Try plpgsql_bm25 first
-                try:
-                    bm25_query = f"SELECT * FROM bm25topk('{normalized_name}', 'text_content', $1, {limit + offset}, 'luceneaccurate', 'en')"
-                    bm25_rows = await conn.fetch(bm25_query, query_text)
+                # Search both question and answer text from payload using PostgreSQL FTS
+                question_fts_query = f"""
+                    SELECT id, payload, 'question_text' as text_type,
+                           ts_rank(to_tsvector('english', payload->>'question'), plainto_tsquery('english', $1)) as score
+                    FROM {normalized_name}
+                    WHERE payload->>'question' IS NOT NULL
+                      AND to_tsvector('english', payload->>'question') @@ plainto_tsquery('english', $1)
+                """
 
-                    results = []
-                    # Apply offset manually since bm25topk doesn't support offset
-                    for i, row in enumerate(bm25_rows[offset:offset + limit]):
-                        # Get original document and payload
-                        doc_query = f"SELECT id, payload, text_content FROM {normalized_name} WHERE text_content = $1"
-                        doc_row = await conn.fetchrow(doc_query, row["doc"])
+                answer_fts_query = f"""
+                    SELECT id, payload, 'answer_text' as text_type,
+                           ts_rank(to_tsvector('english', payload->>'answer'), plainto_tsquery('english', $1)) as score
+                    FROM {normalized_name}
+                    WHERE payload->>'answer' IS NOT NULL
+                      AND to_tsvector('english', payload->>'answer') @@ plainto_tsquery('english', $1)
+                """
 
-                        if doc_row:
-                            results.append({
-                                "id": doc_row["id"],
-                                "score": float(row["score"]),
-                                "payload": doc_row["payload"] if doc_row["payload"] else {},
-                                "text_content": doc_row["text_content"]
-                            })
+                # Combine both queries with UNION ALL and order by score
+                combined_fts_query = f"""
+                    ({question_fts_query})
+                    UNION ALL
+                    ({answer_fts_query})
+                    ORDER BY score DESC
+                    LIMIT {limit * 2} OFFSET {offset}
+                """
 
-                    logger.debug(f"BM25 search using plpgsql_bm25 returned {len(results)} results")
-                    return results
+                rows = await conn.fetch(combined_fts_query, query_text, query_text)
 
-                except Exception as bm25_error:
-                    logger.debug(f"plpgsql_bm25 search failed: {bm25_error}, falling back to PostgreSQL FTS")
+                results = []
+                for row in rows:
+                    results.append({
+                        "id": row["id"],
+                        "score": float(row["score"]),
+                        "payload": row["payload"] if row["payload"] else {},
+                        "text_type": row["text_type"]  # Track which text type matched
+                    })
 
-                    # Fallback to PostgreSQL FTS
-                    fts_query = f"""
-                        SELECT id, payload, text_content,
-                               ts_rank(to_tsvector('english', text_content), plainto_tsquery('english', $1)) as score
-                        FROM {normalized_name}
-                        WHERE to_tsvector('english', text_content) @@ plainto_tsquery('english', $1)
-                        ORDER BY score DESC
-                        LIMIT {limit} OFFSET {offset}
-                    """
-
-                    rows = await conn.fetch(fts_query, query_text)
-
-                    results = []
-                    for row in rows:
-                        results.append({
-                            "id": row["id"],
-                            "score": float(row["score"]),
-                            "payload": row["payload"] if row["payload"] else {},
-                            "text_content": row["text_content"]
-                        })
-
-                    logger.debug(f"FTS fallback search returned {len(results)} results")
-                    return results
+                logger.debug(f"BM25 FTS search returned {len(results)} results from {normalized_name}")
+                return results
 
         except Exception as e:
-            logger.error(f"BM25 search failed completely: {e}")
+            logger.error(f"BM25 search failed: {e}")
             return []
 
     async def create_alias(self, alias_name: str, collection_name: str) -> bool:
