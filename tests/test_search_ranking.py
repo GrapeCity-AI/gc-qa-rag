@@ -87,7 +87,7 @@ class SearchRankingTester:
                 payload = {
                     "keyword": question,
                     "mode": "chat",
-                    "product": "bbb",
+                    "product": "default",
                     "session_id": self.session_id,
                     "session_index": session_index
                 }

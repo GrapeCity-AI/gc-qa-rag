@@ -1,0 +1,45 @@
+# Cells
+
+A list of topics related to the cell functionality in SpreadJS
+
+## Content
+
+A cell is the basic unit of a worksheet which is formed on the intersection of a row and a column. SpreadJS allows you to work with cells and perform different operations on them:
+
+* [Work with Cells](gcdocsite__documentlink?toc-item-id=b6ba3648-232c-4051-80c9-13c7f22f4dfc)
+* [Cell Types](gcdocsite__documentlink?toc-item-id=6e9c82bb-c6c6-4309-8863-5e57902a0437)
+* [Cell Format](gcdocsite__documentlink?toc-item-id=3dfc1e88-9f21-4409-bcbb-1a7c835aa17d)
+* [Cell States](gcdocsite__documentlink?toc-item-id=a2d150f4-861f-4286-a2d2-732a34bc2ce0)
+* [Cell Range](gcdocsite__documentlink?toc-item-id=00bcc5e1-33eb-4024-a531-adb57858ffb3)
+* [Get Dirty Status](gcdocsite__documentlink?toc-item-id=2fbfffec-b515-4692-a6d0-95d3de6ce25e)
+* [Cell Buttons](gcdocsite__documentlink?toc-item-id=5429b721-5e85-42e5-94c3-7f2510a4c4a6)
+* [Cell Dropdowns](gcdocsite__documentlink?toc-item-id=ed4a30ef-0e7c-43c1-8114-e80fdbe3a7fc)
+* [Cell Comments](gcdocsite__documentlink?toc-item-id=1eef67eb-89cf-440a-bfc9-029679b8c473)
+* [Hyperlink](gcdocsite__documentlink?toc-item-id=6bc424f4-ef53-435c-b211-28d39b75a10b)
+* [Auto Merge Cells](gcdocsite__documentlink?toc-item-id=a2551ecf-aec1-4435-a6ad-86164d84557f)
+* [AutoFit](gcdocsite__documentlink?toc-item-id=92ac12d6-0b63-4b70-9260-6cd11c2ef16d)
+* [Auto Fill Data](gcdocsite__documentlink?toc-item-id=677dacfe-f878-4d02-b1d0-d258a67cfc4a)
+* [Shrink to Fit](gcdocsite__documentlink?toc-item-id=93584dea-12c0-42cb-b515-ac24731e7adb)
+* [Cell Overflow](gcdocsite__documentlink?toc-item-id=d986cbd0-9b54-4bfd-81fe-a374b8c22a54)
+* [Ellipsis or Tips for Cell Overflow](gcdocsite__documentlink?toc-item-id=fb46cfa7-f5f3-4a4b-9c58-e17bdb084bf0)
+* [Cell Alignment and Indentation](gcdocsite__documentlink?toc-item-id=3b6ef9b3-d3dc-46d0-8461-c3390c7b676c)
+* [Cell Padding and Label Styles](gcdocsite__documentlink?toc-item-id=67592651-d9fd-4e40-a0f2-9a5c538e72e7)
+* [Cell Span](gcdocsite__documentlink?toc-item-id=b24734af-3601-4189-a13f-2d24de88cc02)
+* [Cell Tags](gcdocsite__documentlink?toc-item-id=6bc08b8f-2702-4190-9ece-5336666df5ed)
+* [Styles](gcdocsite__documentlink?toc-item-id=513d00e3-c0bb-4b34-bb8c-3afd0937b170)
+* [Cell Colors](gcdocsite__documentlink?toc-item-id=cc7b390c-8212-4bf5-9426-a5dbf0ea389d)
+* [Cell Background Image](gcdocsite__documentlink?toc-item-id=22ecd728-a8e0-43a7-84d8-b58caec36d20)
+* [Borders, Gridlines and Diagonal Lines](gcdocsite__documentlink?toc-item-id=b3e0b48b-4149-481b-a418-821688a71e37)
+* [Quote Prefix](gcdocsite__documentlink?toc-item-id=e71aa6f3-7376-413d-8329-d3968a3741f3)
+* [Insert Cut or Copied Cells](gcdocsite__documentlink?toc-item-id=ed4d7f78-51d9-4785-b9a1-76362da150c9)
+* [Rotate Text In Cells](gcdocsite__documentlink?toc-item-id=a882a20b-98e4-4b77-acfb-03ee6457fd81)
+* [Vertical Text Direction](gcdocsite__documentlink?toc-item-id=caf235b6-c0a7-4e7f-ac4d-ddc8ac81d22b)
+* [Text Decoration](gcdocsite__documentlink?toc-item-id=89db42fa-759d-4df4-ac7c-58b39aba81c2)
+* [Rich Text](gcdocsite__documentlink?toc-item-id=e9f1240c-96ec-4c32-b8aa-73a85a355399)
+* [Wrap Text](gcdocsite__documentlink?toc-item-id=e5e36b8e-6af9-41c9-9b4c-1aca1ebd0891)
+* [Drag and Drop](gcdocsite__documentlink?toc-item-id=75a46b31-3137-4ac9-91eb-0a62dcc50abe)
+* [Drag and Merge](gcdocsite__documentlink?toc-item-id=b4cea1ad-1ccb-4a76-94f8-ead9e4b5f2b9)
+* [Edit Mode Always](gcdocsite__documentlink?toc-item-id=ac1218a8-09b2-4caa-8d4c-d26e1970e892)
+* [Watermark](gcdocsite__documentlink?toc-item-id=b9dca229-d251-4925-a718-48bc2d390dbf)
+* [Pattern Fill and Gradient Fill](gcdocsite__documentlink?toc-item-id=24cf8f1f-12ad-4668-8806-f4212caf2899)
+* [Paste Options](gcdocsite__documentlink?toc-item-id=84ca9fd9-59fc-431d-80db-c073f05b9d55)
