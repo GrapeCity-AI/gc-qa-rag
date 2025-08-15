@@ -21,6 +21,32 @@ GC-QA-RAG is an **enterprise-grade Retrieval-Augmented Generation (RAG) system**
 -   🚀 **Ready-to-use Solution**: Provides complete code from knowledge base construction (ETL), backend services to frontend interfaces, with Docker one-click deployment support, helping developers quickly build high-quality RAG systems.
 -   📚 **Comprehensive Documentation**: Offers complete documentation covering product design, technical architecture, and implementation experience - not just open-source code, but a reusable methodology.
 
+## 🧪 AI Evaluation Validation
+
+To validate the system's actual effectiveness, we had multiple mainstream large language models participate in the "HuoZiGe" low-code platform certification exams. The evaluation used three modes: direct answer generation, knowledge base retrieval (GC-QA-RAG), and Agent automatic planning retrieval (based on GC-QA-RAG).
+
+**Evaluation Results Summary**:
+
+| Exam Subject                                           | Model               | Direct Generation | Knowledge Base Retrieval (RAG) | Agent Automatic Planning Retrieval | **Max Improvement** |
+| :----------------------------------------------------- | :------------------ | :---------------- | :----------------------------- | :--------------------------------- | :------------------ |
+| **Certified Engineer - Subject 1 (Fundamentals)**      | **Claude-4-sonnet** | 65.80%            | 81.03%                         | **88.51%**                         | +22.71%             |
+|                                                        | **GLM-4.5**         | 61.21%            | 84.20%                         | 87.07%                             | **+25.86%**         |
+|                                                        | **Qwen3**           | 67.82%            | 83.05%                         | 85.92%                             | +18.10%             |
+| **Certified Engineer - Subject 2 (Practice)**          | **Claude-4-sonnet** | 57.41%            | 69.44%                         | **70.37%**                         | +12.96%             |
+|                                                        | **GLM-4.5**         | 47.22%            | 64.81%                         | 65.74%                             | +18.52%             |
+|                                                        | **Qwen3**           | 51.85%            | 65.74%                         | 68.52%                             | +16.67%             |
+| **Advanced Certified Engineer - Subject 1 (Advanced)** | **Claude-4-sonnet** | 52.94%            | 65.88%                         | **74.12%**                         | +21.18%             |
+|                                                        | **GLM-4.5**         | 57.65%            | 67.06%                         | 68.24%                             | +10.59%             |
+|                                                        | **Qwen3**           | 54.12%            | 61.18%                         | 68.24%                             | +14.12%             |
+
+**Key Findings**:
+
+-   **Agent mode shows the most significant results**: In all tests, Agent automatic planning retrieval mode achieved the highest scores, with maximum improvement of 25.86%
+-   **RAG technology significantly improves accuracy**: All models showed substantial improvement after gaining external knowledge base support
+-   **Claude-4-sonnet demonstrates the best overall performance**: Achieved the highest scores in Agent mode across all three subjects
+
+📖 **View Complete Evaluation Report**: [《让 LLM 做低代码考试，谁会胜出？》](./tools/gc-qa-rag-eval/让LLM做低代码考试谁会胜出.md)
+
 ## 📖 Table of Contents
 
 -   [Quick Start](#-quick-start)
