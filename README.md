@@ -165,7 +165,14 @@ docker compose up -d --build
 
 ### 📋 配置说明
 
-使用官方 Docker 镜像时，需要在 docker-compose.dockerhub.yml 文件中配置环境变量传递给容器。系统支持优先级为：**Docker 环境变量 > .env 文件 > JSON 配置文件**
+使用官方 Docker 镜像时，需要在 docker-compose.dockerhub.yml 文件中配置环境变量传递给容器。系统支持灵活的配置优先级：
+
+**配置优先级**：`.saved.json 文件` > `Docker 环境变量` > `.env 文件` > `JSON 配置文件` > `默认值`
+
+-   **`.saved.json 文件`**：通过前端界面修改配置时动态生成，优先级最高，确保用户修改的配置能够生效
+-   **Docker 环境变量**：适合生产环境部署，通过 docker-compose 文件设置
+-   **`.env 文件`**：适合开发环境，存储敏感信息如 API 密钥
+-   **JSON 配置文件\*\***：基础配置模板，支持复杂的嵌套配置结构
 
 **完整的环境变量列表请查看：**
 

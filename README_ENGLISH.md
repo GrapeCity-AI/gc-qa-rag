@@ -137,6 +137,22 @@ If you want to understand the details of each module or perform secondary develo
 -   MySQL
 -   Qdrant
 
+### 📋 Configuration Instructions
+
+When using official Docker images, you need to configure environment variables in the docker-compose.dockerhub.yml file to pass them to containers. The system supports flexible configuration priority:
+
+**Configuration Priority**: `.saved.json files` > `Docker environment variables` > `.env files` > `JSON config files` > `default values`
+
+-   **`.saved.json files`**: Dynamically generated when modifying configuration through the frontend interface, highest priority, ensuring user-modified configurations take effect
+-   **Docker environment variables**: Suitable for production deployment, set through docker-compose files
+-   **`.env files`**: Suitable for development environments, storing sensitive information like API keys
+-   **JSON config files**: Base configuration templates, supporting complex nested configuration structures
+
+**For complete environment variable lists, see:**
+
+-   RAG Service: [`sources/gc-qa-rag-server/env.example`](./sources/gc-qa-rag-server/env.example)
+-   ETL Service: [`sources/gc-qa-rag-etl/env.example`](./sources/gc-qa-rag-etl/env.example)
+
 **Important**: Regardless of which deployment method you choose, you need to configure API keys first!
 
 For detailed steps, please refer to our [Quick Start Guide](./quickstart_ENGLISH.md).

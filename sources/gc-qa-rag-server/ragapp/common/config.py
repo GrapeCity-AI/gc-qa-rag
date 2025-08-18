@@ -29,19 +29,29 @@ class DbConfig:
     connection_string: str
 
 
-def _get_config_value(key: str, config_raw: dict, default: Optional[str] = None) -> str:
-    """Get configuration value with priority: ENV > .env > JSON."""
-    # First check environment variables
-    env_value = os.getenv(key)
-    if env_value is not None:
-        return env_value
-    
-    # Then check nested JSON structure
+def _get_config_value(key: str, config_raw: dict, saved_config_raw: dict, default: Optional[str] = None) -> str:
+    """Get configuration value with priority: saved.json > ENV > .env > JSON."""
+    # First check saved configuration (highest priority)
     keys = key.lower().split('_')
     # Skip the 'gc_qa_rag' prefix for JSON lookup
     if keys[0] == 'gc' and keys[1] == 'qa' and keys[2] == 'rag':
         keys = keys[3:]
     
+    # Check saved config first
+    current = saved_config_raw
+    try:
+        for k in keys:
+            current = current[k]
+        return str(current)
+    except (KeyError, TypeError):
+        pass
+    
+    # Then check environment variables
+    env_value = os.getenv(key)
+    if env_value is not None:
+        return env_value
+    
+    # Then check nested JSON structure
     current = config_raw
     try:
         for k in keys:
@@ -58,10 +68,25 @@ def _get_config_value(key: str, config_raw: dict, default: Optional[str] = None)
 
 
 def _get_llm_config(
-    config_raw: dict, config_type: str, default_config: Optional[LlmConfig] = None
+    config_raw: dict, saved_config_raw: dict, config_type: str, default_config: Optional[LlmConfig] = None
 ) -> LlmConfig:
     """Get LLM configuration with fallback to default config if specified config doesn't exist."""
-    # Try to get from environment variables first
+    # Try to get from saved config first (highest priority)
+    if config_type in saved_config_raw:
+        saved_config = saved_config_raw[config_type]
+        api_key = saved_config.get("api_key")
+        api_base = saved_config.get("api_base")
+        model_name = saved_config.get("model_name")
+        
+        # If all saved config values are set, use them
+        if api_key and api_base and model_name:
+            return LlmConfig(
+                api_key=api_key,
+                api_base=api_base,
+                model_name=model_name,
+            )
+    
+    # Try to get from environment variables
     env_prefix = f"GC_QA_RAG_{config_type.upper()}"
     api_key = os.getenv(f"{env_prefix}_API_KEY")
     api_base = os.getenv(f"{env_prefix}_API_BASE")
@@ -94,9 +119,9 @@ def _get_llm_config(
     
     # Last resort: use default LLM config from env/JSON
     return LlmConfig(
-        api_key=api_key or _get_config_value("GC_QA_RAG_LLM_DEFAULT_API_KEY", config_raw),
-        api_base=api_base or _get_config_value("GC_QA_RAG_LLM_DEFAULT_API_BASE", config_raw, "https://dashscope.aliyuncs.com/compatible-mode/v1"),
-        model_name=model_name or _get_config_value("GC_QA_RAG_LLM_DEFAULT_MODEL_NAME", config_raw, "qwen-plus"),
+        api_key=api_key or _get_config_value("GC_QA_RAG_LLM_DEFAULT_API_KEY", config_raw, saved_config_raw),
+        api_base=api_base or _get_config_value("GC_QA_RAG_LLM_DEFAULT_API_BASE", config_raw, saved_config_raw, "https://dashscope.aliyuncs.com/compatible-mode/v1"),
+        model_name=model_name or _get_config_value("GC_QA_RAG_LLM_DEFAULT_MODEL_NAME", config_raw, saved_config_raw, "qwen-plus"),
     )
 
 
@@ -130,27 +155,38 @@ class Config:
             except json.JSONDecodeError as e:
                 print(f"Warning: Invalid JSON in configuration file: {e}")
 
+        # Try to load saved config (highest priority)
+        saved_config_raw = {}
+        saved_config_path = Path(f".config.{environment}.saved.json")
+        if saved_config_path.exists():
+            try:
+                with open(saved_config_path) as f:
+                    saved_config_raw = json.load(f)
+                print(f"Loaded saved configuration from: {saved_config_path}")
+            except json.JSONDecodeError as e:
+                print(f"Warning: Invalid JSON in saved configuration file: {e}")
+
         # Initialize default config first
-        llm_default = _get_llm_config(config_raw, "llm_default")
+        llm_default = _get_llm_config(config_raw, saved_config_raw, "llm_default")
 
         return cls(
             environment=environment,
             llm_default=llm_default,
-            llm_summary=_get_llm_config(config_raw, "llm_summary", llm_default),
-            llm_think=_get_llm_config(config_raw, "llm_think", llm_default),
-            llm_query=_get_llm_config(config_raw, "llm_query", llm_default),
-            llm_research=_get_llm_config(config_raw, "llm_research", llm_default),
+            llm_summary=_get_llm_config(config_raw, saved_config_raw, "llm_summary", llm_default),
+            llm_think=_get_llm_config(config_raw, saved_config_raw, "llm_think", llm_default),
+            llm_query=_get_llm_config(config_raw, saved_config_raw, "llm_query", llm_default),
+            llm_research=_get_llm_config(config_raw, saved_config_raw, "llm_research", llm_default),
             embedding=EmbeddingConfig(
-                api_key=_get_config_value("GC_QA_RAG_EMBEDDING_API_KEY", config_raw)
+                api_key=_get_config_value("GC_QA_RAG_EMBEDDING_API_KEY", config_raw, saved_config_raw)
             ),
             vector_db=VectorDbConfig(
-                host=_get_config_value("GC_QA_RAG_VECTOR_DB_HOST", config_raw, "http://rag_qdrant_container:6333")
+                host=_get_config_value("GC_QA_RAG_VECTOR_DB_HOST", config_raw, saved_config_raw, "http://rag_qdrant_container:6333")
             ),
             db=DbConfig(
-                connection_string=_get_config_value("GC_QA_RAG_DB_CONNECTION_STRING", config_raw, "mysql+mysqlconnector://root:12345678@rag_mysql_container:3306/search_db")
+                connection_string=_get_config_value("GC_QA_RAG_DB_CONNECTION_STRING", config_raw, saved_config_raw, "mysql+mysqlconnector://root:12345678@rag_mysql_container:3306/search_db")
             ),
-            log_path=_get_config_value("GC_QA_RAG_LOG_PATH", config_raw, user_log_dir("gc-qa-rag-server", ensure_exists=True)),
-            etl_base_url=_get_config_value("GC_QA_RAG_ETL_BASE_URL", config_raw, "http://host.docker.internal:8001"),
+            log_path=_get_config_value("GC_QA_RAG_LOG_PATH", config_raw, saved_config_raw, user_log_dir("gc-qa-rag-server", ensure_exists=True)),
+            etl_base_url=_get_config_value("GC_QA_RAG_ETL_BASE_URL", config_raw, saved_config_raw, "http://host.docker.internal:8001"),
         )
 
 

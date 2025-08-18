@@ -32,19 +32,29 @@ class VectorDbConfig:
     host: str
 
 
-def _get_config_value(key: str, config_raw: dict, default: Optional[str] = None) -> str:
-    """Get configuration value with priority: ENV > .env > JSON."""
-    # First check environment variables
-    env_value = os.getenv(key)
-    if env_value is not None:
-        return env_value
-    
-    # Then check nested JSON structure
+def _get_config_value(key: str, config_raw: dict, saved_config_raw: dict, default: Optional[str] = None) -> str:
+    """Get configuration value with priority: saved.json > ENV > .env > JSON."""
+    # First check saved configuration (highest priority)
     keys = key.lower().split('_')
     # Skip the 'gc_qa_rag' prefix for JSON lookup
     if len(keys) >= 4 and keys[0] == 'gc' and keys[1] == 'qa' and keys[2] == 'rag':
         keys = keys[3:]
     
+    # Check saved config first
+    current = saved_config_raw
+    try:
+        for k in keys:
+            current = current[k]
+        return str(current)
+    except (KeyError, TypeError):
+        pass
+    
+    # Then check environment variables
+    env_value = os.getenv(key)
+    if env_value is not None:
+        return env_value
+    
+    # Then check nested JSON structure
     current = config_raw
     try:
         for k in keys:
@@ -60,9 +70,9 @@ def _get_config_value(key: str, config_raw: dict, default: Optional[str] = None)
     raise ValueError(f"Configuration value not found for key: {key}")
 
 
-def _get_config_int(key: str, config_raw: dict, default: Optional[int] = None) -> int:
-    """Get integer configuration value with priority: ENV > .env > JSON."""
-    value = _get_config_value(key, config_raw, str(default) if default is not None else None)
+def _get_config_int(key: str, config_raw: dict, saved_config_raw: dict, default: Optional[int] = None) -> int:
+    """Get integer configuration value with priority: saved.json > ENV > .env > JSON."""
+    value = _get_config_value(key, config_raw, saved_config_raw, str(default) if default is not None else None)
     try:
         return int(value)
     except (ValueError, TypeError):
@@ -97,27 +107,38 @@ class Config:
             except json.JSONDecodeError as e:
                 print(f"Warning: Invalid JSON in configuration file: {e}")
 
+        # Try to load saved config (highest priority)
+        saved_config_raw = {}
+        saved_config_path = Path(f".config.{environment}.saved.json")
+        if saved_config_path.exists():
+            try:
+                with open(saved_config_path) as f:
+                    saved_config_raw = json.load(f)
+                print(f"Loaded saved configuration from: {saved_config_path}")
+            except json.JSONDecodeError as e:
+                print(f"Warning: Invalid JSON in saved configuration file: {e}")
+
         return cls(
             environment=environment,
             das=DasConfig(
-                base_url_page=_get_config_value("GC_QA_RAG_DAS_BASE_URL_PAGE", config_raw, ""),
-                base_url_thread=_get_config_value("GC_QA_RAG_DAS_BASE_URL_THREAD", config_raw, ""),
-                token=_get_config_value("GC_QA_RAG_DAS_TOKEN", config_raw, ""),
+                base_url_page=_get_config_value("GC_QA_RAG_DAS_BASE_URL_PAGE", config_raw, saved_config_raw, ""),
+                base_url_thread=_get_config_value("GC_QA_RAG_DAS_BASE_URL_THREAD", config_raw, saved_config_raw, ""),
+                token=_get_config_value("GC_QA_RAG_DAS_TOKEN", config_raw, saved_config_raw, ""),
             ),
             llm=LlmConfig(
-                api_key=_get_config_value("GC_QA_RAG_LLM_API_KEY", config_raw),
-                api_base=_get_config_value("GC_QA_RAG_LLM_API_BASE", config_raw, "https://dashscope.aliyuncs.com/compatible-mode/v1"),
-                model_name=_get_config_value("GC_QA_RAG_LLM_MODEL_NAME", config_raw, "qwen-plus"),
-                max_rpm=_get_config_int("GC_QA_RAG_LLM_MAX_RPM", config_raw, 100),
+                api_key=_get_config_value("GC_QA_RAG_LLM_API_KEY", config_raw, saved_config_raw),
+                api_base=_get_config_value("GC_QA_RAG_LLM_API_BASE", config_raw, saved_config_raw, "https://dashscope.aliyuncs.com/compatible-mode/v1"),
+                model_name=_get_config_value("GC_QA_RAG_LLM_MODEL_NAME", config_raw, saved_config_raw, "qwen-plus"),
+                max_rpm=_get_config_int("GC_QA_RAG_LLM_MAX_RPM", config_raw, saved_config_raw, 100),
             ),
             embedding=EmbeddingConfig(
-                api_key=_get_config_value("GC_QA_RAG_EMBEDDING_API_KEY", config_raw)
+                api_key=_get_config_value("GC_QA_RAG_EMBEDDING_API_KEY", config_raw, saved_config_raw)
             ),
             vector_db=VectorDbConfig(
-                host=_get_config_value("GC_QA_RAG_VECTOR_DB_HOST", config_raw, "http://host.docker.internal:6333")
+                host=_get_config_value("GC_QA_RAG_VECTOR_DB_HOST", config_raw, saved_config_raw, "http://host.docker.internal:6333")
             ),
-            root_path=_get_config_value("GC_QA_RAG_ROOT_PATH", config_raw, user_cache_dir("gc-qa-rag", ensure_exists=True)),
-            log_path=_get_config_value("GC_QA_RAG_LOG_PATH", config_raw, user_log_dir("gc-qa-rag", ensure_exists=True)),
+            root_path=_get_config_value("GC_QA_RAG_ROOT_PATH", config_raw, saved_config_raw, user_cache_dir("gc-qa-rag", ensure_exists=True)),
+            log_path=_get_config_value("GC_QA_RAG_LOG_PATH", config_raw, saved_config_raw, user_log_dir("gc-qa-rag", ensure_exists=True)),
         )
 
 
