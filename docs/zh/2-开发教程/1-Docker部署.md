@@ -94,9 +94,28 @@
 
 ### 3.1 部署方式选择
 
-系统提供两种一键部署方式，您可以根据需求选择：
+系统提供三种一键部署方式，您可以根据需求选择：
 
-#### 方式一：自动构建部署（推荐新手）
+#### 方式一：使用 Docker Hub 镜像（推荐生产环境）
+
+使用 `docker-compose.dockerhub.yml`，使用预发布的 Docker Hub 镜像：
+
+```bash
+# 进入部署目录
+cd sources/gc-qa-rag-server/deploy
+
+# 使用 Docker Hub 镜像启动服务
+docker compose -f docker-compose.dockerhub.yml up -d
+```
+
+**适用场景**：
+
+-   ✅ 生产环境部署
+-   ✅ 快速启动（无需构建时间）
+-   ✅ 使用稳定版本
+-   ✅ 网络环境良好
+
+#### 方式二：自动构建部署（推荐新手）
 
 使用 `docker-compose.yml`，系统会自动构建最新代码：
 
@@ -115,9 +134,9 @@ docker compose up -d --build
 -   ✅ 希望使用最新代码
 -   ✅ 不想手动构建镜像
 
-#### 方式二：预构建镜像部署（推荐生产环境）
+#### 方式三：预构建镜像部署
 
-使用 `docker-compose.image.yml`，使用预构建的镜像：
+使用 `docker-compose.image.yml`，使用本地预构建的镜像：
 
 ```bash
 # 进入部署目录
@@ -136,10 +155,9 @@ docker compose -f docker-compose.image.yml up -d
 
 **适用场景**：
 
--   ✅ 生产环境部署
 -   ✅ 版本控制严格的环境
--   ✅ 已有镜像仓库
--   ✅ 快速启动（无需构建时间）
+-   ✅ 已有本地镜像仓库
+-   ✅ 网络环境受限
 
 ### 3.2 服务组成
 
@@ -160,6 +178,18 @@ docker compose -f docker-compose.image.yml up -d
 ### 3.3 ETL 模块部署
 
 ETL 模块负责数据采集、处理和向量化，是完整 RAG 系统的重要组成部分。需要在核心服务启动后单独部署：
+
+#### 方式一：使用 Docker Hub 镜像（推荐）
+
+```bash
+# 进入 ETL 目录
+cd sources/gc-qa-rag-etl/deploy
+
+# 使用 Docker Hub 镜像启动服务
+docker compose -f docker-compose.dockerhub.yml up -d
+```
+
+#### 方式二：本地构建部署
 
 ```bash
 # 进入 ETL 目录
@@ -202,7 +232,17 @@ ETL 应用：
 
 根据您使用的部署方式选择对应的停止命令：
 
-#### 方式一：自动构建部署
+#### 方式一：Docker Hub 镜像部署
+
+```bash
+# 停止所有服务
+docker compose -f docker-compose.dockerhub.yml down
+
+# 停止服务并删除数据卷（谨慎操作）
+docker compose -f docker-compose.dockerhub.yml down -v
+```
+
+#### 方式二：自动构建部署
 
 ```bash
 # 停止所有服务
@@ -212,7 +252,7 @@ docker compose down
 docker compose down -v
 ```
 
-#### 方式二：预构建镜像部署
+#### 方式三：预构建镜像部署
 
 ```bash
 # 停止所有服务
@@ -223,6 +263,15 @@ docker compose -f docker-compose.image.yml down -v
 ```
 
 #### 停止 ETL 服务
+
+**Docker Hub 镜像部署：**
+
+```bash
+# 停止 ETL 服务
+docker compose -f docker-compose.dockerhub.yml down
+```
+
+**本地构建部署：**
 
 ```bash
 # 停止 ETL 服务
@@ -252,6 +301,7 @@ docker compose ps
 1. **访问 ETL 管理后台**：http://localhost:8001
 
 2. **上传文档**：
+
     - 上传您的 PDF、Word、Markdown 等文档文件
 
 3. **处理数据**：
@@ -513,6 +563,34 @@ docker network ls
 docker network inspect rag_network
 ```
 
+### 8.5 Docker Hub 镜像相关问题
+
+#### Q: 拉取镜像失败，提示 "manifest not found"
+
+A: 检查镜像名称是否正确，确认镜像已发布到 Docker Hub
+
+#### Q: 使用 Docker Hub 镜像启动失败
+
+A: 确认已正确修改配置文件中的用户名，并检查网络连接
+
+#### Q: 如何更新到最新版本的镜像
+
+A: 使用以下命令拉取最新镜像：
+
+```bash
+docker pull grapecitysoftware/gc-qa-rag-server:latest
+docker pull grapecitysoftware/gc-qa-rag-frontend:latest
+docker pull grapecitysoftware/gc-qa-rag-etl:latest
+```
+
+#### Q: 如何查看镜像版本信息
+
+A: 使用以下命令查看镜像详情：
+
+```bash
+docker inspect grapecitysoftware/gc-qa-rag-server:latest
+```
+
 ## 9. 监控和维护
 
 ### 9.1 容器状态监控
@@ -528,4 +606,4 @@ docker compose logs -f server
 docker stats
 ```
 
-通过以上步骤，您就可以成功部署 GC-QA-RAG 系统了。推荐使用一键部署方式，简单快捷且配置完整。
+通过以上步骤，您就可以成功部署 GC-QA-RAG 系统了。推荐使用 Docker Hub 镜像部署方式，简单快捷且配置完整。

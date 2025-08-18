@@ -1,0 +1,110 @@
+name: Publish to Docker Hub
+
+on:
+    push:
+        tags:
+            - "v*" # 当推送版本标签时触发
+    workflow_dispatch: # 允许手动触发
+        inputs:
+            version:
+                description: "版本号 (例如: v1.0.0)"
+                required: true
+                default: "latest"
+
+env:
+    DOCKERHUB_LOGIN_USERNAME: ${{ secrets.DOCKERHUB_LOGIN_USERNAME }}
+    DOCKERHUB_USERNAME: ${{ secrets.DOCKERHUB_USERNAME }}
+    PROJECT_NAME: gc-qa-rag
+
+jobs:
+    build-and-push:
+        runs-on: ubuntu-latest
+
+        steps:
+            - name: Checkout code
+              uses: actions/checkout@v4
+
+            - name: Set up Docker Buildx
+              uses: docker/setup-buildx-action@v3
+
+            - name: Login to Docker Hub
+              uses: docker/login-action@v3
+              with:
+                  username: ${{ secrets.DOCKERHUB_LOGIN_USERNAME }}
+                  password: ${{ secrets.DOCKERHUB_TOKEN }}
+
+            - name: Extract version
+              id: version
+              run: |
+                  if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+                    echo "version=${{ github.event.inputs.version }}" >> $GITHUB_OUTPUT
+                  else
+                    echo "version=${GITHUB_REF#refs/tags/}" >> $GITHUB_OUTPUT
+                  fi
+
+            - name: Build and push Server image
+              uses: docker/build-push-action@v5
+              with:
+                  context: ./sources/gc-qa-rag-server
+                  push: true
+                  tags: |
+                      ${{ env.DOCKERHUB_USERNAME }}/${{ env.PROJECT_NAME }}-server:${{ steps.version.outputs.version }}
+                      ${{ env.DOCKERHUB_USERNAME }}/${{ env.PROJECT_NAME }}-server:latest
+                  cache-from: type=gha
+                  cache-to: type=gha,mode=max
+
+            - name: Build and push ETL image
+              uses: docker/build-push-action@v5
+              with:
+                  context: ./sources/gc-qa-rag-etl
+                  push: true
+                  tags: |
+                      ${{ env.DOCKERHUB_USERNAME }}/${{ env.PROJECT_NAME }}-etl:${{ steps.version.outputs.version }}
+                      ${{ env.DOCKERHUB_USERNAME }}/${{ env.PROJECT_NAME }}-etl:latest
+                  cache-from: type=gha
+                  cache-to: type=gha,mode=max
+
+            - name: Build and push Frontend image
+              uses: docker/build-push-action@v5
+              with:
+                  context: ./sources/gc-qa-rag-frontend
+                  push: true
+                  tags: |
+                      ${{ env.DOCKERHUB_USERNAME }}/${{ env.PROJECT_NAME }}-frontend:${{ steps.version.outputs.version }}
+                      ${{ env.DOCKERHUB_USERNAME }}/${{ env.PROJECT_NAME }}-frontend:latest
+                  cache-from: type=gha
+                  cache-to: type=gha,mode=max
+
+            - name: Create Release
+              if: github.event_name != 'workflow_dispatch'
+              uses: actions/create-release@v1
+              env:
+                  GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+              with:
+                  tag_name: ${{ steps.version.outputs.version }}
+                  release_name: Release ${{ steps.version.outputs.version }}
+                  body: |
+                      ## 🚀 GC-QA-RAG ${{ steps.version.outputs.version }}
+
+                      ### 📦 Docker 镜像
+
+                      本次发布包含以下 Docker 镜像：
+
+                      - `${{ env.DOCKERHUB_USERNAME }}/${{ env.PROJECT_NAME }}-server:${{ steps.version.outputs.version }}`
+                      - `${{ env.DOCKERHUB_USERNAME }}/${{ env.PROJECT_NAME }}-etl:${{ steps.version.outputs.version }}`
+                      - `${{ env.DOCKERHUB_USERNAME }}/${{ env.PROJECT_NAME }}-frontend:${{ steps.version.outputs.version }}`
+
+                      ### 🐳 快速部署
+
+                      ```bash
+                      # 使用 Docker Hub 镜像部署
+                      cd sources/gc-qa-rag-server/deploy
+                      docker compose -f docker-compose.dockerhub.yml up -d
+                      ```
+
+                      ### 📚 文档
+
+                      - [部署指南](https://grapecity-ai.github.io/gc-qa-rag/zh/2-%E5%BC%80%E5%8F%91%E6%95%99%E7%A8%8B/1-Docker%E9%83%A8%E7%BD%B2/)
+                      - [项目文档](https://grapecity-ai.github.io/gc-qa-rag/)
+                  draft: false
+                  prerelease: false

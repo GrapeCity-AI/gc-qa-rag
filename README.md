@@ -81,7 +81,26 @@ GC-QA-RAG 是一个**企业级的检索增强生成（RAG）系统**。我们通
 
 **第二步：配置和部署**
 
-知识库部署：
+#### 方法一：使用 Docker Hub 镜像（推荐）
+
+```bash
+# 1. 克隆项目
+git clone https://github.com/GrapeCity-AI/gc-qa-rag.git
+cd gc-qa-rag
+
+# 2. 配置API密钥 (必须！)
+# 编辑 sources/gc-qa-rag-etl/.config.production.json
+# 编辑 sources/gc-qa-rag-server/.config.production.json
+# 填入您的API密钥
+
+# 3. 进入部署目录
+cd sources/gc-qa-rag-server/deploy
+
+# 4. 使用 Docker Hub 镜像启动服务
+docker compose -f docker-compose.dockerhub.yml up -d
+```
+
+#### 方法二：本地构建镜像
 
 ```bash
 # 1. 克隆项目
@@ -102,9 +121,21 @@ docker compose up -d --build
 
 ETL 管理后台部署：
 
+#### 方法一：使用 Docker Hub 镜像（推荐）
+
 ```bash
 # 1. 进入 ETL 目录
-cd sources/gc-qa-rag-etl
+cd sources/gc-qa-rag-etl/deploy
+
+# 2. 使用 Docker Hub 镜像启动服务
+docker compose -f docker-compose.dockerhub.yml up -d
+```
+
+#### 方法二：本地构建镜像
+
+```bash
+# 1. 进入 ETL 目录
+cd sources/gc-qa-rag-etl/deploy
 
 # 2. 构建 Docker 镜像
 docker compose up -d --build

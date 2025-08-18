@@ -1,0 +1,17 @@
+version: "3.8"
+
+services:
+    rag-etl:
+        # 使用 Docker Hub 镜像，请替换为你的用户名
+        image: grapecitysoftware/gc-qa-rag-etl:latest
+        container_name: rag_etl_container
+        restart: on-failure
+        environment:
+            GC_QA_RAG_ENV: production
+        ports:
+            - "8001:8001"
+        volumes:
+            - rag-etl-cache:/app/.rag-cache
+
+volumes:
+    rag-etl-cache:

@@ -94,9 +94,30 @@ The `das` section in the configuration file is for the **Data Acquisition System
 
 ### 3.1 Deployment Method Selection
 
-The system provides two one-click deployment methods. You can choose based on your needs:
+The system provides three one-click deployment methods. You can choose based on your needs:
 
-#### Method 1: Auto-Build Deployment (Recommended for Beginners)
+#### Method 1: Docker Hub Image Deployment (Recommended for Production)
+
+Using `docker-compose.dockerhub.yml`, uses pre-published Docker Hub images:
+
+```bash
+# Navigate to deployment directory
+cd sources/gc-qa-rag-server/deploy
+
+# Start services using Docker Hub images
+docker compose -f docker-compose.dockerhub.yml up -d
+```
+
+**Use Cases**:
+
+-   ✅ Production environment deployment
+-   ✅ Quick startup (no build time required)
+-   ✅ Using stable versions
+-   ✅ Good network environment
+
+**Note**: Before using, you need to replace `your-dockerhub-username` in the configuration file with your actual Docker Hub username.
+
+#### Method 2: Auto-Build Deployment (Recommended for Beginners)
 
 Using `docker-compose.yml`, the system will automatically build the latest code:
 
@@ -115,9 +136,9 @@ docker compose up -d --build
 -   ✅ Want to use latest code
 -   ✅ Don't want to manually build images
 
-#### Method 2: Pre-Built Image Deployment (Recommended for Production)
+#### Method 3: Pre-Built Image Deployment
 
-Using `docker-compose.image.yml`, uses pre-built images:
+Using `docker-compose.image.yml`, uses locally pre-built images:
 
 ```bash
 # Navigate to deployment directory
@@ -136,10 +157,9 @@ docker compose -f docker-compose.image.yml up -d
 
 **Use Cases**:
 
--   ✅ Production environment deployment
 -   ✅ Strict version control environment
--   ✅ Existing image registry
--   ✅ Quick startup (no build time required)
+-   ✅ Existing local image registry
+-   ✅ Limited network environment
 
 ### 3.2 Service Components
 
@@ -160,6 +180,18 @@ Both deployment methods include complete RAG system core services:
 ### 3.3 ETL Module Deployment
 
 The ETL module is responsible for data collection, processing, and vectorization, and is an important component of the complete RAG system. It needs to be deployed separately after core services are started:
+
+#### Method 1: Docker Hub Image Deployment (Recommended)
+
+```bash
+# Navigate to ETL directory
+cd sources/gc-qa-rag-etl/deploy
+
+# Start services using Docker Hub images
+docker compose -f docker-compose.dockerhub.yml up -d
+```
+
+#### Method 2: Local Build Deployment
 
 ```bash
 # Navigate to ETL directory
@@ -202,7 +234,17 @@ ETL Application:
 
 Choose the corresponding stop command based on the deployment method you used:
 
-#### Method 1: Auto-Build Deployment
+#### Method 1: Docker Hub Image Deployment
+
+```bash
+# Stop all services
+docker compose -f docker-compose.dockerhub.yml down
+
+# Stop services and delete data volumes (use with caution)
+docker compose -f docker-compose.dockerhub.yml down -v
+```
+
+#### Method 2: Auto-Build Deployment
 
 ```bash
 # Stop all services
@@ -212,7 +254,7 @@ docker compose down
 docker compose down -v
 ```
 
-#### Method 2: Pre-Built Image Deployment
+#### Method 3: Pre-Built Image Deployment
 
 ```bash
 # Stop all services
@@ -223,6 +265,15 @@ docker compose -f docker-compose.image.yml down -v
 ```
 
 #### Stop ETL Service
+
+**Docker Hub Image Deployment:**
+
+```bash
+# Stop ETL service
+docker compose -f docker-compose.dockerhub.yml down
+```
+
+**Local Build Deployment:**
 
 ```bash
 # Stop ETL service
@@ -514,6 +565,34 @@ docker network ls
 docker network inspect rag_network
 ```
 
+### 8.5 Docker Hub Image Related Issues
+
+#### Q: Failed to pull image, showing "manifest not found"
+
+A: Check if the image name is correct and confirm the image has been published to Docker Hub
+
+#### Q: Failed to start using Docker Hub images
+
+A: Confirm that you have correctly modified the username in the configuration file and check network connectivity
+
+#### Q: How to update to the latest version of images
+
+A: Use the following commands to pull the latest images:
+
+```bash
+docker pull grapecitysoftware/gc-qa-rag-server:latest
+docker pull grapecitysoftware/gc-qa-rag-frontend:latest
+docker pull grapecitysoftware/gc-qa-rag-etl:latest
+```
+
+#### Q: How to view image version information
+
+A: Use the following command to view image details:
+
+```bash
+docker inspect your-username/gc-qa-rag-server:latest
+```
+
 ## 9. Monitoring and Maintenance
 
 ### 9.1 Container Status Monitoring
@@ -529,4 +608,4 @@ docker compose logs -f server
 docker stats
 ```
 
-Through the above steps, you can successfully deploy the GC-QA-RAG system. One-click deployment is recommended as it's simple, quick, and fully configured.
+Through the above steps, you can successfully deploy the GC-QA-RAG system. Docker Hub image deployment is recommended as it's simple, quick, and fully configured.
