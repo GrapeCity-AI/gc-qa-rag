@@ -98,8 +98,16 @@ jobs:
                       ### 🐳 快速部署
 
                       ```bash
-                      # 使用 Docker Hub 镜像部署
+                      # 使用 Docker Hub 镜像部署 ETL 服务 
+                      cd sources/gc-qa-rag-etl/deploy
+                      # 编辑 docker-compose.dockerhub.yml 文件，取消环境变量注释并填入你的API密钥
+                      # 启动 ETL 服务
+                      docker compose -f docker-compose.dockerhub.yml up -d
+
+                      # 使用 Docker Hub 镜像部署 RAG 服务
                       cd sources/gc-qa-rag-server/deploy
+                      # 编辑 docker-compose.dockerhub.yml 文件，取消环境变量注释并填入你的API密钥
+                      # 启动 RAG 服务
                       docker compose -f docker-compose.dockerhub.yml up -d
                       ```
 

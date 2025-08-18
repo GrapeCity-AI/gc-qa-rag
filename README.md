@@ -88,7 +88,7 @@ GC-QA-RAG 是一个**企业级的检索增强生成（RAG）系统**。我们通
 git clone https://github.com/GrapeCity-AI/gc-qa-rag.git
 cd gc-qa-rag
 
-# 2. 编辑 ETL 配置
+# 2. 编辑 ETL 配置（也可在部署后的Web端界面修改配置）
 cd sources/gc-qa-rag-etl/deploy
 # 编辑 docker-compose.dockerhub.yml，取消注释并填入你的API密钥：
 # GC_QA_RAG_LLM_API_KEY: "your_llm_api_key_here"
@@ -128,7 +128,7 @@ docker compose up -d --build
 # 5. 进入 RAG 目录
 cd sources/gc-qa-rag-server/deploy
 
-# 6. 构建 RAG 服务镜像，并启动服务
+# 6. 构建 RAG 镜像，并启动服务
 docker compose up -d --build
 ```
 
