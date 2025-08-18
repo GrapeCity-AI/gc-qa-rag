@@ -21,6 +21,8 @@ jobs:
         runs-on: ubuntu-latest
         permissions:
             contents: write
+            pull-requests: write
+            issues: write
         steps:
             - name: Checkout code
               uses: actions/checkout@v4
@@ -78,42 +80,38 @@ jobs:
 
             - name: Create Release
               if: github.event_name != 'workflow_dispatch'
-              uses: actions/create-release@v1
               env:
                   GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-              with:
-                  tag_name: ${{ steps.version.outputs.version }}
-                  release_name: Release ${{ steps.version.outputs.version }}
-                  body: |
-                      ## 🚀 GC-QA-RAG ${{ steps.version.outputs.version }}
+              run: |
+                  gh release create ${{ steps.version.outputs.version }} \
+                    --title "Release ${{ steps.version.outputs.version }}" \
+                    --notes "## 🚀 GC-QA-RAG ${{ steps.version.outputs.version }}
 
-                      ### 📦 Docker Images
+                  ### 📦 Docker Images
 
-                      This release includes the following Docker images:
+                  This release includes the following Docker images:
 
-                      - `${{ env.DOCKERHUB_USERNAME }}/${{ env.PROJECT_NAME }}-server:${{ steps.version.outputs.version }}`
-                      - `${{ env.DOCKERHUB_USERNAME }}/${{ env.PROJECT_NAME }}-etl:${{ steps.version.outputs.version }}`
-                      - `${{ env.DOCKERHUB_USERNAME }}/${{ env.PROJECT_NAME }}-frontend:${{ steps.version.outputs.version }}`
+                  - \`${{ env.DOCKERHUB_USERNAME }}/${{ env.PROJECT_NAME }}-server:${{ steps.version.outputs.version }}\`
+                  - \`${{ env.DOCKERHUB_USERNAME }}/${{ env.PROJECT_NAME }}-etl:${{ steps.version.outputs.version }}\`
+                  - \`${{ env.DOCKERHUB_USERNAME }}/${{ env.PROJECT_NAME }}-frontend:${{ steps.version.outputs.version }}\`
 
-                      ### 🐳 Quick Deployment
+                  ### 🐳 Quick Deployment
 
-                      ```bash
-                      # Deploy ETL service using Docker Hub images
-                      cd sources/gc-qa-rag-etl/deploy
-                      # Edit docker-compose.dockerhub.yml file, uncomment environment variables and fill in your API keys
-                      # Start ETL service
-                      docker compose -f docker-compose.dockerhub.yml up -d
+                  \`\`\`bash
+                  # Deploy ETL service using Docker Hub images
+                  cd sources/gc-qa-rag-etl/deploy
+                  # Edit docker-compose.dockerhub.yml file, uncomment environment variables and fill in your API keys
+                  # Start ETL service
+                  docker compose -f docker-compose.dockerhub.yml up -d
 
-                      # Deploy RAG service using Docker Hub images
-                      cd sources/gc-qa-rag-server/deploy
-                      # Edit docker-compose.dockerhub.yml file, uncomment environment variables and fill in your API keys
-                      # Start RAG service
-                      docker compose -f docker-compose.dockerhub.yml up -d
-                      ```
+                  # Deploy RAG service using Docker Hub images
+                  cd sources/gc-qa-rag-server/deploy
+                  # Edit docker-compose.dockerhub.yml file, uncomment environment variables and fill in your API keys
+                  # Start RAG service
+                  docker compose -f docker-compose.dockerhub.yml up -d
+                  \`\`\`
 
-                      ### 📚 Documentation
+                  ### 📚 Documentation
 
-                      - [Deployment Guide](https://grapecity-ai.github.io/gc-qa-rag/en/2-development-tutorial/1-docker-deployment/)
-                      - [Project Documentation](https://grapecity-ai.github.io/gc-qa-rag/en/)
-                  draft: false
-                  prerelease: false
+                  - [Deployment Guide](https://grapecity-ai.github.io/gc-qa-rag/en/2-development-tutorial/1-docker-deployment/)
+                  - [Project Documentation](https://grapecity-ai.github.io/gc-qa-rag/en/)"
