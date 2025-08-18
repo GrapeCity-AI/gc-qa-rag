@@ -3,11 +3,11 @@ name: Publish to Docker Hub
 on:
     push:
         tags:
-            - "v*" # 当推送版本标签时触发
-    workflow_dispatch: # 允许手动触发
+            - "v*" # Trigger when version tags are pushed
+    workflow_dispatch: # Allow manual trigger
         inputs:
             version:
-                description: "版本号 (例如: v1.0.0)"
+                description: "Version number (e.g.: v1.0.0)"
                 required: true
                 default: "latest"
 
@@ -87,33 +87,33 @@ jobs:
                   body: |
                       ## 🚀 GC-QA-RAG ${{ steps.version.outputs.version }}
 
-                      ### 📦 Docker 镜像
+                      ### 📦 Docker Images
 
-                      本次发布包含以下 Docker 镜像：
+                      This release includes the following Docker images:
 
                       - `${{ env.DOCKERHUB_USERNAME }}/${{ env.PROJECT_NAME }}-server:${{ steps.version.outputs.version }}`
                       - `${{ env.DOCKERHUB_USERNAME }}/${{ env.PROJECT_NAME }}-etl:${{ steps.version.outputs.version }}`
                       - `${{ env.DOCKERHUB_USERNAME }}/${{ env.PROJECT_NAME }}-frontend:${{ steps.version.outputs.version }}`
 
-                      ### 🐳 快速部署
+                      ### 🐳 Quick Deployment
 
                       ```bash
-                      # 使用 Docker Hub 镜像部署 ETL 服务 
+                      # Deploy ETL service using Docker Hub images
                       cd sources/gc-qa-rag-etl/deploy
-                      # 编辑 docker-compose.dockerhub.yml 文件，取消环境变量注释并填入你的API密钥
-                      # 启动 ETL 服务
+                      # Edit docker-compose.dockerhub.yml file, uncomment environment variables and fill in your API keys
+                      # Start ETL service
                       docker compose -f docker-compose.dockerhub.yml up -d
 
-                      # 使用 Docker Hub 镜像部署 RAG 服务
+                      # Deploy RAG service using Docker Hub images
                       cd sources/gc-qa-rag-server/deploy
-                      # 编辑 docker-compose.dockerhub.yml 文件，取消环境变量注释并填入你的API密钥
-                      # 启动 RAG 服务
+                      # Edit docker-compose.dockerhub.yml file, uncomment environment variables and fill in your API keys
+                      # Start RAG service
                       docker compose -f docker-compose.dockerhub.yml up -d
                       ```
 
-                      ### 📚 文档
+                      ### 📚 Documentation
 
-                      - [部署指南](https://grapecity-ai.github.io/gc-qa-rag/zh/2-%E5%BC%80%E5%8F%91%E6%95%99%E7%A8%8B/1-Docker%E9%83%A8%E7%BD%B2/)
-                      - [项目文档](https://grapecity-ai.github.io/gc-qa-rag/)
+                      - [Deployment Guide](https://grapecity-ai.github.io/gc-qa-rag/en/2-development-tutorial/1-docker-deployment/)
+                      - [Project Documentation](https://grapecity-ai.github.io/gc-qa-rag/en/)
                   draft: false
                   prerelease: false
