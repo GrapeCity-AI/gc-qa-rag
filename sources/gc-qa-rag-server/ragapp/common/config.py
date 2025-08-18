@@ -30,37 +30,50 @@ class DbConfig:
 
 
 def _get_config_value(key: str, config_raw: dict, saved_config_raw: dict, default: Optional[str] = None) -> str:
-    """Get configuration value with priority: saved.json > ENV > .env > JSON."""
-    # First check saved configuration (highest priority)
-    keys = key.lower().split('_')
-    # Skip the 'gc_qa_rag' prefix for JSON lookup
-    if keys[0] == 'gc' and keys[1] == 'qa' and keys[2] == 'rag':
-        keys = keys[3:]
+    """
+    Get configuration value with priority: saved.json > ENV > .env > JSON.
     
-    # Check saved config first
-    current = saved_config_raw
-    try:
-        for k in keys:
-            current = current[k]
-        return str(current)
-    except (KeyError, TypeError):
-        pass
+    Key format: GC_QA_RAG.SECTION.FIELD (e.g., GC_QA_RAG.LLM_DEFAULT.API_KEY)
+    - For JSON: uses dot notation to navigate nested structure
+    - For ENV: converts dots to underscores (GC_QA_RAG_LLM_DEFAULT_API_KEY)
+    """
     
-    # Then check environment variables
-    env_value = os.getenv(key)
+    def _get_value_from_json(config_dict: dict, dot_key: str) -> Optional[str]:
+        """Navigate JSON structure using dot notation."""
+        if not config_dict:
+            return None
+        
+        # Remove GC_QA_RAG prefix and split by dots
+        if dot_key.startswith("GC_QA_RAG."):
+            path = dot_key[10:].split('.')  # Remove "GC_QA_RAG." prefix
+        else:
+            path = dot_key.split('.')
+        
+        current = config_dict
+        try:
+            for key_part in path:
+                current = current[key_part.lower()]
+            return str(current)
+        except (KeyError, TypeError):
+            return None
+    
+    # 1. Check saved config first (highest priority)
+    saved_value = _get_value_from_json(saved_config_raw, key)
+    if saved_value is not None:
+        return saved_value
+    
+    # 2. Then check environment variables (convert dots to underscores)
+    env_key = key.replace('.', '_').upper()
+    env_value = os.getenv(env_key)
     if env_value is not None:
         return env_value
     
-    # Then check nested JSON structure
-    current = config_raw
-    try:
-        for k in keys:
-            current = current[k]
-        return str(current)
-    except (KeyError, TypeError):
-        pass
+    # 3. Then check JSON config
+    json_value = _get_value_from_json(config_raw, key)
+    if json_value is not None:
+        return json_value
     
-    # Return default if provided
+    # 4. Return default if provided
     if default is not None:
         return default
     
@@ -119,9 +132,9 @@ def _get_llm_config(
     
     # Last resort: use default LLM config from env/JSON
     return LlmConfig(
-        api_key=api_key or _get_config_value("GC_QA_RAG_LLM_DEFAULT_API_KEY", config_raw, saved_config_raw),
-        api_base=api_base or _get_config_value("GC_QA_RAG_LLM_DEFAULT_API_BASE", config_raw, saved_config_raw, "https://dashscope.aliyuncs.com/compatible-mode/v1"),
-        model_name=model_name or _get_config_value("GC_QA_RAG_LLM_DEFAULT_MODEL_NAME", config_raw, saved_config_raw, "qwen-plus"),
+        api_key=api_key or _get_config_value("GC_QA_RAG.LLM_DEFAULT.API_KEY", config_raw, saved_config_raw),
+        api_base=api_base or _get_config_value("GC_QA_RAG.LLM_DEFAULT.API_BASE", config_raw, saved_config_raw, "https://dashscope.aliyuncs.com/compatible-mode/v1"),
+        model_name=model_name or _get_config_value("GC_QA_RAG.LLM_DEFAULT.MODEL_NAME", config_raw, saved_config_raw, "qwen-plus"),
     )
 
 
@@ -177,16 +190,16 @@ class Config:
             llm_query=_get_llm_config(config_raw, saved_config_raw, "llm_query", llm_default),
             llm_research=_get_llm_config(config_raw, saved_config_raw, "llm_research", llm_default),
             embedding=EmbeddingConfig(
-                api_key=_get_config_value("GC_QA_RAG_EMBEDDING_API_KEY", config_raw, saved_config_raw)
+                api_key=_get_config_value("GC_QA_RAG.EMBEDDING.API_KEY", config_raw, saved_config_raw)
             ),
             vector_db=VectorDbConfig(
-                host=_get_config_value("GC_QA_RAG_VECTOR_DB_HOST", config_raw, saved_config_raw, "http://rag_qdrant_container:6333")
+                host=_get_config_value("GC_QA_RAG.VECTOR_DB.HOST", config_raw, saved_config_raw, "http://rag_qdrant_container:6333")
             ),
             db=DbConfig(
-                connection_string=_get_config_value("GC_QA_RAG_DB_CONNECTION_STRING", config_raw, saved_config_raw, "mysql+mysqlconnector://root:12345678@rag_mysql_container:3306/search_db")
+                connection_string=_get_config_value("GC_QA_RAG.DB.CONNECTION_STRING", config_raw, saved_config_raw, "mysql+mysqlconnector://root:12345678@rag_mysql_container:3306/search_db")
             ),
-            log_path=_get_config_value("GC_QA_RAG_LOG_PATH", config_raw, saved_config_raw, user_log_dir("gc-qa-rag-server", ensure_exists=True)),
-            etl_base_url=_get_config_value("GC_QA_RAG_ETL_BASE_URL", config_raw, saved_config_raw, "http://host.docker.internal:8001"),
+            log_path=_get_config_value("GC_QA_RAG.LOG_PATH", config_raw, saved_config_raw, user_log_dir("gc-qa-rag-server", ensure_exists=True)),
+            etl_base_url=_get_config_value("GC_QA_RAG.ETL_BASE_URL", config_raw, saved_config_raw, "http://host.docker.internal:8001"),
         )
 
 
