@@ -1,0 +1,46 @@
+version: "3.8"
+
+# 这是一个完整的环境变量配置示例
+# 复制此文件为 docker-compose.yml 并填入你的API密钥
+
+services:
+    rag-etl:
+        image: grapecitysoftware/gc-qa-rag-etl:latest
+        container_name: rag_etl_container
+        restart: on-failure
+        ports:
+            - "8001:8001"
+        environment:
+            # 基础配置
+            GC_QA_RAG_ENV: production
+
+            # === 必需配置 ===
+            # 大语言模型API密钥（必需）
+            GC_QA_RAG_LLM_API_KEY: "your_llm_api_key_here"
+            # 嵌入模型API密钥（必需）
+            GC_QA_RAG_EMBEDDING_API_KEY: "your_embedding_api_key_here"
+
+            # === 可选配置 ===
+            # LLM设置
+            GC_QA_RAG_LLM_API_BASE: "https://dashscope.aliyuncs.com/compatible-mode/v1"
+            GC_QA_RAG_LLM_MODEL_NAME: "qwen-plus"
+            GC_QA_RAG_LLM_MAX_RPM: "100"
+
+            # 向量数据库配置
+            GC_QA_RAG_VECTOR_DB_HOST: "http://host.docker.internal:6333"
+
+            # 存储配置
+            GC_QA_RAG_ROOT_PATH: "/app/.rag-cache"
+            GC_QA_RAG_LOG_PATH: "/app/logs"
+
+            # DAS配置（可选，用于文档爬取）
+            # GC_QA_RAG_DAS_BASE_URL_PAGE: ""
+            # GC_QA_RAG_DAS_BASE_URL_THREAD: ""
+            # GC_QA_RAG_DAS_TOKEN: ""
+        volumes:
+            - rag-etl-cache:/app/.rag-cache
+            - rag-etl-logs:/app/logs
+
+volumes:
+    rag-etl-cache:
+    rag-etl-logs:

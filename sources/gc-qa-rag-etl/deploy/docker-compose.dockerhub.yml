@@ -8,6 +8,13 @@ services:
         restart: on-failure
         environment:
             GC_QA_RAG_ENV: production
+            # === 必需配置 - 请填入你的API密钥 ===
+            # GC_QA_RAG_LLM_API_KEY: "your_llm_api_key_here"
+            # GC_QA_RAG_EMBEDDING_API_KEY: "your_embedding_api_key_here"
+            # === 可选配置 ===
+            # GC_QA_RAG_LLM_API_BASE: "https://dashscope.aliyuncs.com/compatible-mode/v1"
+            # GC_QA_RAG_LLM_MODEL_NAME: "qwen-plus"
+            # GC_QA_RAG_VECTOR_DB_HOST: "http://host.docker.internal:6333"
         ports:
             - "8001:8001"
         volumes:

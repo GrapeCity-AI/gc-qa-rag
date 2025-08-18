@@ -88,19 +88,26 @@ GC-QA-RAG 是一个**企业级的检索增强生成（RAG）系统**。我们通
 git clone https://github.com/GrapeCity-AI/gc-qa-rag.git
 cd gc-qa-rag
 
-# 2. 配置API密钥 (必须！)
-# 编辑 sources/gc-qa-rag-etl/.config.production.json
-# 编辑 sources/gc-qa-rag-server/.config.production.json
-# 填入您的API密钥
+# 2. 编辑 ETL 配置
+cd sources/gc-qa-rag-etl/deploy
+# 编辑 docker-compose.dockerhub.yml，取消注释并填入你的API密钥：
+# GC_QA_RAG_LLM_API_KEY: "your_llm_api_key_here"
+# GC_QA_RAG_EMBEDDING_API_KEY: "your_embedding_api_key_here"
 
-# 3. 进入部署目录
+# 3. 启动 ETL 服务
+docker compose -f docker-compose.dockerhub.yml up -d
+
+# 4. 编辑 RAG 配置
 cd sources/gc-qa-rag-server/deploy
+# 编辑 docker-compose.dockerhub.yml，取消注释并填入你的API密钥：
+# GC_QA_RAG_LLM_DEFAULT_API_KEY: "your_llm_api_key_here"
+# GC_QA_RAG_EMBEDDING_API_KEY: "your_embedding_api_key_here"
 
-# 4. 使用 Docker Hub 镜像启动服务
+# 5. 启动 RAG 服务
 docker compose -f docker-compose.dockerhub.yml up -d
 ```
 
-#### 方法二：本地构建镜像
+#### 方法二：本地手动构建镜像
 
 ```bash
 # 1. 克隆项目
@@ -108,36 +115,20 @@ git clone https://github.com/GrapeCity-AI/gc-qa-rag.git
 cd gc-qa-rag
 
 # 2. 配置API密钥 (必须！)
-# 编辑 sources/gc-qa-rag-etl/.config.production.json
-# 编辑 sources/gc-qa-rag-server/.config.production.json
+# 编辑 sources/gc-qa-rag-etl/.config.production.json 或 .env 文件
+# 编辑 sources/gc-qa-rag-server/.config.production.json 或 .env 文件
 # 填入您的API密钥
 
-# 3. 进入部署目录
+# 3. 进入 ETL 目录
+cd sources/gc-qa-rag-etl/deploy
+
+# 4. 构建 ETL 镜像，并启动服务
+docker compose up -d --build
+
+# 5. 进入 RAG 目录
 cd sources/gc-qa-rag-server/deploy
 
-# 4. 启动所有服务
-docker compose up -d --build
-```
-
-ETL 管理后台部署：
-
-#### 方法一：使用 Docker Hub 镜像（推荐）
-
-```bash
-# 1. 进入 ETL 目录
-cd sources/gc-qa-rag-etl/deploy
-
-# 2. 使用 Docker Hub 镜像启动服务
-docker compose -f docker-compose.dockerhub.yml up -d
-```
-
-#### 方法二：本地构建镜像
-
-```bash
-# 1. 进入 ETL 目录
-cd sources/gc-qa-rag-etl/deploy
-
-# 2. 构建 Docker 镜像
+# 6. 构建 RAG 服务镜像，并启动服务
 docker compose up -d --build
 ```
 
@@ -171,6 +162,15 @@ docker compose up -d --build
 -   Node.js 16+ (及 pnpm)
 -   MySQL
 -   Qdrant
+
+### 📋 配置说明
+
+使用官方 Docker 镜像时，需要在 docker-compose.dockerhub.yml 文件中配置环境变量传递给容器。系统支持优先级为：**Docker 环境变量 > .env 文件 > JSON 配置文件**
+
+**完整的环境变量列表请查看：**
+
+-   RAG 服务：[`sources/gc-qa-rag-server/env.example`](./sources/gc-qa-rag-server/env.example)
+-   ETL 服务：[`sources/gc-qa-rag-etl/env.example`](./sources/gc-qa-rag-etl/env.example)
 
 **重要**：无论选择哪种部署方式，都需要先配置 API 密钥！
 

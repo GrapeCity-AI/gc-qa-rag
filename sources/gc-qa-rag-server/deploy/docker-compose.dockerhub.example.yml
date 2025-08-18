@@ -1,5 +1,8 @@
 version: "3.8"
 
+# 这是一个完整的环境变量配置示例
+# 复制此文件为 docker-compose.yml 并填入你的API密钥
+
 services:
     mysql:
         image: mysql:latest
@@ -37,7 +40,6 @@ services:
                     memory: 8G
 
     server:
-        # 使用 Docker Hub 镜像
         image: grapecitysoftware/gc-qa-rag-server:latest
         container_name: rag_server_container
         restart: on-failure
@@ -47,19 +49,33 @@ services:
         ports:
             - "8000:8000"
         environment:
+            # 基础配置
             GC_QA_RAG_ENV: production
-            # === 必需配置 - 请填入你的API密钥 ===
-            # GC_QA_RAG_LLM_DEFAULT_API_KEY: "your_llm_api_key_here"
-            # GC_QA_RAG_EMBEDDING_API_KEY: "your_embedding_api_key_here"
+
+            # === 必需配置 ===
+            # 大语言模型API密钥（必需）
+            GC_QA_RAG_LLM_DEFAULT_API_KEY: "your_llm_api_key_here"
+            # 嵌入模型API密钥（必需）
+            GC_QA_RAG_EMBEDDING_API_KEY: "your_embedding_api_key_here"
+
             # === 可选配置 ===
-            # GC_QA_RAG_LLM_DEFAULT_API_BASE: "https://dashscope.aliyuncs.com/compatible-mode/v1"
-            # GC_QA_RAG_LLM_DEFAULT_MODEL_NAME: "qwen-plus"
-            # GC_QA_RAG_LLM_THINK_MODEL_NAME: "deepseek-r1"
+            # 默认LLM设置
+            GC_QA_RAG_LLM_DEFAULT_API_BASE: "https://dashscope.aliyuncs.com/compatible-mode/v1"
+            GC_QA_RAG_LLM_DEFAULT_MODEL_NAME: "qwen-plus"
+
+            # 思考模式LLM（推理模式，可选）
+            # GC_QA_RAG_LLM_THINK_API_KEY: "your_think_llm_api_key"
+            # GC_QA_RAG_LLM_THINK_API_BASE: "https://dashscope.aliyuncs.com/compatible-mode/v1"
+            GC_QA_RAG_LLM_THINK_MODEL_NAME: "deepseek-r1"
+
+            # 数据库和服务配置
+            GC_QA_RAG_VECTOR_DB_HOST: "http://rag_qdrant_container:6333"
+            GC_QA_RAG_DB_CONNECTION_STRING: "mysql+mysqlconnector://root:12345678@rag_mysql_container:3306/search_db"
+            GC_QA_RAG_ETL_BASE_URL: "http://host.docker.internal:8001"
         networks:
             - rag_network
 
     frontend:
-        # 使用 Docker Hub 镜像
         image: grapecitysoftware/gc-qa-rag-frontend:latest
         container_name: rag_frontend_container
         restart: on-failure
