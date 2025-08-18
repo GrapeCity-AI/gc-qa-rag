@@ -40,22 +40,8 @@ const ConfigModal: React.FC<ConfigModalProps> = ({
                     showIcon
                     style={{ marginBottom: "16px" }}
                 />
-                
+
                 <Text strong>LLM 配置</Text>
-                <Input
-                    style={{ margin: "8px 0" }}
-                    addonBefore="API Key"
-                    value={config.llm.api_key}
-                    onChange={(e) =>
-                        setConfig({
-                            ...config,
-                            llm: {
-                                ...config.llm,
-                                api_key: e.target.value,
-                            },
-                        })
-                    }
-                />
                 <Input
                     style={{ margin: "8px 0" }}
                     addonBefore="API Base"
@@ -66,6 +52,20 @@ const ConfigModal: React.FC<ConfigModalProps> = ({
                             llm: {
                                 ...config.llm,
                                 api_base: e.target.value,
+                            },
+                        })
+                    }
+                />
+                <Input.Password
+                    style={{ margin: "8px 0" }}
+                    addonBefore="API Key"
+                    value={config.llm.api_key}
+                    onChange={(e) =>
+                        setConfig({
+                            ...config,
+                            llm: {
+                                ...config.llm,
+                                api_key: e.target.value,
                             },
                         })
                     }
@@ -85,7 +85,7 @@ const ConfigModal: React.FC<ConfigModalProps> = ({
                     }
                 />
                 <Text strong>Embedding 配置</Text>
-                <Input
+                <Input.Password
                     style={{ margin: "8px 0" }}
                     addonBefore="API Key"
                     value={config.embedding.api_key}
