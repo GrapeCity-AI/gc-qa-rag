@@ -22,7 +22,10 @@ def split_text_into_sentence_groups(
     if not text:
         return []
 
-    sentences = text.split(sentence_delimiter)
+    if sentence_delimiter in text:
+        sentences = text.split(sentence_delimiter)
+    else:
+        sentences = text.split('\n')
 
     # Remove empty sentences
     sentences = [s.strip() for s in sentences if s.strip()]
