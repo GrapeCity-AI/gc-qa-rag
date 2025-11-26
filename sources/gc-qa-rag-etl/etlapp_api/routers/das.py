@@ -1,5 +1,5 @@
 from fastapi import APIRouter, UploadFile, File, Form
-from fastapi.responses import JSONResponse, PlainTextResponse
+from fastapi.responses import JSONResponse, PlainTextResponse, FileResponse, Response
 import os
 import shutil
 import threading
@@ -78,17 +78,41 @@ def get_raw_file(product: str, filename: str):
         raise HTTPException(status_code=403, detail="非法路径")
     if not os.path.exists(file_path) or not os.path.isfile(file_path):
         raise HTTPException(status_code=404, detail="文件不存在")
-    # 判断文件类型
+
+    # 根据扩展名确定媒体类型
     ext = os.path.splitext(file_path)[1].lower()
-    if ext in [".md", ".markdown"]:
-        media_type = "text/markdown"
-    elif ext in [".json"]:
-        media_type = "application/json"
+    media_type_map = {
+        ".md": "text/markdown",
+        ".markdown": "text/markdown",
+        ".json": "application/json",
+        ".txt": "text/plain",
+        ".pdf": "application/pdf",
+        ".docx": "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+        ".doc": "application/msword",
+        ".xlsx": "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+        ".xls": "application/vnd.ms-excel",
+        ".pptx": "application/vnd.openxmlformats-officedocument.presentationml.presentation",
+        ".ppt": "application/vnd.ms-powerpoint",
+        ".png": "image/png",
+        ".jpg": "image/jpeg",
+        ".jpeg": "image/jpeg",
+        ".gif": "image/gif",
+        ".csv": "text/csv",
+        ".xml": "application/xml",
+        ".html": "text/html",
+        ".htm": "text/html",
+    }
+    media_type = media_type_map.get(ext, "application/octet-stream")
+
+    # 文本类型使用文本模式读取，其他使用二进制模式
+    text_extensions = {".md", ".markdown", ".json", ".txt", ".csv", ".xml", ".html", ".htm"}
+    if ext in text_extensions:
+        with open(file_path, "r", encoding="utf-8") as f:
+            content = f.read()
+        return PlainTextResponse(content, media_type=media_type)
     else:
-        media_type = "text/plain"
-    with open(file_path, "r", encoding="utf-8") as f:
-        content = f.read()
-    return PlainTextResponse(content, media_type=media_type)
+        # 二进制文件直接返回 FileResponse
+        return FileResponse(file_path, media_type=media_type, filename=os.path.basename(file_path))
 
 @das_router.get("/products")
 def list_products():
