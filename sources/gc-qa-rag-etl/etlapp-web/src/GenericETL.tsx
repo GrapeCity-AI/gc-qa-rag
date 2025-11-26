@@ -265,6 +265,37 @@ const GenericETL: React.FC = () => {
     };
 
     // Single file content preview
+    // 限制预览内容大小，避免大文件导致内存溢出
+    const truncateContentForPreview = (content: any, maxItems: number = 50): any => {
+        if (!content) return content;
+
+        // 处理 Groups 数组（QA/Full 结果）
+        if (content.Groups && Array.isArray(content.Groups)) {
+            if (content.Groups.length > maxItems) {
+                return {
+                    ...content,
+                    Groups: content.Groups.slice(0, maxItems),
+                    _truncated: true,
+                    _originalCount: content.Groups.length,
+                };
+            }
+        }
+
+        // 处理 chunks 数组（Embedding 结果）
+        if (content.chunks && Array.isArray(content.chunks)) {
+            if (content.chunks.length > maxItems) {
+                return {
+                    ...content,
+                    chunks: content.chunks.slice(0, maxItems),
+                    _truncated: true,
+                    _originalCount: content.chunks.length,
+                };
+            }
+        }
+
+        return content;
+    };
+
     const handlePreview = async (
         row: any,
         stage: "das" | "embedding" | "qa" | "full"
@@ -286,7 +317,9 @@ const GenericETL: React.FC = () => {
             );
             title = `${row.filename} - ${stage}`;
         }
-        setPreviewContent(content);
+        // 截断大内容以避免内存问题
+        const truncatedContent = truncateContentForPreview(content);
+        setPreviewContent(truncatedContent);
         setPreviewTitle(title);
         setPreviewModal(true);
     };
