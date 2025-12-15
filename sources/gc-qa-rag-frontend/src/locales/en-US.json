@@ -6,7 +6,8 @@
     "Home": {
         "SearchPlaceholder": "Enter your product question, press Enter to send, Shift+Enter for a new line",
         "SearchPlaceholder_Mobile": "Enter your product question",
-        "DeepThink": "Deep Thinking (DeepSeek-R1 Full Version)"
+        "DeepThink": "Deep Thinking",
+        "VisitProductHome": "Visit Product Homepage"
     },
     "Search": {
         "AIChat": "AI Q&A",
@@ -29,7 +30,7 @@
         "think": "Thinking Mode"
     },
     "Answer": {
-        "DeepThink": "Deep Thinking (DeepSeek-R1 Full Version)",
+        "DeepThink": "Deep Thinking",
         "SmartAnswer": "Smart Answer",
         "StopGenerating": "Stop Generating",
         "AIHint": "The above content is AI-generated and for reference only.",

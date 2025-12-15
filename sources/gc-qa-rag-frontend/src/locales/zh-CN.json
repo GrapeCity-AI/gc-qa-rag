@@ -6,7 +6,8 @@
     "Home": {
         "SearchPlaceholder": "输入你想了解的产品问题，Enter键发送，Shift+Enter键换行",
         "SearchPlaceholder_Mobile": "输入你想了解的产品问题",
-        "DeepThink": "深度思考（DeepSeek-R1满血版）"
+        "DeepThink": "深度思考",
+        "VisitProductHome": "访问产品首页"
     },
     "Search": {
         "AIChat": "智能问答",
@@ -29,7 +30,7 @@
         "think": "思考模式"
     },
     "Answer": {
-        "DeepThink": "深度思考 (DeepSeek-R1 满血版)",
+        "DeepThink": "深度思考",
         "SmartAnswer": "智能回答",
         "StopGenerating": "停止生成",
         "AIHint": "以上内容由AI生成，仅供参考。",
