@@ -6,8 +6,7 @@
     "Home": {
         "SearchPlaceholder": "Enter your product question, press Enter to send, Shift+Enter for a new line",
         "SearchPlaceholder_Mobile": "Enter your product question",
-        "DeepThink": "Deep Thinking",
-        "VisitProductHome": "Visit Product Homepage"
+        "DeepThink": "Deep Thinking"
     },
     "Search": {
         "AIChat": "AI Q&A",

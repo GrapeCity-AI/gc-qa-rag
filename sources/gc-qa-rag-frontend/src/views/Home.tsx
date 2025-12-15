@@ -4,7 +4,6 @@ import { isMobile } from "react-device-detect";
 import {
     ArrowRightOutlined,
     SettingOutlined,
-    LinkOutlined,
 } from "@ant-design/icons";
 import Title from "antd/es/typography/Title";
 import TextArea from "antd/es/input/TextArea";
@@ -14,15 +13,6 @@ import CustomFooter from "../components/CustomFooter";
 import { getUrlSearchArg, raise_gtag_event } from "../common/utils";
 import { useTranslation } from "react-i18next";
 import { useProducts } from "../hooks/useProducts";
-
-// 产品首页链接映射
-const ProductHomeLinks: Record<string, string> = {
-    forguncy: "https://www.grapecity.com.cn/solutions/huozige",
-    wyn: "https://www.grapecity.com.cn/solutions/wyn",
-    spreadjs: "https://www.grapecity.com.cn/developer/spreadjs",
-    gcexcel:
-        "https://www.grapecity.com.cn/developer/grapecitydocuments/excel-java",
-};
 
 const useSearchMode = () => {
     const initialSearchMode =
@@ -219,21 +209,6 @@ const HomePage = () => {
                         searchMode={searchMode}
                         onSearchModeChange={handleSearchModeChange}
                     />
-                    {ProductHomeLinks[selectedProduct] && (
-                        <Flex justify="flex-start" style={{ marginTop: 4 }}>
-                            <Button
-                                type="text"
-                                size="small"
-                                icon={<LinkOutlined />}
-                                href={ProductHomeLinks[selectedProduct]}
-                                target="_blank"
-                            >
-                                {t("Home.VisitProductHome", {
-                                    defaultValue: "访问产品首页",
-                                })}
-                            </Button>
-                        </Flex>
-                    )}
                 </Space>
             </Flex>
             {mode === "fixed" && (
