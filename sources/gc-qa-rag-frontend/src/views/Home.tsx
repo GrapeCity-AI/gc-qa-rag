@@ -1,14 +1,15 @@
 import { useState } from "react";
 import { Button, Flex, Segmented, Space, Switch, Typography, Spin } from "antd";
 import { isMobile } from "react-device-detect";
-import { ArrowRightOutlined, SettingOutlined, LinkOutlined } from "@ant-design/icons";
+import {
+    ArrowRightOutlined,
+    SettingOutlined,
+    LinkOutlined,
+} from "@ant-design/icons";
 import Title from "antd/es/typography/Title";
 import TextArea from "antd/es/input/TextArea";
 import { useNavigate } from "react-router-dom";
-import {
-    SearchMode,
-    TextResourcesKey,
-} from "../types/Base";
+import { SearchMode, TextResourcesKey } from "../types/Base";
 import CustomFooter from "../components/CustomFooter";
 import { getUrlSearchArg, raise_gtag_event } from "../common/utils";
 import { useTranslation } from "react-i18next";
@@ -19,7 +20,8 @@ const ProductHomeLinks: Record<string, string> = {
     forguncy: "https://www.grapecity.com.cn/solutions/huozige",
     wyn: "https://www.grapecity.com.cn/solutions/wyn",
     spreadjs: "https://www.grapecity.com.cn/developer/spreadjs",
-    gcexcel: "https://www.grapecity.com.cn/developer/grapecitydocuments/excel-java",
+    gcexcel:
+        "https://www.grapecity.com.cn/developer/grapecitydocuments/excel-java",
 };
 
 const useSearchMode = () => {
@@ -118,7 +120,14 @@ const SearchInput = ({
 };
 
 const HomePage = () => {
-    const { products, loading, mode, selectedProduct, switchMode, selectProduct } = useProducts();
+    const {
+        products,
+        loading,
+        mode,
+        selectedProduct,
+        switchMode,
+        selectProduct,
+    } = useProducts();
     const { searchMode, handleSearchModeChange } = useSearchMode();
     const [inputValue, setInputValue] = useState("");
     const navigate = useNavigate();
@@ -137,7 +146,9 @@ const HomePage = () => {
             productmode: productModeArg,
         });
 
-        navigate(`/search?${queryArg}&${productArg}&${searchModeArg}&${productModeArg}`);
+        navigate(
+            `/search?${queryArg}&${productArg}&${searchModeArg}&${productModeArg}`
+        );
     };
 
     return (
@@ -177,17 +188,27 @@ const HomePage = () => {
                             <Segmented
                                 value={selectedProduct}
                                 options={products.map((product) => ({
-                                    label: t(product.display_name, { defaultValue: product.name }),
+                                    label: t(product.display_name, {
+                                        defaultValue: product.name,
+                                    }),
                                     value: product.id,
                                 }))}
-                                onChange={(value) => selectProduct(value as string)}
+                                onChange={(value) =>
+                                    selectProduct(value as string)
+                                }
                             />
                         )}
-                        <Button 
-                            icon={<SettingOutlined />} 
-                            onClick={() => switchMode(mode === 'fixed' ? 'generic' : 'fixed')}
-                            title={`Switch to ${mode === 'fixed' ? 'Generic' : 'Fixed'} Mode`}
-                            type={mode === 'generic' ? 'primary' : 'default'}
+                        <Button
+                            icon={<SettingOutlined />}
+                            onClick={() =>
+                                switchMode(
+                                    mode === "fixed" ? "generic" : "fixed"
+                                )
+                            }
+                            title={`Switch to ${
+                                mode === "fixed" ? "Generic" : "Fixed"
+                            } Mode`}
+                            type={mode === "generic" ? "primary" : "default"}
                             size="small"
                         />
                     </Flex>
@@ -207,13 +228,19 @@ const HomePage = () => {
                                 href={ProductHomeLinks[selectedProduct]}
                                 target="_blank"
                             >
-                                {t("Home.VisitProductHome", { defaultValue: "访问产品首页" })}
+                                {t("Home.VisitProductHome", {
+                                    defaultValue: "访问产品首页",
+                                })}
                             </Button>
                         </Flex>
                     )}
                 </Space>
             </Flex>
-            <CustomFooter />
+            {mode === "fixed" && (
+                <div style={{ width: "calc(100vw - 64px)", maxWidth: "720px" }}>
+                    <CustomFooter />
+                </div>
+            )}
         </Flex>
     );
 };

@@ -598,7 +598,7 @@ const SearchPage = () => {
                     </Flex>
                 </Flex>
             </Flex>
-            <CustomFooter />
+            {mode === "fixed" && <CustomFooter />}
         </Flex>
     );
 };

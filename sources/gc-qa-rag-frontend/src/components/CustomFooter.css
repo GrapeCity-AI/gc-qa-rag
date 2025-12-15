@@ -1,0 +1,68 @@
+footer[gc-footer] * {
+    margin: 0;
+    padding: 0;
+}
+
+footer[gc-footer] {
+    box-sizing: content-box;
+    color: #303133;
+    font-size: 14px;
+    padding: 2em 0;
+}
+
+footer[gc-footer] .gc-footer-container {
+    position: relative;
+    margin-left: auto;
+    margin-right: auto;
+}
+
+footer[gc-footer] .footer-panel-container .footer-panel-item:not(:last-child) {
+    margin-bottom: 15px;
+}
+
+footer[gc-footer] .footer-panel-container .footer-panel-item dl {
+    display: flex;
+    justify-content: left;
+    width: 100%;
+}
+
+footer[gc-footer] .footer-panel-container .footer-panel-item dl dt {
+    margin-right: 20px;
+}
+
+footer[gc-footer] .footer-panel-container .footer-panel-item dl dd:after {
+    content: "|";
+    margin: 0 0.5em;
+}
+
+footer[gc-footer]
+    .footer-panel-container
+    .footer-panel-item
+    dl
+    dd:last-child:after {
+    content: unset;
+}
+
+footer[gc-footer]
+    .footer-panel-container
+    .footer-panel-item
+    .footer-company-info-img
+    img {
+    width: 190px;
+}
+
+footer[gc-footer] a {
+    color: #303133;
+    text-decoration: none;
+    white-space: nowrap;
+}
+
+footer[gc-footer] a:hover {
+    text-decoration: underline;
+}
+
+@media (max-width: 992px) {
+    footer[gc-footer] .footer-panel-container .footer-panel-item dl {
+        flex-wrap: wrap;
+    }
+}
