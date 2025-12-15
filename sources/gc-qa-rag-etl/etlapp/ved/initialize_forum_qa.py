@@ -210,6 +210,9 @@ def start_initialize_forum_qa(context: EtlRagContext) -> None:
         content = read_text_from_file(file_path)
         forum = extract_object(content)
 
+        if not thread_dict[file_index]["content"]:
+            continue
+
         metadata = {
             "product": product,
             "url": thread_dict[file_index]["content"]["url"],
