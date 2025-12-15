@@ -118,8 +118,14 @@ def das_generic_main(
     ensure_folder_exists(output_dir)
 
     logger.info(f"MarkItDown instance is getting")
-    markitdown_inst = get_markitdown_inst()
-    logger.info(f"MarkItDown instance created")
+    markitdown_inst = None
+    try:
+        markitdown_inst = get_markitdown_inst()
+        logger.info(f"MarkItDown instance created")
+    except:
+        markitdown_inst = None
+        logger.info(f"MarkItDown instance created failed")
+        return
 
     files = collect_files(input_dir)
     logger.info(f"Found {len(files)} files in {input_dir}")
