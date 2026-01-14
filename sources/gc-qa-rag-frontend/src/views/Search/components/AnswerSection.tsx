@@ -4,7 +4,6 @@ import { AnswerSectionProps } from "../types";
 import { SearchMode } from "../../../types/Base";
 import { Markdown } from "../../../components/Markdown";
 import AnswerActions from "./AnswerActions";
-import AnswerOptionsComponent from "../../../components/AnswerOptions";
 import Title from "antd/es/typography/Title";
 import { useTranslation } from "react-i18next";
 
