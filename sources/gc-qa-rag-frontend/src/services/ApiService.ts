@@ -38,7 +38,8 @@ export const getChatResult = async (
   messages: MessageItem[],
   product: string,
   callback: (chunk: string, end: boolean) => void,
-  onController: (controller: AbortController) => void
+  onController: (controller: AbortController) => void,
+  extraInstruction: string = ""
 ) => {
   const url = `${URL_ROOT}/chat_streaming/`;
 
@@ -46,6 +47,7 @@ export const getChatResult = async (
     keyword: keyword,
     messages: messages,
     product: product,
+    extra_instruction: extraInstruction,
   });
 
   const controller = new AbortController();
@@ -105,7 +107,8 @@ export const getThinkResult = async (
   messages: MessageItem[],
   product: string,
   callback: (chunk: string, end: boolean) => void,
-  onController: (controller: AbortController) => void
+  onController: (controller: AbortController) => void,
+  extraInstruction: string = ""
 ) => {
   const url = `${URL_ROOT}/think_streaming/`;
 
@@ -113,6 +116,7 @@ export const getThinkResult = async (
     keyword: keyword,
     messages: messages,
     product: product,
+    extra_instruction: extraInstruction,
   });
 
   const controller = new AbortController();

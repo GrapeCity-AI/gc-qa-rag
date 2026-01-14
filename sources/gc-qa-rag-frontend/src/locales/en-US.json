@@ -49,5 +49,13 @@
     "Button": {
         "Search": "Search",
         "NewChat": "New Chat"
+    },
+    "AnswerOptions": {
+        "Beginner": "Beginner",
+        "Professional": "Professional",
+        "Concise": "Concise",
+        "Verbose": "Verbose",
+        "Custom": "Custom",
+        "CustomPlaceholder": "Enter custom answer requirements..."
     }
 }

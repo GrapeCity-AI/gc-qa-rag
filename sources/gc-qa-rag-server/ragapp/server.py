@@ -43,6 +43,7 @@ class ChatModel(BaseModel):
     keyword: str
     messages: list
     product: str = "forguncy"
+    extra_instruction: str = ""
 
 
 class FeedbackModel(BaseModel):
@@ -138,7 +139,7 @@ async def chat_streaming(item: ChatModel):
     logger.info(f"Keyword: {keyword}")
 
     hits = search_sementic_hybrid(client, keyword, item.product)
-    stream = await get_llm_sse_result(summary_hits, keyword, item.messages, hits)
+    stream = await get_llm_sse_result(summary_hits, keyword, item.messages, hits, item.extra_instruction)
     return StreamingResponse(stream, media_type="text/event-stream")
 
 
@@ -167,7 +168,7 @@ async def think_streaming(item: ChatModel):
     logger.info(f"Keyword: {keyword}")
 
     hits = search_sementic_hybrid(client, keyword, item.product)
-    stream = await get_llm_sse_result(summary_hits_think, keyword, item.messages, hits)
+    stream = await get_llm_sse_result(summary_hits_think, keyword, item.messages, hits, item.extra_instruction)
     return StreamingResponse(stream, media_type="text/event-stream")
 
 
@@ -197,7 +198,7 @@ async def reasearch_streaming(item: ChatModel):
 
     hits = search_sementic_hybrid(client, keyword, item.product)
     stream = await get_llm_sse_result(
-        research_hits, client, keyword, item.messages, hits, item.product
+        research_hits, client, keyword, item.messages, hits, item.product, item.extra_instruction
     )
     return StreamingResponse(stream, media_type="text/event-stream")
 

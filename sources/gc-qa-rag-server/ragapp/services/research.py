@@ -64,7 +64,7 @@ async def split_questions(keyword, messages, hits):
     return chat(messages_with_hits)
 
 
-async def research_hits(client, keyword, messages, hits, product):
+async def research_hits(client, keyword, messages, hits, product, extra_instruction=""):
     logger.info(f"Researching hits for keyword: {keyword}")
 
     # hits = search_sementic_hybrid(client, keyword, product)
@@ -80,7 +80,7 @@ async def research_hits(client, keyword, messages, hits, product):
 
         sub_hits = search_sementic_hybrid(client, sub_question, product)
         sub_answer = await get_llm_full_result(
-            summary_hits, sub_question, messages, sub_hits
+            summary_hits, sub_question, messages, sub_hits, extra_instruction
         )
         return sub_question, sub_answer
 
@@ -96,7 +96,7 @@ async def research_hits(client, keyword, messages, hits, product):
         messages.insert(-1, {"role": "assistant", "content": sub_answer})
 
     # Summary the final answer
-    return await summary_hits_think(keyword, messages, hits)
+    return await summary_hits_think(keyword, messages, hits, extra_instruction)
 
 
 def extract_json_content(text):

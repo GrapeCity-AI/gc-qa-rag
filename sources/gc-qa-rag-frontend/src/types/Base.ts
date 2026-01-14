@@ -47,3 +47,36 @@ export const TextResourcesKey = {
         SearchResults: 'Search.SearchResults'
     }
 }
+
+// Answer Options Types
+export enum AnswerStyle {
+    Beginner = 'beginner',
+    Professional = 'professional'
+}
+
+export enum AnswerComplexity {
+    Concise = 'concise',
+    Verbose = 'verbose'
+}
+
+export interface AnswerOptions {
+    style: AnswerStyle;
+    complexity: AnswerComplexity;
+    customInstruction: string;
+}
+
+export const DEFAULT_ANSWER_OPTIONS: AnswerOptions = {
+    style: AnswerStyle.Professional,
+    complexity: AnswerComplexity.Concise,
+    customInstruction: ''
+};
+
+export const AnswerStyleNameKey = {
+    [AnswerStyle.Beginner]: 'AnswerOptions.Beginner',
+    [AnswerStyle.Professional]: 'AnswerOptions.Professional',
+};
+
+export const AnswerComplexityNameKey = {
+    [AnswerComplexity.Concise]: 'AnswerOptions.Concise',
+    [AnswerComplexity.Verbose]: 'AnswerOptions.Verbose',
+};

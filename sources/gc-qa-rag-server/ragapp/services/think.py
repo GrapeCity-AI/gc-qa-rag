@@ -39,11 +39,15 @@ async def think(messages):
             yield content
 
 
-async def summary_hits_think(keyword, messages, hits):
+async def summary_hits_think(keyword, messages, hits, extra_instruction=""):
     hits_text = json.dumps(hits, ensure_ascii=False, default=vars)
 
+    extra_part = ""
+    if extra_instruction:
+        extra_part = f"\n## 回答要求\n{extra_instruction}\n"
+
     hits_prompt = f"""你正在和用户对话，请综合参考上下文以及下面的用户问题和知识库检索结果，回答用户的问题。回答时附上文档链接。
-## 用户问题
+{extra_part}## 用户问题
 {keyword}
 
 ## 知识库检索结果

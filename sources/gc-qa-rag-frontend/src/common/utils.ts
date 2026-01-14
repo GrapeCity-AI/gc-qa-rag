@@ -132,3 +132,33 @@ export function raise_gtag_event(eventName: string, args = {}) {
         ...args
     });
 }
+
+import { AnswerOptions, AnswerStyle, AnswerComplexity } from '../types/Base';
+
+/**
+ * Build extra_instruction based on answer options
+ */
+export function buildExtraInstruction(options: AnswerOptions): string {
+    const parts: string[] = [];
+
+    // Style instruction
+    if (options.style === AnswerStyle.Beginner) {
+        parts.push('请使用通俗易懂的语言解释，避免使用专业术语，必要时举例说明');
+    } else if (options.style === AnswerStyle.Professional) {
+        parts.push('请使用专业、严谨的语言回答，可以使用技术术语');
+    }
+
+    // Complexity instruction
+    if (options.complexity === AnswerComplexity.Concise) {
+        parts.push('回答尽量简洁扼要，突出重点');
+    } else if (options.complexity === AnswerComplexity.Verbose) {
+        parts.push('请详细全面地回答，提供更多背景信息和相关知识');
+    }
+
+    // Custom instruction
+    if (options.customInstruction?.trim()) {
+        parts.push(options.customInstruction.trim());
+    }
+
+    return parts.join('。');
+}

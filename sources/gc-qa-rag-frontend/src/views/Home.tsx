@@ -10,9 +10,11 @@ import TextArea from "antd/es/input/TextArea";
 import { useNavigate } from "react-router-dom";
 import { SearchMode, TextResourcesKey } from "../types/Base";
 import CustomFooter from "../components/CustomFooter";
+import AnswerOptionsComponent from "../components/AnswerOptions";
 import { getUrlSearchArg, raise_gtag_event } from "../common/utils";
 import { useTranslation } from "react-i18next";
 import { useProducts } from "../hooks/useProducts";
+import { useAnswerOptions } from "../hooks/useAnswerOptions";
 
 const useSearchMode = () => {
     const initialSearchMode =
@@ -119,6 +121,13 @@ const HomePage = () => {
         selectProduct,
     } = useProducts();
     const { searchMode, handleSearchModeChange } = useSearchMode();
+    const {
+        options: answerOptions,
+        setStyle,
+        setComplexity,
+        setCustomInstruction,
+        buildUrlParams,
+    } = useAnswerOptions();
     const [inputValue, setInputValue] = useState("");
     const navigate = useNavigate();
     const { t } = useTranslation();
@@ -128,6 +137,7 @@ const HomePage = () => {
         const productArg = `product=${encodeURIComponent(selectedProduct)}`;
         const searchModeArg = `searchmode=${encodeURIComponent(searchMode)}`;
         const productModeArg = `productmode=${encodeURIComponent(mode)}`;
+        const answerOptionsArg = buildUrlParams();
 
         raise_gtag_event("home.enter", {
             query: queryArg,
@@ -137,7 +147,7 @@ const HomePage = () => {
         });
 
         navigate(
-            `/search?${queryArg}&${productArg}&${searchModeArg}&${productModeArg}`
+            `/search?${queryArg}&${productArg}&${searchModeArg}&${productModeArg}&${answerOptionsArg}`
         );
     };
 
@@ -208,6 +218,12 @@ const HomePage = () => {
                         onSearch={handleSearch}
                         searchMode={searchMode}
                         onSearchModeChange={handleSearchModeChange}
+                    />
+                    <AnswerOptionsComponent
+                        options={answerOptions}
+                        onStyleChange={setStyle}
+                        onComplexityChange={setComplexity}
+                        onCustomInstructionChange={setCustomInstruction}
                     />
                 </Space>
             </Flex>

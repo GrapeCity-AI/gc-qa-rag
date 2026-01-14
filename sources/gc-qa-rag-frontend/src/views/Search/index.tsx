@@ -16,11 +16,13 @@ import {
     TextResourcesKey,
 } from "../../types/Base";
 import CustomFooter from "../../components/CustomFooter";
+import AnswerOptionsComponent from "../../components/AnswerOptions";
 import {
     captureDivToClipboard,
     copyToClipboard,
     extractContentAfterDivider,
     raise_gtag_event,
+    buildExtraInstruction,
 } from "../../common/utils";
 import { useSearchState } from "./hooks/useSearchState";
 import SearchHeader from "./components/SearchHeader";
@@ -29,6 +31,7 @@ import AnswerSection from "./components/AnswerSection";
 import SearchResults from "./components/SearchResults";
 import { useTranslation } from "react-i18next";
 import { useProducts } from "../../hooks/useProducts";
+import { useAnswerOptions } from "../../hooks/useAnswerOptions";
 
 interface RetrivalItem {
     key: number;
@@ -86,6 +89,13 @@ const SearchPage = () => {
         switchMode,
         selectProduct,
     } = useProducts();
+    const {
+        options: answerOptions,
+        setStyle,
+        setComplexity,
+        setCustomInstruction,
+        buildUrlParams,
+    } = useAnswerOptions();
     const {
         searchMode,
         setSearchMode,
@@ -175,6 +185,7 @@ const SearchPage = () => {
             refreshUI();
 
             const messages = convertToMessages(retrivals);
+            const extraInstruction = buildExtraInstruction(answerOptions);
 
             getChatResult(
                 newQuery,
@@ -198,7 +209,8 @@ const SearchPage = () => {
                 },
                 (controller) => {
                     setController(controller);
-                }
+                },
+                extraInstruction
             );
         }
     };
@@ -243,6 +255,7 @@ const SearchPage = () => {
             refreshUI();
 
             const messages = convertToMessages(retrivals);
+            const extraInstruction = buildExtraInstruction(answerOptions);
 
             getThinkResult(
                 newQuery,
@@ -283,7 +296,8 @@ const SearchPage = () => {
                 },
                 (controller) => {
                     setController(controller);
-                }
+                },
+                extraInstruction
             );
         }
     };
@@ -360,12 +374,13 @@ const SearchPage = () => {
             searchMode ?? SearchMode.Chat
         )}`;
         const productModeArgStr = `productmode=${encodeURIComponent(mode)}`;
+        const answerOptionsArgStr = buildUrlParams();
         window.document.title = t(TextResourcesKey.Common.WebsiteName);
 
         raise_gtag_event("search.gohome");
 
         navigate(
-            `/home?${productArgStr}&${searchModeArgStr}&${productModeArgStr}`
+            `/home?${productArgStr}&${searchModeArgStr}&${productModeArgStr}&${answerOptionsArgStr}`
         );
     };
 
@@ -376,6 +391,7 @@ const SearchPage = () => {
             searchMode ?? SearchMode.Chat
         )}`;
         const productModeArgStr = `productmode=${encodeURIComponent(mode)}`;
+        const answerOptionsArgStr = buildUrlParams();
 
         raise_gtag_event("search.enter", {
             query: inputValue,
@@ -391,7 +407,7 @@ const SearchPage = () => {
         appendMessageMap.current.clear();
 
         navigate(
-            `/search?${queryArgStr}&${productArgStr}&${searchModeArgStr}&${productModeArgStr}`
+            `/search?${queryArgStr}&${productArgStr}&${searchModeArgStr}&${productModeArgStr}&${answerOptionsArgStr}`
         );
         initialize();
     };
@@ -515,77 +531,87 @@ const SearchPage = () => {
 
                     <Flex vertical>
                         {retrivals.map((retrivalItem, index) => (
-                            <Flex vertical style={{ width: "100%" }}>
+                            <Flex vertical style={{ width: "100%" }} key={retrivalItem.key}>
                                 {(searchMode === SearchMode.Chat ||
                                     searchMode === SearchMode.Think) && (
-                                    <AnswerSection
-                                        retrivalItem={retrivalItem}
-                                        index={index}
-                                        onLike={() => likeAnswer(retrivalItem)}
-                                        onDislike={() =>
-                                            dislikeAnswer(retrivalItem)
-                                        }
-                                        onCopy={async () => {
-                                            const copyText =
-                                                searchMode === SearchMode.Think
-                                                    ? extractContentAfterDivider(
-                                                          retrivalItem.answer
-                                                              .content
-                                                      )
-                                                    : retrivalItem.answer
-                                                          .content;
-                                            const success =
-                                                await copyToClipboard(copyText);
-                                            if (success) {
-                                                raise_gtag_event(
-                                                    "search.answer.copy"
-                                                );
-                                                messageApi.open({
-                                                    type: "success",
-                                                    content: t("Search.Copied"),
-                                                    duration: 2,
-                                                });
+                                    <>
+                                        {index === 0 && (
+                                            <AnswerOptionsComponent
+                                                options={answerOptions}
+                                                onStyleChange={setStyle}
+                                                onComplexityChange={setComplexity}
+                                                onCustomInstructionChange={setCustomInstruction}
+                                            />
+                                        )}
+                                        <AnswerSection
+                                            retrivalItem={retrivalItem}
+                                            index={index}
+                                            onLike={() => likeAnswer(retrivalItem)}
+                                            onDislike={() =>
+                                                dislikeAnswer(retrivalItem)
                                             }
-                                        }}
-                                        onCopyImage={async () => {
-                                            const div = document.getElementById(
-                                                "ais-answer-" + index
-                                            ) as HTMLDivElement;
-                                            const success =
-                                                await captureDivToClipboard(
-                                                    div,
-                                                    16,
-                                                    10
-                                                );
-                                            if (success) {
-                                                raise_gtag_event(
-                                                    "search.answer.copy_image"
-                                                );
-                                                messageApi.open({
-                                                    type: "success",
-                                                    content:
-                                                        t("Search.CopiedImage"),
-                                                    duration: 2,
-                                                });
+                                            onCopy={async () => {
+                                                const copyText =
+                                                    searchMode === SearchMode.Think
+                                                        ? extractContentAfterDivider(
+                                                              retrivalItem.answer
+                                                                  .content
+                                                          )
+                                                        : retrivalItem.answer
+                                                              .content;
+                                                const success =
+                                                    await copyToClipboard(copyText);
+                                                if (success) {
+                                                    raise_gtag_event(
+                                                        "search.answer.copy"
+                                                    );
+                                                    messageApi.open({
+                                                        type: "success",
+                                                        content: t("Search.Copied"),
+                                                        duration: 2,
+                                                    });
+                                                }
+                                            }}
+                                            onCopyImage={async () => {
+                                                const div = document.getElementById(
+                                                    "ais-answer-" + index
+                                                ) as HTMLDivElement;
+                                                const success =
+                                                    await captureDivToClipboard(
+                                                        div,
+                                                        16,
+                                                        10
+                                                    );
+                                                if (success) {
+                                                    raise_gtag_event(
+                                                        "search.answer.copy_image"
+                                                    );
+                                                    messageApi.open({
+                                                        type: "success",
+                                                        content:
+                                                            t("Search.CopiedImage"),
+                                                        duration: 2,
+                                                    });
+                                                }
+                                            }}
+                                            onAskMore={() => {
+                                                retrivalItem.answer.asking =
+                                                    !retrivalItem.answer.asking;
+                                                refreshUI();
+                                            }}
+                                            onAppendSearch={() =>
+                                                handleAppendSearch(index)
                                             }
-                                        }}
-                                        onAskMore={() => {
-                                            retrivalItem.answer.asking =
-                                                !retrivalItem.answer.asking;
-                                            refreshUI();
-                                        }}
-                                        onAppendSearch={() =>
-                                            handleAppendSearch(index)
-                                        }
-                                        onAppendSearchChanged={(value) =>
-                                            onAppendSearchChanged(index, value)
-                                        }
-                                        onAppendBoxPressEnter={(e) =>
-                                            handleAppendBoxPressEnter(e, index)
-                                        }
-                                        onPause={handlePause}
-                                        searchMode={searchMode}
-                                    />
+                                            onAppendSearchChanged={(value) =>
+                                                onAppendSearchChanged(index, value)
+                                            }
+                                            onAppendBoxPressEnter={(e) =>
+                                                handleAppendBoxPressEnter(e, index)
+                                            }
+                                            onPause={handlePause}
+                                            searchMode={searchMode}
+                                        />
+                                    </>
                                 )}
                                 <SearchResults
                                     retrivalItem={retrivalItem}

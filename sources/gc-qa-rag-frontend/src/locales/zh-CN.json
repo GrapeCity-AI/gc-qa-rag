@@ -40,6 +40,14 @@
         "AskMore": "追问",
         "ContinueAsking": "继续提问"
     },
+    "AnswerOptions": {
+        "Beginner": "通俗",
+        "Professional": "专业",
+        "Concise": "简洁",
+        "Verbose": "详细",
+        "Custom": "自定义",
+        "CustomPlaceholder": "输入自定义回答要求..."
+    },
     "Tabs": {
         "All": "全部",
         "Doc": "帮助文档",

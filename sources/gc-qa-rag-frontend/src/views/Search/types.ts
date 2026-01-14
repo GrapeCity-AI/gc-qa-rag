@@ -1,6 +1,6 @@
 import { MenuProps } from "antd";
 import { SearchItem } from "../../types/Api";
-import { ProductInfo, SearchMode } from "../../types/Base";
+import { ProductInfo, SearchMode, AnswerOptions, AnswerStyle, AnswerComplexity } from "../../types/Base";
 
 export interface RetrivalItem {
   key: number;
