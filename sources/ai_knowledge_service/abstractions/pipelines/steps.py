@@ -117,6 +117,9 @@ class ProcessingContext:
     raw_file: RawFile
     file_version: FileVersion
 
+    # Raw content bytes (loaded by executor)
+    raw_content: Optional[bytes] = None
+
     # Pipeline outputs (populated by different steps)
     parsed_document: Optional[ParsedDocument] = None
     chunks: Optional[List[Chunk]] = None

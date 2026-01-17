@@ -6,7 +6,7 @@ authors = [{ name = "experdotxie", email = "experdot.xie@developertools.com" }]
 requires-python = ">=3.11"
 readme = "README.md"
 license = { text = "MIT" }
-dependencies = []
+dependencies = ["qdrant-client>=1.16.2", "dashscope>=1.25.8", "openai>=1.0.0", "markitdown>=0.0.1"]
 
 [project.optional-dependencies]
 dev = [
@@ -14,8 +14,16 @@ dev = [
     "pytest-cov>=4.0.0",
 ]
 
+[build-system]
+requires = ["pdm-backend"]
+build-backend = "pdm.backend"
+
 [tool.pdm]
-distribution = false
+distribution = true
+
+[tool.pdm.build]
+includes = ["abstractions", "implementations", "core", "examples", "__init__.py", "py.typed"]
+package-dir = "."
 
 [tool.pdm.dev-dependencies]
 dev = [

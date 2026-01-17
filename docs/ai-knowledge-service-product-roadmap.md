@@ -103,24 +103,29 @@ tests/
 
 **目标**: ETL 管道可端到端运行
 
-**状态**: ⏳ 待开始
+**状态**: ✅ 完成
 
-| 任务 | 说明 |
-|------|------|
-| 任务调度器 | 线程池调度器，支持并发执行 |
-| Ingestion 执行器 | 数据采集管道执行器 |
-| Indexing 执行器 | 索引构建管道执行器 |
-| Publishing 执行器 | 发布管道执行器 |
-| Source Connectors | Sitemap、Forum API、文件系统连接器 |
-| 处理步骤 | Parser、Chunker、Enricher、Embedder |
-| Qdrant 存储 | 向量索引存储实现 |
+| 任务 | 说明 | 状态 |
+|------|------|------|
+| 任务调度器 | 线程池调度器，支持并发执行 | ✅ 完成 |
+| Ingestion 执行器 | 数据采集管道执行器 | ✅ 完成 |
+| Indexing 执行器 | 索引构建管道执行器 | ✅ 完成 |
+| Publishing 执行器 | 发布管道执行器 | ✅ 完成 |
+| Source Connectors | 文件系统连接器 | ✅ 完成 |
+| 处理步骤 | Parser、Chunker、Enricher、Embedder、IndexBuilder | ✅ 完成 |
+| Qdrant 存储 | 向量索引存储实现 | ✅ 完成 |
+| LLM Client | OpenAI 兼容 LLM 客户端 | ✅ 完成 |
+| 单元测试 | 全组件测试覆盖 (270 tests) | ✅ 完成 |
 
 **产出物**:
 ```
 core/
+├── __init__.py
 ├── scheduler/
+│   ├── __init__.py
 │   └── thread_scheduler.py          # 线程池调度器
 └── executors/
+    ├── __init__.py
     ├── base_executor.py             # 基类
     ├── ingestion_executor.py        # 采集执行器
     ├── indexing_executor.py         # 索引执行器
@@ -128,22 +133,46 @@ core/
 
 implementations/
 ├── connectors/
-│   ├── sitemap_connector.py         # Sitemap 连接器
-│   ├── forum_api_connector.py       # 论坛 API 连接器
+│   ├── __init__.py
 │   └── filesystem_connector.py      # 文件系统连接器
 ├── steps/
+│   ├── __init__.py
 │   ├── parsers/
-│   │   ├── html_parser.py           # HTML 解析器
-│   │   └── markdown_parser.py       # Markdown 解析器
+│   │   ├── __init__.py
+│   │   └── markitdown_parser.py     # MarkItDown 解析器
 │   ├── chunkers/
+│   │   ├── __init__.py
 │   │   └── sentence_chunker.py      # 句子分片器
 │   ├── enrichers/
-│   │   ├── qa_enricher.py           # QA 生成
-│   │   └── summary_enricher.py      # 摘要生成
-│   └── embedders/
-│       └── dashscope_embedder.py    # DashScope 嵌入
-└── storage/
-    └── qdrant_index_storage.py      # Qdrant 存储
+│   │   ├── __init__.py
+│   │   └── qa_enricher.py           # QA 生成
+│   ├── embedders/
+│   │   ├── __init__.py
+│   │   └── dashscope_embedder.py    # DashScope 嵌入
+│   └── index_builders/
+│       ├── __init__.py
+│       └── vector_index_builder.py  # 向量索引构建器
+├── storage/
+│   └── qdrant_index_storage.py      # Qdrant 存储
+└── llm/
+    ├── __init__.py
+    └── llm_client.py                # LLM 客户端
+
+examples/
+└── run_generic_pipeline.py          # 端到端示例
+
+tests/
+├── core/
+│   ├── test_thread_scheduler.py     # 调度器测试 (16 tests)
+│   └── test_executors.py            # 执行器测试 (18 tests)
+├── implementations/
+│   ├── test_filesystem_connector.py # 连接器测试 (13 tests)
+│   ├── test_sentence_chunker.py     # 分片器测试 (12 tests)
+│   ├── test_qa_enricher.py          # QA 生成测试 (14 tests)
+│   ├── test_dashscope_embedder.py   # 嵌入测试 (12 tests)
+│   └── test_qdrant_index_storage.py # Qdrant 测试 (17 tests)
+└── integration/
+    └── test_generic_pipeline.py     # 集成测试 (10 tests)
 ```
 
 ---
@@ -432,10 +461,10 @@ implementations/
 
 ```
 Phase 1: 基础框架        ████████████████████████  ✅ 完成
-Phase 2: 核心管道        ████░░░░░░░░░░░░░░░░░░░░  当前阶段
-Phase 3: 管理 API        ░░░░████░░░░░░░░░░░░░░░░
-Phase 4: 管理控制台       ░░░░░░░░████░░░░░░░░░░░░
-Phase 5: 生产化          ░░░░░░░░░░░░████████████  (持续进行)
+Phase 2: 核心管道        ████████████████████████  ✅ 完成
+Phase 3: 管理 API        ████░░░░░░░░░░░░░░░░░░░░  当前阶段
+Phase 4: 管理控制台       ░░░░████░░░░░░░░░░░░░░░░
+Phase 5: 生产化          ░░░░░░░░████████████████  (持续进行)
 Phase 6: 高级特性        ░░░░░░░░░░░░░░░░░░░░░░░░  (长期规划)
 ```
 
@@ -481,3 +510,4 @@ gc-qa-rag-etl/                    →   ETL 服务
 | 1.0 | 2026-01-17 | 初稿 |
 | 1.1 | 2026-01-17 | 聚焦 ETL 层，移除 RAG 查询服务相关内容 |
 | 1.2 | 2026-01-17 | Phase 1 完成，新增测试套件 (154 tests) |
+| 1.3 | 2026-01-17 | Phase 2 完成，核心管道端到端可运行 (270 tests) |
