@@ -1,40 +1,37 @@
-# AI 知识服务 - 产品路线图
+# AI 知识服务 ETL - 产品路线图
 
-> 本文档定义 AI 知识服务的完整产品路线图，从基础框架到生产化部署的全阶段规划。
+> 本文档定义 AI 知识服务 ETL 层的产品路线图，从基础框架到生产化部署的全阶段规划。
 
 ---
 
-## 一、产品架构全景
+## 一、ETL 服务架构
 
 ```
 ┌─────────────────────────────────────────────────────────────────────────────┐
-│                              产品架构全景                                    │
+│                            ETL 服务架构                                      │
 ├─────────────────────────────────────────────────────────────────────────────┤
 │                                                                              │
 │   ┌─────────────────────────────────────────────────────────────────────┐   │
 │   │                         用户层 (User Layer)                          │   │
-│   │  ┌─────────────┐  ┌─────────────┐  ┌─────────────┐  ┌────────────┐  │   │
-│   │  │  管理控制台  │  │  知识问答UI │  │   嵌入组件   │  │  CLI 工具  │  │   │
-│   │  │  (Admin)    │  │  (Chat)     │  │  (Widget)   │  │            │  │   │
-│   │  └─────────────┘  └─────────────┘  └─────────────┘  └────────────┘  │   │
+│   │  ┌───────────────────────────────┐  ┌───────────────────────────┐   │   │
+│   │  │         管理控制台 (Admin)      │  │        CLI 工具            │   │   │
+│   │  └───────────────────────────────┘  └───────────────────────────┘   │   │
 │   └─────────────────────────────────────────────────────────────────────┘   │
 │                                      │                                       │
 │   ┌─────────────────────────────────────────────────────────────────────┐   │
 │   │                         API 层 (API Layer)                           │   │
 │   │  ┌─────────────┐  ┌─────────────┐  ┌─────────────┐  ┌────────────┐  │   │
-│   │  │ 管理 API    │  │  查询 API   │  │  任务 API   │  │ WebSocket  │  │   │
-│   │  │ /api/admin  │  │ /api/query  │  │ /api/tasks  │  │  /ws       │  │   │
+│   │  │ 知识库 API  │  │  版本 API   │  │  任务 API   │  │ WebSocket  │  │   │
+│   │  │ /kb        │  │ /versions   │  │ /tasks      │  │  /ws       │  │   │
 │   │  └─────────────┘  └─────────────┘  └─────────────┘  └────────────┘  │   │
 │   └─────────────────────────────────────────────────────────────────────┘   │
 │                                      │                                       │
 │   ┌─────────────────────────────────────────────────────────────────────┐   │
 │   │                       服务层 (Service Layer)                         │   │
-│   │  ┌───────────────────────────┐  ┌───────────────────────────────┐   │   │
-│   │  │      ETL 服务 (构建)       │  │       RAG 服务 (查询)          │   │   │
-│   │  │  ┌─────┐ ┌─────┐ ┌─────┐ │  │  ┌─────┐ ┌─────┐ ┌─────┐     │   │   │
-│   │  │  │Ingest│ │Index│ │Publish│  │  │Search│ │Chat │ │Think│     │   │   │
-│   │  │  └─────┘ └─────┘ └─────┘ │  │  └─────┘ └─────┘ └─────┘     │   │   │
-│   │  └───────────────────────────┘  └───────────────────────────────┘   │   │
+│   │  ┌─────────────────┐  ┌─────────────────┐  ┌─────────────────────┐  │   │
+│   │  │    Ingestion    │  │    Indexing     │  │    Publishing       │  │   │
+│   │  │   (数据采集)     │  │   (索引构建)     │  │    (发布部署)        │  │   │
+│   │  └─────────────────┘  └─────────────────┘  └─────────────────────┘  │   │
 │   └─────────────────────────────────────────────────────────────────────┘   │
 │                                      │                                       │
 │   ┌─────────────────────────────────────────────────────────────────────┐   │
@@ -45,7 +42,7 @@
 │   ┌─────────────────────────────────────────────────────────────────────┐   │
 │   │                     基础设施层 (Infrastructure)                       │   │
 │   │  ┌────────┐ ┌────────┐ ┌────────┐ ┌────────┐ ┌────────┐ ┌────────┐ │   │
-│   │  │ Qdrant │ │ MySQL  │ │ Redis  │ │  LLM   │ │Embedding│ │  OSS   │ │   │
+│   │  │ Qdrant │ │ SQLite │ │ Redis  │ │  LLM   │ │Embedding│ │  FS    │ │   │
 │   │  └────────┘ └────────┘ └────────┘ └────────┘ └────────┘ └────────┘ │   │
 │   └─────────────────────────────────────────────────────────────────────┘   │
 │                                                                              │
@@ -150,7 +147,7 @@ implementations/
 **API 端点设计**:
 
 ```
-/api/admin/
+/api/
 
 # 知识库管理
 GET    /knowledge-bases                    # 列出知识库
@@ -335,244 +332,7 @@ admin-ui/
 
 ---
 
-### Phase 5: 查询 API
-
-**目标**: 提供 RAG 查询服务
-
-**状态**: ⏳ 待开始
-
-**API 端点设计**:
-
-```
-/api/query/
-
-# 搜索
-POST   /search
-       Request:  {
-         query: string,
-         knowledge_base_id: string,
-         filters?: { category?: string, ... },
-         limit?: number,
-         offset?: number
-       }
-       Response: {
-         results: [{
-           id: string,
-           score: number,
-           question: string,
-           answer: string,
-           full_answer?: string,
-           source: { url: string, title: string, category: string }
-         }],
-         total: number
-       }
-
-# 对话 (流式)
-POST   /chat
-       Request:  {
-         query: string,
-         knowledge_base_id: string,
-         session_id?: string,
-         history?: [{ role: string, content: string }]
-       }
-       Response: SSE stream
-       Event:    { type: "content" | "source" | "done", data: ... }
-
-# 深度思考 (流式)
-POST   /think
-       Request:  {
-         query: string,
-         knowledge_base_id: string
-       }
-       Response: SSE stream
-       Event:    { type: "thinking" | "content" | "done", data: ... }
-
-# 反馈
-POST   /feedback
-       Request:  {
-         query_id: string,
-         rating: number,      // 1-5
-         comment?: string
-       }
-
-# 会话管理
-GET    /sessions/{id}                     # 获取会话历史
-DELETE /sessions/{id}                     # 删除会话
-
-# 产品/知识库
-GET    /products                          # 可用知识库列表
-```
-
-**产出物**:
-```
-query-api/
-├── __init__.py
-├── main.py
-├── routers/
-│   ├── search.py
-│   ├── chat.py
-│   ├── feedback.py
-│   └── products.py
-├── services/
-│   ├── retrieval.py                     # 检索服务
-│   ├── reranker.py                      # 重排序
-│   ├── generation.py                    # 答案生成
-│   └── session.py                       # 会话管理
-└── schemas/
-    └── ...
-```
-
----
-
-### Phase 6: 知识问答 UI (Chat UI)
-
-**目标**: 终端用户的问答界面
-
-**状态**: ⏳ 待开始
-
-**功能模块**:
-
-```
-问答界面
-├── 首页 (Home)
-│   ├── 产品/知识库选择器
-│   ├── 搜索框
-│   ├── 热门问题推荐
-│   └── 最近会话
-│
-├── 对话界面 (Chat)
-│   ├── 消息列表
-│   │   ├── 用户消息
-│   │   ├── AI 回复
-│   │   │   ├── 流式打字效果
-│   │   │   ├── Markdown 渲染
-│   │   │   ├── 代码高亮
-│   │   │   ├── 数学公式 (KaTeX)
-│   │   │   └── 图表 (Mermaid)
-│   │   └── 源文档引用
-│   ├── 输入区域
-│   │   ├── 文本输入
-│   │   ├── 发送按钮
-│   │   └── 快捷操作
-│   ├── 反馈组件
-│   │   ├── 点赞/点踩
-│   │   └── 详细反馈表单
-│   └── 侧边栏
-│       ├── 会话历史
-│       └── 相关问题
-│
-├── 搜索结果页 (Search)
-│   ├── 搜索结果列表
-│   ├── 结果过滤器
-│   ├── 排序选项
-│   └── 分页
-│
-└── 高级功能
-    ├── 深度思考模式
-    │   ├── 思考过程展示
-    │   └── 详细分析结果
-    ├── 多知识库查询
-    └── 导出会话
-```
-
-**技术选型**: 复用现有 `gc-qa-rag-frontend` 技术栈
-- React 18 + TypeScript
-- Ant Design
-- react-markdown
-- 国际化 (i18next)
-
-**产出物**:
-```
-chat-ui/
-├── src/
-│   ├── components/
-│   │   ├── Chat/
-│   │   │   ├── MessageList.tsx
-│   │   │   ├── MessageItem.tsx
-│   │   │   ├── InputArea.tsx
-│   │   │   └── SourceCard.tsx
-│   │   ├── Markdown/
-│   │   ├── Feedback/
-│   │   └── ...
-│   ├── pages/
-│   │   ├── Home/
-│   │   ├── Chat/
-│   │   └── Search/
-│   ├── services/
-│   │   ├── api.ts
-│   │   └── stream.ts
-│   └── ...
-└── ...
-```
-
----
-
-### Phase 7: 嵌入组件 (Widget)
-
-**目标**: 可嵌入第三方网站的问答组件
-
-**状态**: ⏳ 待开始
-
-**功能**:
-- 浮动按钮触发
-- 弹窗式对话界面
-- 自定义主题和样式
-- 多语言支持
-- 响应式设计
-- 最小化/最大化
-- 拖拽移动
-
-**嵌入代码示例**:
-```html
-<!-- 方式一: 脚本标签 -->
-<script src="https://your-domain/widget.js"></script>
-<script>
-  AIKnowledge.init({
-    container: '#chat-widget',
-    knowledgeBaseId: 'kb-forguncy',
-    apiKey: 'your-api-key',
-    theme: 'light',           // 'light' | 'dark' | 'auto'
-    position: 'bottom-right', // 'bottom-right' | 'bottom-left'
-    locale: 'zh-CN',          // 'zh-CN' | 'en-US'
-    title: '智能助手',
-    placeholder: '请输入您的问题...',
-    welcomeMessage: '您好！有什么可以帮助您的？',
-    primaryColor: '#1890ff',
-  });
-</script>
-
-<!-- 方式二: Web Component -->
-<ai-knowledge-widget
-  knowledge-base-id="kb-forguncy"
-  api-key="your-api-key"
-  theme="light">
-</ai-knowledge-widget>
-```
-
-**产出物**:
-```
-widget/
-├── src/
-│   ├── index.ts                         # 入口
-│   ├── Widget.tsx                       # 主组件
-│   ├── components/
-│   │   ├── Bubble.tsx                   # 浮动按钮
-│   │   ├── Dialog.tsx                   # 对话窗口
-│   │   └── ...
-│   ├── styles/
-│   │   └── widget.css
-│   └── utils/
-│       └── ...
-├── dist/
-│   ├── widget.js                        # UMD bundle
-│   ├── widget.min.js                    # 压缩版
-│   └── widget.css
-└── package.json
-```
-
----
-
-### Phase 8: 生产化
+### Phase 5: 生产化
 
 **目标**: 生产环境就绪
 
@@ -603,7 +363,6 @@ widget/
 deploy/
 ├── docker/
 │   ├── Dockerfile.etl
-│   ├── Dockerfile.query
 │   └── Dockerfile.admin
 ├── docker-compose/
 │   ├── docker-compose.dev.yml
@@ -614,12 +373,11 @@ deploy/
 │   ├── configmap.yaml
 │   ├── secret.yaml
 │   ├── deployment-etl.yaml
-│   ├── deployment-query.yaml
 │   ├── service.yaml
 │   ├── ingress.yaml
 │   └── hpa.yaml
 ├── helm/
-│   └── ai-knowledge-service/
+│   └── ai-knowledge-etl/
 │       ├── Chart.yaml
 │       ├── values.yaml
 │       └── templates/
@@ -640,26 +398,23 @@ implementations/
 
 ---
 
-### Phase 9: 高级特性
+### Phase 6: 高级特性
 
-**目标**: 增强功能和生态建设
+**目标**: 增强功能和扩展能力
 
 **状态**: ⏳ 长期规划
 
 | 特性 | 说明 | 复杂度 |
 |------|------|--------|
-| 多租户 | 租户隔离、配额管理、计费 | 高 |
+| 多租户 | 租户隔离、配额管理 | 高 |
 | Webhook | 事件通知集成 (构建完成、发布等) | 低 |
 | 插件系统 | 自定义处理步骤、连接器 | 高 |
-| Python SDK | 编程式接口 | 中 |
-| JavaScript SDK | 前端/Node.js 集成 | 中 |
-| Go SDK | Go 语言集成 | 中 |
-| GraphQL API | 灵活查询接口 | 中 |
-| 数据分析 | 查询分析、效果评估仪表盘 | 中 |
-| A/B 测试 | 模型/策略对比实验 | 高 |
-| 自动调优 | 参数自动优化 | 高 |
-| 联邦知识库 | 跨知识库联合查询 | 高 |
-| 知识图谱 | 实体关系抽取与展示 | 高 |
+| Python SDK | 编程式 ETL 接口 | 中 |
+| CLI 工具 | 命令行管理工具 | 中 |
+| 定时调度 | Cron 式任务调度 | 中 |
+| 增量同步 | 实时/准实时数据同步 | 高 |
+| 数据血缘 | 文件处理追踪 | 中 |
+| 质量检测 | 索引质量评估 | 中 |
 
 ---
 
@@ -668,13 +423,10 @@ implementations/
 ```
 Phase 1: 基础框架        ████░░░░░░░░░░░░░░░░░░░░  当前阶段
 Phase 2: 核心管道        ░░░░████░░░░░░░░░░░░░░░░
-Phase 3: 管理 API        ░░░░░░░░██░░░░░░░░░░░░░░
-Phase 4: 管理控制台       ░░░░░░░░░░███░░░░░░░░░░░
-Phase 5: 查询 API        ░░░░░░░░░░░░░██░░░░░░░░░
-Phase 6: 问答 UI         ░░░░░░░░░░░░░░░███░░░░░░
-Phase 7: 嵌入组件        ░░░░░░░░░░░░░░░░░░██░░░░
-Phase 8: 生产化          ░░░░░░░░░░░░░░░░░░░░████  (持续进行)
-Phase 9: 高级特性        ░░░░░░░░░░░░░░░░░░░░░░░░  (长期规划)
+Phase 3: 管理 API        ░░░░░░░░████░░░░░░░░░░░░
+Phase 4: 管理控制台       ░░░░░░░░░░░░████░░░░░░░░
+Phase 5: 生产化          ░░░░░░░░░░░░░░░░████████  (持续进行)
+Phase 6: 高级特性        ░░░░░░░░░░░░░░░░░░░░░░░░  (长期规划)
 ```
 
 ---
@@ -701,17 +453,6 @@ gc-qa-rag-etl/                    →   ETL 服务
 │   ├── embedding.py              →   DashScopeEmbedder
 │   └── vector.py                 →   QdrantIndexStorage
 └── etlapp/ved/                   →   PublishingExecutor
-
-gc-qa-rag-server/                 →   RAG 服务 (Query API)
-├── ragapp/services/
-│   ├── search.py                 →   /api/query/search
-│   ├── query.py                  →   QueryRewriter
-│   ├── summary.py                →   /api/query/chat
-│   └── think.py                  →   /api/query/think
-└── ragapp/common/                →   共享基础设施
-
-gc-qa-rag-frontend/               →   问答 UI (Chat UI)
-└── (大部分代码可复用)
 ```
 
 ### 迁移策略
@@ -727,4 +468,5 @@ gc-qa-rag-frontend/               →   问答 UI (Chat UI)
 
 | 版本 | 日期 | 说明 |
 |-----|------|------|
-| 1.0 | 2026-01-17 | 初稿，完整路线图 |
+| 1.0 | 2026-01-17 | 初稿 |
+| 1.1 | 2026-01-17 | 聚焦 ETL 层，移除 RAG 查询服务相关内容 |
