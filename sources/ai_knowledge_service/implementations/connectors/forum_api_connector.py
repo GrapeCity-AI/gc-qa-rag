@@ -64,6 +64,7 @@ class ForumApiConnector(ISourceConnector):
         self._max_retries: int = 5
         self._retry_delay: float = 1.0
         self._request_delay: float = 0.1
+        self._max_records: Optional[int] = None
         self._session: Optional[requests.Session] = None
         self._total_threads: int = 0
 
@@ -88,6 +89,7 @@ class ForumApiConnector(ISourceConnector):
         - max_retries: int - Max retry attempts (default: 5)
         - retry_delay: float - Delay between retries (default: 1.0)
         - request_delay: float - Delay between requests (default: 0.1)
+        - max_records: int - Max number of records to fetch (default: None = all)
         """
         if config.connector_type != self.source_type:
             raise ValueError(
@@ -116,6 +118,7 @@ class ForumApiConnector(ISourceConnector):
         self._max_retries = config.get_fetch_option("max_retries", 5)
         self._retry_delay = config.get_fetch_option("retry_delay", 1.0)
         self._request_delay = config.get_fetch_option("request_delay", 0.1)
+        self._max_records = config.get_fetch_option("max_records", None)
 
         self._config = config
 
@@ -176,12 +179,18 @@ class ForumApiConnector(ISourceConnector):
 
         self._logger.info(
             f"Starting fetch from forum: {self._product}/{self._section}"
+            + (f" (limit: {self._max_records})" if self._max_records else "")
         )
 
         page = 1
         self._total_threads = 0
 
         while True:
+            # Check limit
+            if self._max_records is not None and self._total_threads >= self._max_records:
+                self._logger.info(f"Reached max_records limit ({self._max_records})")
+                break
+
             # Fetch page listing
             page_data = self._fetch_page(page)
             if not page_data:
@@ -193,6 +202,10 @@ class ForumApiConnector(ISourceConnector):
 
             # Fetch each thread's content
             for thread in threads:
+                # Check limit
+                if self._max_records is not None and self._total_threads >= self._max_records:
+                    break
+
                 record = self._fetch_thread(thread)
                 if record is not None:
                     yield record

@@ -47,6 +47,7 @@ class SitemapConnector(ISourceConnector):
         self._request_delay: float = 0.1
         self._max_retries: int = 3
         self._retry_delay: float = 1.0
+        self._max_records: Optional[int] = None
         self._session: Optional[requests.Session] = None
         self._urls: List[str] = []
         self._common_prefix: str = ""
@@ -68,6 +69,7 @@ class SitemapConnector(ISourceConnector):
         - request_delay: float - Delay between requests in seconds (default: 0.1)
         - max_retries: int - Max retry attempts (default: 3)
         - retry_delay: float - Delay between retries (default: 1.0)
+        - max_records: int - Max number of records to fetch (default: None = all)
         """
         if config.connector_type != self.source_type:
             raise ValueError(
@@ -84,6 +86,7 @@ class SitemapConnector(ISourceConnector):
         self._request_delay = config.get_fetch_option("request_delay", 0.1)
         self._max_retries = config.get_fetch_option("max_retries", 3)
         self._retry_delay = config.get_fetch_option("retry_delay", 1.0)
+        self._max_records = config.get_fetch_option("max_records", None)
 
         self._config = config
 
@@ -151,11 +154,15 @@ class SitemapConnector(ISourceConnector):
             if not validation.is_connected:
                 raise ConnectionError(validation.message)
 
-        self._logger.info(f"Starting fetch of {len(self._urls)} URLs from sitemap")
+        urls_to_fetch = self._urls
+        if self._max_records is not None:
+            urls_to_fetch = self._urls[:self._max_records]
 
-        for index, url in enumerate(self._urls):
+        self._logger.info(f"Starting fetch of {len(urls_to_fetch)} URLs from sitemap")
+
+        for index, url in enumerate(urls_to_fetch):
             try:
-                record = self._fetch_page(url, index)
+                record = self._fetch_page(url, index, len(urls_to_fetch))
                 if record is not None:
                     yield record
 
@@ -199,13 +206,14 @@ class SitemapConnector(ISourceConnector):
 
         return None
 
-    def _fetch_page(self, url: str, index: int) -> Optional[SourceRecord]:
+    def _fetch_page(self, url: str, index: int, total: int) -> Optional[SourceRecord]:
         """
         Fetch a single page with retry logic.
 
         Args:
             url: URL to fetch.
             index: Index for logging progress.
+            total: Total number of URLs to fetch.
 
         Returns:
             SourceRecord if successful, None otherwise.
@@ -230,7 +238,7 @@ class SitemapConnector(ISourceConnector):
                 if source_uri.startswith("_"):
                     source_uri = source_uri[1:]
 
-                progress = (index + 1) / len(self._urls) * 100
+                progress = (index + 1) / total * 100
                 self._logger.info(f"[{progress:.1f}%] Fetched: {url}")
 
                 return SourceRecord(
