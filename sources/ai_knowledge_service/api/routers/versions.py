@@ -16,9 +16,11 @@ from ai_knowledge_service.api.schemas.version import (
     FileVersionResponse,
     VersionBuildRequest,
     VersionCreate,
+    VersionIngestRequest,
     VersionPublishRequest,
     VersionResponse,
     VersionSummary,
+    VersionUpdate,
 )
 from ai_knowledge_service.api.schemas.task import TaskResponse
 from ai_knowledge_service.api.dependencies import KbStoreDep, TaskQueueDep
@@ -28,6 +30,7 @@ from ai_knowledge_service.abstractions.models.knowledge_base import (
     IndexStatus,
 )
 from ai_knowledge_service.abstractions.models.tasks import (
+    IngestionTask,
     IndexingTask,
     PublishingTask,
     BuildType,
@@ -173,6 +176,85 @@ async def get_version(
     )
 
 
+@router.put("/versions/{version_id}", response_model=ApiResponse[VersionResponse])
+async def update_version(
+    version_id: str,
+    kb_store: KbStoreDep,
+    data: VersionUpdate,
+) -> ApiResponse[VersionResponse]:
+    """
+    Update a version. Only DRAFT versions can be updated.
+    """
+    version = kb_store.get_version(version_id)
+    if version is None:
+        raise HTTPException(status_code=404, detail=f"Version not found: {version_id}")
+
+    if version.status != VersionStatus.DRAFT:
+        raise HTTPException(
+            status_code=400,
+            detail=f"Cannot update version in status: {version.status.value}. Only DRAFT versions can be updated."
+        )
+
+    # Update fields if provided
+    if data.version_tag is not None:
+        version.version_tag = data.version_tag
+    if data.metadata is not None:
+        version.metadata = data.metadata
+
+    kb_store.save_version(version)
+
+    file_versions = kb_store.get_file_versions(version_id)
+    indexed = sum(1 for fv in file_versions if fv.index_status == IndexStatus.INDEXED)
+    pending = sum(1 for fv in file_versions if fv.index_status == IndexStatus.PENDING)
+    failed = sum(1 for fv in file_versions if fv.index_status == IndexStatus.FAILED)
+
+    return ApiResponse.success(
+        VersionResponse(
+            id=version.id,
+            knowledge_base_id=version.knowledge_base_id,
+            version_tag=version.version_tag,
+            status=version.status.value,
+            parent_version_id=version.parent_version_id,
+            created_at=version.created_at,
+            published_at=version.published_at,
+            metadata=version.metadata,
+            file_count=len(file_versions),
+            indexed_count=indexed,
+            pending_count=pending,
+            failed_count=failed,
+        )
+    )
+
+
+@router.delete("/versions/{version_id}", response_model=ApiResponse[None])
+async def delete_version(
+    version_id: str,
+    kb_store: KbStoreDep,
+) -> ApiResponse[None]:
+    """
+    Delete a version. Only DRAFT or ARCHIVED versions can be deleted.
+    """
+    version = kb_store.get_version(version_id)
+    if version is None:
+        raise HTTPException(status_code=404, detail=f"Version not found: {version_id}")
+
+    if version.status not in (VersionStatus.DRAFT, VersionStatus.ARCHIVED):
+        raise HTTPException(
+            status_code=400,
+            detail=f"Cannot delete version in status: {version.status.value}. Only DRAFT or ARCHIVED versions can be deleted."
+        )
+
+    # Delete associated file versions first
+    file_versions = kb_store.get_file_versions(version_id)
+    for fv in file_versions:
+        kb_store.delete_file_version(fv.id)
+
+    # Delete the version
+    kb_store.delete_version(version_id)
+
+    return ApiResponse.success(None)
+
+
 @router.post("/versions/{version_id}/build", response_model=ApiResponse[TaskResponse])
 async def trigger_build(
     version_id: str,
@@ -210,6 +292,72 @@ async def trigger_build(
         knowledge_base_version_id=version_id,
         build_type=build_type,
         pipeline_config=pipeline_config,
+        created_at=datetime.now(),
+    )
+
+    task_queue.enqueue(task)
+
+    return ApiResponse.success(
+        TaskResponse(
+            id=task.id,
+            task_type=task.task_type.value,
+            knowledge_base_id=task.knowledge_base_id,
+            knowledge_base_version_id=task.knowledge_base_version_id,
+            status=TaskStatus.PENDING.value,
+            priority=task.priority,
+            retry_count=task.retry_count,
+            max_retries=task.max_retries,
+            created_at=task.created_at,
+            started_at=task.started_at,
+            completed_at=task.completed_at,
+            metadata=task.metadata,
+            knowledge_base_name=kb.name if kb else None,
+            version_tag=version.version_tag,
+        )
+    )
+
+
+@router.post("/versions/{version_id}/ingest", response_model=ApiResponse[TaskResponse])
+async def trigger_ingest(
+    version_id: str,
+    kb_store: KbStoreDep,
+    task_queue: TaskQueueDep,
+    data: VersionIngestRequest,
+) -> ApiResponse[TaskResponse]:
+    """
+    Trigger data ingestion from a source into a version.
+
+    This fetches data from the configured source and stores it as raw files
+    in the version. After ingestion, you can trigger a build to process
+    the files and create indexes.
+    """
+    version = kb_store.get_version(version_id)
+    if version is None:
+        raise HTTPException(status_code=404, detail=f"Version not found: {version_id}")
+
+    if version.status not in (VersionStatus.DRAFT, VersionStatus.READY):
+        raise HTTPException(
+            status_code=400,
+            detail=f"Cannot ingest into version in status: {version.status.value}. Must be 'draft' or 'ready'."
+        )
+
+    # Get KB for response and source config
+    kb = kb_store.get_knowledge_base(version.knowledge_base_id)
+
+    # Build source config from request
+    source_config = {
+        "source_type": data.source_type,
+        **data.source_config,
+    }
+
+    # Create ingestion task
+    task = IngestionTask(
+        id=str(uuid.uuid4()),
+        knowledge_base_id=version.knowledge_base_id,
+        knowledge_base_version_id=version_id,
+        source_config=source_config,
+        incremental=data.incremental,
+        dedup_strategy=data.dedup_strategy,
         created_at=datetime.now(),
     )
 

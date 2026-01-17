@@ -1,6 +1,6 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { versionsApi, ListVersionsParams, ListFilesParams } from '../api/versions'
-import { VersionCreate, VersionBuildRequest, VersionPublishRequest } from '../api/types'
+import { VersionCreate, VersionBuildRequest, VersionPublishRequest, VersionIngestRequest } from '../api/types'
 import { knowledgeBaseKeys } from './useKnowledgeBases'
 
 // Query keys
@@ -65,6 +65,19 @@ export function usePublishVersion(versionId: string) {
     mutationFn: (data: VersionPublishRequest) => versionsApi.publish(versionId, data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: versionKeys.detail(versionId) })
+    },
+  })
+}
+
+// Ingest version (fetch data from source)
+export function useIngestVersion(versionId: string) {
+  const queryClient = useQueryClient()
+
+  return useMutation({
+    mutationFn: (data: VersionIngestRequest) => versionsApi.ingest(versionId, data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: versionKeys.detail(versionId) })
+      queryClient.invalidateQueries({ queryKey: versionKeys.files(versionId) })
     },
   })
 }

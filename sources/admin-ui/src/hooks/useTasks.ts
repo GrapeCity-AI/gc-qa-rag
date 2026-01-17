@@ -1,6 +1,6 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { tasksApi, systemApi, ListTasksParams } from '../api/tasks'
-import { TaskCancelRequest } from '../api/types'
+import { TaskCancelRequest, TaskRetryRequest } from '../api/types'
 
 // Query keys
 export const taskKeys = {
@@ -58,6 +58,21 @@ export function useCancelTask() {
       tasksApi.cancel(taskId, data),
     onSuccess: (_, variables) => {
       queryClient.invalidateQueries({ queryKey: taskKeys.detail(variables.taskId) })
+      queryClient.invalidateQueries({ queryKey: taskKeys.lists() })
+    },
+  })
+}
+
+// Retry task
+export function useRetryTask() {
+  const queryClient = useQueryClient()
+
+  return useMutation({
+    mutationFn: ({ taskId, data }: { taskId: string; data?: TaskRetryRequest }) =>
+      tasksApi.retry(taskId, data),
+    onSuccess: (newTask, variables) => {
+      queryClient.invalidateQueries({ queryKey: taskKeys.detail(variables.taskId) })
+      queryClient.invalidateQueries({ queryKey: taskKeys.detail(newTask.id) })
       queryClient.invalidateQueries({ queryKey: taskKeys.lists() })
     },
   })

@@ -4,6 +4,8 @@ import {
   DatabaseOutlined,
   ThunderboltOutlined,
   SettingOutlined,
+  CloudDownloadOutlined,
+  RocketOutlined,
 } from '@ant-design/icons'
 import { useNavigate, useLocation } from 'react-router-dom'
 import { useAppStore } from '../../stores/app'
@@ -22,9 +24,19 @@ const menuItems = [
     label: 'Knowledge Bases',
   },
   {
+    key: '/sources',
+    icon: <CloudDownloadOutlined />,
+    label: 'Data Sources',
+  },
+  {
     key: '/tasks',
     icon: <ThunderboltOutlined />,
     label: 'Tasks',
+  },
+  {
+    key: '/publishing',
+    icon: <RocketOutlined />,
+    label: 'Publishing',
   },
   {
     key: '/settings',

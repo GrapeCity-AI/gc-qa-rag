@@ -128,6 +128,24 @@ class TaskCancelRequest(BaseModel):
     reason: str | None = Field(default=None, description="Cancellation reason")
 
 
+class TaskRetryRequest(BaseModel):
+    """Request model for retrying a task."""
+
+    reset_retry_count: bool = Field(default=True, description="Whether to reset the retry count")
+    priority: int | None = Field(default=None, description="New priority for the retried task")
+
+    model_config = {
+        "json_schema_extra": {
+            "examples": [
+                {
+                    "reset_retry_count": True,
+                    "priority": 1
+                }
+            ]
+        }
+    }
+
+
 class TaskProgressUpdate(BaseModel):
     """WebSocket message for task progress updates."""
 

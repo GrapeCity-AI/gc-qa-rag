@@ -10,6 +10,7 @@ from ai_knowledge_service.api.schemas.common import (
     ApiResponse,
     CountStats,
     HealthStatus,
+    SystemConfigResponse,
 )
 from ai_knowledge_service.api.dependencies import (
     TaskQueueDep,
@@ -76,3 +77,31 @@ async def get_stats(
         failed_tasks=failed,
     )
     return ApiResponse.success(stats)
+
+
+@router.get("/config", response_model=ApiResponse[SystemConfigResponse])
+async def get_config() -> ApiResponse[SystemConfigResponse]:
+    """
+    Get system configuration.
+
+    Returns sanitized configuration values (no secrets/credentials).
+    """
+    # In a real implementation, this would read from actual config
+    # For now, return default/placeholder values
+    config = SystemConfigResponse(
+        llm_provider="dashscope",
+        llm_model="qwen-max",
+        storage_type="local",
+        vector_db_type="qdrant",
+        max_concurrent_tasks=4,
+        default_chunk_size=512,
+        default_chunk_overlap=50,
+        features={
+            "incremental_indexing": True,
+            "blue_green_deployment": True,
+            "sitemap_connector": True,
+            "filesystem_connector": True,
+            "forum_api_connector": False,
+        },
+    )
+    return ApiResponse.success(config)

@@ -10,6 +10,7 @@ from fastapi.middleware.cors import CORSMiddleware
 
 from ai_knowledge_service.api.routers import (
     connectors_router,
+    environments_router,
     knowledge_bases_router,
     system_router,
     tasks_router,
@@ -91,6 +92,11 @@ def create_app() -> FastAPI:
         connectors_router,
         prefix=f"{API_V1_PREFIX}/connectors",
         tags=["Connectors"],
+    )
+    app.include_router(
+        environments_router,
+        prefix=f"{API_V1_PREFIX}/environments",
+        tags=["Environments"],
     )
 
     return app

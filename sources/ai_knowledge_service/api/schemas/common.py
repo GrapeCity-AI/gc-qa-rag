@@ -73,3 +73,23 @@ class CountStats(BaseModel):
     running_tasks: int = Field(default=0, description="Running tasks")
     completed_tasks: int = Field(default=0, description="Completed tasks (last 24h)")
     failed_tasks: int = Field(default=0, description="Failed tasks (last 24h)")
+
+
+class SystemConfigResponse(BaseModel):
+    """System configuration response (sanitized for API exposure)."""
+
+    # LLM configuration
+    llm_provider: str = Field(..., description="LLM provider name")
+    llm_model: str = Field(..., description="LLM model name")
+
+    # Storage configuration
+    storage_type: str = Field(..., description="Storage type (local, s3, etc.)")
+    vector_db_type: str = Field(..., description="Vector database type")
+
+    # Processing configuration
+    max_concurrent_tasks: int = Field(..., description="Maximum concurrent tasks")
+    default_chunk_size: int = Field(default=512, description="Default chunk size for text splitting")
+    default_chunk_overlap: int = Field(default=50, description="Default chunk overlap")
+
+    # Feature flags
+    features: dict[str, bool] = Field(default_factory=dict, description="Enabled features")

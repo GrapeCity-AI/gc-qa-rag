@@ -8,6 +8,7 @@ import {
   Task,
   TaskCancelRequest,
   TaskResult,
+  TaskRetryRequest,
   TaskSummary,
 } from './types'
 
@@ -49,6 +50,15 @@ export const tasksApi = {
   async cancel(taskId: string, data?: TaskCancelRequest): Promise<Task> {
     const response = await client.post<ApiResponse<Task>>(
       `/tasks/${taskId}/cancel`,
+      data || {}
+    )
+    return extractData(response)
+  },
+
+  // Retry a task
+  async retry(taskId: string, data?: TaskRetryRequest): Promise<Task> {
+    const response = await client.post<ApiResponse<Task>>(
+      `/tasks/${taskId}/retry`,
       data || {}
     )
     return extractData(response)

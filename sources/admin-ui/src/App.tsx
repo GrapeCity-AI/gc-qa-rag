@@ -8,6 +8,8 @@ import KnowledgeBaseDetail from './pages/KnowledgeBases/Detail'
 import KnowledgeBaseCreate from './pages/KnowledgeBases/Create'
 import TaskList from './pages/Tasks/List'
 import TaskDetail from './pages/Tasks/Detail'
+import SourceList from './pages/Sources/List'
+import Publishing from './pages/Publishing'
 import Settings from './pages/Settings'
 
 function App() {
@@ -32,10 +34,12 @@ function App() {
               <Route path="create" element={<KnowledgeBaseCreate />} />
               <Route path=":id" element={<KnowledgeBaseDetail />} />
             </Route>
+            <Route path="sources" element={<SourceList />} />
             <Route path="tasks">
               <Route index element={<TaskList />} />
               <Route path=":id" element={<TaskDetail />} />
             </Route>
+            <Route path="publishing" element={<Publishing />} />
             <Route path="settings" element={<Settings />} />
           </Route>
         </Routes>

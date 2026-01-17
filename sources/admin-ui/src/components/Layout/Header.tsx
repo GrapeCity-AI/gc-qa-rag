@@ -1,5 +1,5 @@
 import { Layout, Badge, Space, Typography } from 'antd'
-import { CheckCircleOutlined, SyncOutlined } from '@ant-design/icons'
+import { SyncOutlined } from '@ant-design/icons'
 import { useHealth } from '../../hooks/useTasks'
 
 const { Header: AntHeader } = Layout

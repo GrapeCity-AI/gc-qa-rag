@@ -1,4 +1,4 @@
-import { Row, Col, Card, Statistic, Table, Typography, Space, Spin } from 'antd'
+import { Row, Col, Card, Statistic, Table, Typography } from 'antd'
 import {
   DatabaseOutlined,
   BranchesOutlined,
@@ -9,7 +9,6 @@ import {
 } from '@ant-design/icons'
 import { useNavigate } from 'react-router-dom'
 import { useStats, useTasks } from '../../hooks/useTasks'
-import { useKnowledgeBases } from '../../hooks/useKnowledgeBases'
 import TaskStatusBadge from '../../components/TaskStatusBadge'
 import { formatRelativeTime } from '../../utils/format'
 import type { ColumnsType } from 'antd/es/table'
@@ -21,7 +20,6 @@ function Dashboard() {
   const navigate = useNavigate()
   const { data: stats, isLoading: statsLoading } = useStats()
   const { data: recentTasks, isLoading: tasksLoading } = useTasks({ page_size: 5 })
-  const { data: knowledgeBases, isLoading: kbLoading } = useKnowledgeBases({ page_size: 5 })
 
   const taskColumns: ColumnsType<TaskSummary> = [
     {

@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState } from 'react'
 import {
   Typography,
   Button,
@@ -9,7 +9,6 @@ import {
   Tag,
   Space,
   Spin,
-  Alert,
   App,
   Collapse,
 } from 'antd'
@@ -17,14 +16,14 @@ import {
   ArrowLeftOutlined,
   StopOutlined,
   ReloadOutlined,
+  RetweetOutlined,
 } from '@ant-design/icons'
 import { useNavigate, useParams } from 'react-router-dom'
-import { useTask, useTaskResult, useCancelTask } from '../../hooks/useTasks'
+import { useTask, useTaskResult, useCancelTask, useRetryTask } from '../../hooks/useTasks'
 import { useTaskWebSocket } from '../../hooks/useTaskWebSocket'
 import TaskStatusBadge from '../../components/TaskStatusBadge'
 import { formatDateTime, formatDuration, formatPercent } from '../../utils/format'
-import type { ColumnsType } from 'antd/es/table'
-import { ProcessingError, TaskProgressUpdate } from '../../api/types'
+import { TaskProgressUpdate } from '../../api/types'
 
 const { Title, Text } = Typography
 
@@ -34,11 +33,12 @@ function TaskDetail() {
   const { message } = App.useApp()
 
   const { data: task, isLoading, refetch } = useTask(id!)
-  const { data: result, isLoading: resultLoading } = useTaskResult(
+  const { data: result } = useTaskResult(
     id!,
     task?.status === 'completed' || task?.status === 'failed'
   )
   const cancelTask = useCancelTask()
+  const retryTask = useRetryTask()
 
   const [wsProgress, setWsProgress] = useState<TaskProgressUpdate | null>(null)
 
@@ -64,43 +64,15 @@ function TaskDetail() {
     }
   }
 
-  const errorColumns: ColumnsType<ProcessingError> = [
-    {
-      title: 'Item',
-      dataIndex: 'item_name',
-      key: 'item_name',
-      ellipsis: true,
-    },
-    {
-      title: 'Step',
-      dataIndex: 'step',
-      key: 'step',
-      width: 150,
-    },
-    {
-      title: 'Error Type',
-      dataIndex: 'error_type',
-      key: 'error_type',
-      width: 150,
-    },
-    {
-      title: 'Message',
-      dataIndex: 'error_message',
-      key: 'error_message',
-      ellipsis: true,
-    },
-    {
-      title: 'Recoverable',
-      dataIndex: 'recoverable',
-      key: 'recoverable',
-      width: 100,
-      render: (recoverable: boolean) => (
-        <Tag color={recoverable ? 'green' : 'red'}>
-          {recoverable ? 'Yes' : 'No'}
-        </Tag>
-      ),
-    },
-  ]
+  const handleRetry = async () => {
+    try {
+      const newTask = await retryTask.mutateAsync({ taskId: id! })
+      message.success('Task retry created')
+      navigate(`/tasks/${newTask.id}`)
+    } catch {
+      message.error('Failed to retry task')
+    }
+  }
 
   if (isLoading) {
     return (
@@ -117,6 +89,7 @@ function TaskDetail() {
   const isRunning = task.status === 'running'
   const isPending = task.status === 'pending'
   const canCancel = isRunning || isPending
+  const canRetry = task.status === 'failed' || task.status === 'cancelled'
 
   // Calculate progress from WebSocket or result
   const progress = wsProgress?.progress ??
@@ -139,6 +112,16 @@ function TaskDetail() {
             loading={cancelTask.isPending}
           >
             Cancel
+          </Button>
+        )}
+        {canRetry && (
+          <Button
+            type="primary"
+            icon={<RetweetOutlined />}
+            onClick={handleRetry}
+            loading={retryTask.isPending}
+          >
+            Retry
           </Button>
         )}
       </Space>

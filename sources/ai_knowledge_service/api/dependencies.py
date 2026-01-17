@@ -171,6 +171,12 @@ class InMemoryKnowledgeBaseStore:
     def save_file_version(self, file_version: Any) -> None:
         self._file_versions[file_version.id] = file_version
 
+    def delete_file_version(self, file_version_id: str) -> bool:
+        if file_version_id in self._file_versions:
+            del self._file_versions[file_version_id]
+            return True
+        return False
+
 
 # Global store instance (for development)
 _kb_store: InMemoryKnowledgeBaseStore | None = None
@@ -185,3 +191,51 @@ def get_kb_store() -> InMemoryKnowledgeBaseStore:
 
 
 KbStoreDep = Annotated[InMemoryKnowledgeBaseStore, Depends(get_kb_store)]
+
+
+class InMemoryEnvironmentStore:
+    """In-memory store for environments (development only)."""
+
+    def __init__(self):
+        self._environments: dict[str, Any] = {}
+
+    def get_environment(self, env_id: str) -> Any | None:
+        return self._environments.get(env_id)
+
+    def list_environments(self) -> list[Any]:
+        return list(self._environments.values())
+
+    def save_environment(self, env: Any) -> None:
+        self._environments[env.id] = env
+
+    def delete_environment(self, env_id: str) -> bool:
+        if env_id in self._environments:
+            del self._environments[env_id]
+            return True
+        return False
+
+    def get_default_environment(self) -> Any | None:
+        for env in self._environments.values():
+            if env.is_default:
+                return env
+        return None
+
+    def clear_default(self) -> None:
+        """Clear the default flag from all environments."""
+        for env in self._environments.values():
+            env.is_default = False
+
+
+# Global environment store instance (for development)
+_env_store: InMemoryEnvironmentStore | None = None
+
+
+def get_env_store() -> InMemoryEnvironmentStore:
+    """Get the in-memory environment store."""
+    global _env_store
+    if _env_store is None:
+        _env_store = InMemoryEnvironmentStore()
+    return _env_store
+
+
+EnvStoreDep = Annotated[InMemoryEnvironmentStore, Depends(get_env_store)]

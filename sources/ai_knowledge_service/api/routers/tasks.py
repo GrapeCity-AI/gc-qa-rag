@@ -2,6 +2,10 @@
 Tasks Router - Task management endpoints.
 """
 
+import uuid
+from datetime import datetime
+from copy import deepcopy
+
 from fastapi import APIRouter, HTTPException, Query, WebSocket, WebSocketDisconnect, Request
 
 from ai_knowledge_service.api.schemas.common import (
@@ -15,6 +19,7 @@ from ai_knowledge_service.api.schemas.task import (
     TaskCancelRequest,
     TaskResponse,
     TaskResultResponse,
+    TaskRetryRequest,
     TaskSummary,
 )
 from ai_knowledge_service.api.dependencies import KbStoreDep, TaskQueueDep
@@ -256,6 +261,79 @@ async def cancel_task(
             started_at=task.started_at,
             completed_at=task.completed_at,
             metadata=task.metadata,
+            knowledge_base_name=kb.name if kb else None,
+            version_tag=version.version_tag if version else None,
+        )
+    )
+
+
+@router.post("/{task_id}/retry", response_model=ApiResponse[TaskResponse])
+async def retry_task(
+    task_id: str,
+    task_queue: TaskQueueDep,
+    kb_store: KbStoreDep,
+    data: TaskRetryRequest | None = None,
+) -> ApiResponse[TaskResponse]:
+    """
+    Retry a failed or cancelled task. Creates a new task with the same configuration.
+    """
+    original_task = task_queue.get_task(task_id)
+    if original_task is None:
+        raise HTTPException(status_code=404, detail=f"Task not found: {task_id}")
+
+    task_status = task_queue.get_status(task_id)
+    if task_status not in (TaskStatus.FAILED, TaskStatus.CANCELLED):
+        raise HTTPException(
+            status_code=400,
+            detail=f"Cannot retry task in status: {task_status.value if task_status else 'unknown'}. Only FAILED or CANCELLED tasks can be retried."
+        )
+
+    # Check if max retries exceeded (unless reset_retry_count is True)
+    reset_retry = data.reset_retry_count if data else True
+    if not reset_retry and original_task.retry_count >= original_task.max_retries:
+        raise HTTPException(
+            status_code=400,
+            detail=f"Task has exceeded maximum retries ({original_task.max_retries})"
+        )
+
+    # Create a new task with same configuration
+    new_task = deepcopy(original_task)
+    new_task.id = str(uuid.uuid4())
+    new_task.created_at = datetime.now()
+    new_task.started_at = None
+    new_task.completed_at = None
+
+    if reset_retry:
+        new_task.retry_count = 0
+    else:
+        new_task.retry_count = original_task.retry_count + 1
+
+    if data and data.priority is not None:
+        new_task.priority = data.priority
+
+    # Add reference to original task in metadata
+    new_task.metadata = new_task.metadata.copy() if new_task.metadata else {}
+    new_task.metadata["retried_from"] = task_id
+
+    task_queue.enqueue(new_task)
+
+    kb = kb_store.get_knowledge_base(new_task.knowledge_base_id)
+    version = kb_store.get_version(new_task.knowledge_base_version_id)
+
+    return ApiResponse.success(
+        TaskResponse(
+            id=new_task.id,
+            task_type=new_task.task_type.value,
+            knowledge_base_id=new_task.knowledge_base_id,
+            knowledge_base_version_id=new_task.knowledge_base_version_id,
+            status=TaskStatus.PENDING.value,
+            priority=new_task.priority,
+            retry_count=new_task.retry_count,
+            max_retries=new_task.max_retries,
+            created_at=new_task.created_at,
+            started_at=new_task.started_at,
+            completed_at=new_task.completed_at,
+            metadata=new_task.metadata,
             knowledge_base_name=kb.name if kb else None,
             version_tag=version.version_tag if version else None,
         )

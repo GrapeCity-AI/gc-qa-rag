@@ -1,11 +1,20 @@
-import { Typography, Card, Descriptions, Space, Tag, Switch, Divider } from 'antd'
+import { Typography, Card, Descriptions, Space, Tag, Row, Col, Divider, Spin } from 'antd'
+import {
+  CheckCircleOutlined,
+  CloseCircleOutlined,
+  RobotOutlined,
+  DatabaseOutlined,
+  SettingOutlined,
+} from '@ant-design/icons'
 import { useHealth } from '../../hooks/useTasks'
+import { useSystemConfig } from '../../hooks/useConfig'
 import { formatDateTime } from '../../utils/format'
 
 const { Title, Text } = Typography
 
 function Settings() {
-  const { data: health, isLoading } = useHealth()
+  const { data: health, isLoading: healthLoading } = useHealth()
+  const { data: config, isLoading: configLoading } = useSystemConfig()
 
   return (
     <div>
@@ -15,19 +24,21 @@ function Settings() {
 
       {/* System Status */}
       <Card title="System Status" style={{ marginBottom: 24 }}>
-        <Descriptions column={2} loading={isLoading}>
-          <Descriptions.Item label="Status">
-            <Tag color={health?.status === 'healthy' ? 'green' : 'red'}>
-              {health?.status || 'Unknown'}
-            </Tag>
-          </Descriptions.Item>
-          <Descriptions.Item label="Version">
-            {health?.version || '-'}
-          </Descriptions.Item>
-          <Descriptions.Item label="Last Check">
-            {health?.timestamp ? formatDateTime(health.timestamp) : '-'}
-          </Descriptions.Item>
-        </Descriptions>
+        <Spin spinning={healthLoading}>
+          <Descriptions column={2}>
+            <Descriptions.Item label="Status">
+              <Tag color={health?.status === 'healthy' ? 'green' : 'red'}>
+                {health?.status || 'Unknown'}
+              </Tag>
+            </Descriptions.Item>
+            <Descriptions.Item label="Version">
+              {health?.version || '-'}
+            </Descriptions.Item>
+            <Descriptions.Item label="Last Check">
+              {health?.timestamp ? formatDateTime(health.timestamp) : '-'}
+            </Descriptions.Item>
+          </Descriptions>
+        </Spin>
 
         {health?.components && (
           <>
@@ -44,6 +55,98 @@ function Settings() {
           </>
         )}
       </Card>
+
+      {/* System Configuration */}
+      <Row gutter={[16, 16]} style={{ marginBottom: 24 }}>
+        <Col xs={24} lg={8}>
+          <Card
+            title={
+              <Space>
+                <RobotOutlined />
+                <span>LLM Configuration</span>
+              </Space>
+            }
+            loading={configLoading}
+          >
+            {config && (
+              <Descriptions column={1} size="small">
+                <Descriptions.Item label="Provider">
+                  <Tag color="blue">{config.llm_provider}</Tag>
+                </Descriptions.Item>
+                <Descriptions.Item label="Model">
+                  <Text code>{config.llm_model}</Text>
+                </Descriptions.Item>
+              </Descriptions>
+            )}
+          </Card>
+        </Col>
+
+        <Col xs={24} lg={8}>
+          <Card
+            title={
+              <Space>
+                <DatabaseOutlined />
+                <span>Storage Configuration</span>
+              </Space>
+            }
+            loading={configLoading}
+          >
+            {config && (
+              <Descriptions column={1} size="small">
+                <Descriptions.Item label="Storage Type">
+                  <Tag color="green">{config.storage_type}</Tag>
+                </Descriptions.Item>
+                <Descriptions.Item label="Vector DB">
+                  <Tag color="purple">{config.vector_db_type}</Tag>
+                </Descriptions.Item>
+              </Descriptions>
+            )}
+          </Card>
+        </Col>
+
+        <Col xs={24} lg={8}>
+          <Card
+            title={
+              <Space>
+                <SettingOutlined />
+                <span>Pipeline Configuration</span>
+              </Space>
+            }
+            loading={configLoading}
+          >
+            {config && (
+              <Descriptions column={1} size="small">
+                <Descriptions.Item label="Max Concurrent Tasks">
+                  {config.max_concurrent_tasks}
+                </Descriptions.Item>
+                <Descriptions.Item label="Default Chunk Size">
+                  {config.default_chunk_size}
+                </Descriptions.Item>
+                <Descriptions.Item label="Chunk Overlap">
+                  {config.default_chunk_overlap}
+                </Descriptions.Item>
+              </Descriptions>
+            )}
+          </Card>
+        </Col>
+      </Row>
+
+      {/* Feature Flags */}
+      {config?.features && Object.keys(config.features).length > 0 && (
+        <Card title="Feature Flags" style={{ marginBottom: 24 }}>
+          <Space wrap>
+            {Object.entries(config.features).map(([feature, enabled]) => (
+              <Tag
+                key={feature}
+                icon={enabled ? <CheckCircleOutlined /> : <CloseCircleOutlined />}
+                color={enabled ? 'success' : 'default'}
+              >
+                {feature.replace(/_/g, ' ')}
+              </Tag>
+            ))}
+          </Space>
+        </Card>
+      )}
 
       {/* API Information */}
       <Card title="API Configuration" style={{ marginBottom: 24 }}>

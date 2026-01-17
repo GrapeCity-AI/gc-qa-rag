@@ -29,6 +29,24 @@ class VersionCreate(BaseModel):
     }
 
 
+class VersionUpdate(BaseModel):
+    """Request model for updating a version."""
+
+    version_tag: str | None = Field(default=None, min_length=1, max_length=100, description="Version tag")
+    metadata: dict[str, Any] | None = Field(default=None, description="Additional metadata")
+
+    model_config = {
+        "json_schema_extra": {
+            "examples": [
+                {
+                    "version_tag": "v1.1.0",
+                    "metadata": {"release_notes": "Bug fixes"}
+                }
+            ]
+        }
+    }
+
+
 class VersionResponse(BaseModel):
     """Response model for version."""
 
@@ -106,6 +124,40 @@ class VersionPublishRequest(BaseModel):
                     "target_environment_id": "production",
                     "alias_name": "latest",
                     "publish_strategy": "blue_green"
+                }
+            ]
+        }
+    }
+
+
+class VersionIngestRequest(BaseModel):
+    """Request model for triggering ingestion from data source."""
+
+    source_type: str = Field(..., description="Source type: sitemap, filesystem, forum_api")
+    source_config: dict[str, Any] = Field(
+        default_factory=dict,
+        description="Source-specific configuration"
+    )
+    incremental: bool = Field(default=False, description="Whether to perform incremental ingestion")
+    dedup_strategy: str = Field(default="version", description="Deduplication strategy: skip, replace, version")
+
+    model_config = {
+        "json_schema_extra": {
+            "examples": [
+                {
+                    "source_type": "sitemap",
+                    "source_config": {
+                        "sitemap_url": "https://example.com/sitemap.xml",
+                        "max_pages": 100
+                    },
+                    "incremental": False
+                },
+                {
+                    "source_type": "filesystem",
+                    "source_config": {
+                        "root_path": "/path/to/documents",
+                        "patterns": "**/*.md,**/*.txt"
+                    }
                 }
             ]
         }

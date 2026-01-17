@@ -8,6 +8,7 @@ import {
   Version,
   VersionBuildRequest,
   VersionCreate,
+  VersionIngestRequest,
   VersionPublishRequest,
   VersionSummary,
 } from './types'
@@ -57,6 +58,15 @@ export const versionsApi = {
   async build(versionId: string, data: VersionBuildRequest): Promise<Task> {
     const response = await client.post<ApiResponse<Task>>(
       `/versions/${versionId}/build`,
+      data
+    )
+    return extractData(response)
+  },
+
+  // Trigger data ingestion for a version
+  async ingest(versionId: string, data: VersionIngestRequest): Promise<Task> {
+    const response = await client.post<ApiResponse<Task>>(
+      `/versions/${versionId}/ingest`,
       data
     )
     return extractData(response)

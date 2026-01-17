@@ -119,6 +119,13 @@ export interface VersionPublishRequest {
   include_raw_files?: boolean
 }
 
+export interface VersionIngestRequest {
+  source_type: string
+  source_config: Record<string, unknown>
+  incremental?: boolean
+  dedup_strategy?: 'skip' | 'replace' | 'version'
+}
+
 export interface PipelineStepConfig {
   step_type: string
   config?: Record<string, unknown>
@@ -213,6 +220,11 @@ export interface TaskResult {
 
 export interface TaskCancelRequest {
   reason?: string
+}
+
+export interface TaskRetryRequest {
+  reset_retry_count?: boolean
+  priority?: number
 }
 
 // Connector
