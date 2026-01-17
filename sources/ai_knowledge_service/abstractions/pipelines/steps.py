@@ -85,7 +85,7 @@ class Embedding:
     id: str
     chunk_id: str  # Reference to source chunk
     vector: List[float]  # Dense vector
-    sparse_vector: Optional[Dict[int, float]] = None  # Sparse vector
+    sparse_vector: Optional[List[Dict[str, Any]]] = None  # Sparse vector: [{"index": int, "value": float}, ...]
     metadata: Dict[str, Any] = field(default_factory=dict)
 
     def __post_init__(self):

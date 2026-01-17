@@ -135,6 +135,10 @@ class DashScopeEmbedder(IEmbedder):
             embed_answers = self._config.get("embed_answers", True)
             embed_chunks = self._config.get("embed_chunks", False)
 
+            # Build embedding prefix from category and title
+            # Format: [Category/Title] - matches original implementation
+            prefix = self._build_embedding_prefix(context)
+
             # Get QA enrichment data
             qa_data = context.get_enrichment("qa", {})
             chunk_qa_list = qa_data.get("chunk_qa", []) if isinstance(qa_data, dict) else []
@@ -167,20 +171,20 @@ class DashScopeEmbedder(IEmbedder):
                 # Add chunk content embedding if configured
                 if embed_chunks:
                     texts_to_embed.append({
-                        "text": chunk.content,
+                        "text": prefix + chunk.content,
                         "chunk_id": chunk_id,
                         "type": "chunk",
                         "index": 0,
                     })
 
-                # Add QA embeddings
+                # Add QA embeddings with prefix
                 for i, qa in enumerate(qa_pairs):
                     if not isinstance(qa, dict):
                         self._logger.warning(f"qa item is not a dict: {type(qa)}")
                         continue
                     if embed_questions and qa.get("question"):
                         texts_to_embed.append({
-                            "text": qa["question"],
+                            "text": prefix + qa["question"],
                             "chunk_id": chunk_id,
                             "type": "question",
                             "index": i,
@@ -188,7 +192,7 @@ class DashScopeEmbedder(IEmbedder):
                         })
                     if embed_answers and qa.get("answer"):
                         texts_to_embed.append({
-                            "text": qa["answer"],
+                            "text": prefix + qa["answer"],
                             "chunk_id": chunk_id,
                             "type": "answer",
                             "index": i,
@@ -300,32 +304,63 @@ class DashScopeEmbedder(IEmbedder):
     def _convert_sparse_vector(
         self,
         sparse_data: Any,
-    ) -> Dict[int, float]:
+    ) -> List[Dict[str, Any]]:
         """
-        Convert DashScope sparse embedding format to dict format.
+        Convert DashScope sparse embedding to list format.
 
-        DashScope may return sparse embeddings as:
-        - {"indices": [int], "values": [float]}
-        - [[index, value], [index, value], ...]
+        Keeps the original format: [{"index": int, "value": float}, ...]
+        This matches the original implementation and preserves order.
         """
         if isinstance(sparse_data, dict):
+            # Handle {"indices": [...], "values": [...]} format
             indices = sparse_data.get("indices", [])
             values = sparse_data.get("values", [])
-            return {
-                int(idx): float(val)
+            return [
+                {"index": int(idx), "value": float(val)}
                 for idx, val in zip(indices, values)
-            }
+            ]
         elif isinstance(sparse_data, list):
-            # Handle list of [index, value] pairs
-            result = {}
+            # Handle list of items
+            result = []
             for item in sparse_data:
                 if isinstance(item, (list, tuple)) and len(item) >= 2:
-                    result[int(item[0])] = float(item[1])
+                    result.append({"index": int(item[0]), "value": float(item[1])})
                 elif isinstance(item, dict):
                     idx = item.get("index", item.get("token_id", 0))
                     val = item.get("value", item.get("weight", 0.0))
-                    result[int(idx)] = float(val)
+                    result.append({"index": int(idx), "value": float(val)})
             return result
         else:
             self._logger.warning(f"Unknown sparse data format: {type(sparse_data)}")
-            return {}
+            return []
+
+    def _build_embedding_prefix(self, context: ProcessingContext) -> str:
+        """
+        Build embedding prefix from category and title.
+
+        Format: [Category/Title]
+        This matches the original implementation to ensure
+        consistent vector semantics.
+        """
+        category = ""
+        title = ""
+
+        # Try to get from raw_file metadata
+        if context.raw_file and context.raw_file.metadata:
+            category = context.raw_file.metadata.get("category", "")
+            # Title might be in metadata or parsed_document
+            title = context.raw_file.metadata.get("title", "")
+
+        # Fallback to parsed_document for title
+        if not title and context.parsed_document:
+            title = context.parsed_document.title or ""
+
+        # Build prefix only if we have both category and title
+        if category and title:
+            return f"[{category}/{title}]"
+        elif category:
+            return f"[{category}]"
+        elif title:
+            return f"[{title}]"
+        else:
+            return ""

@@ -283,16 +283,27 @@ class TestDashScopeEmbedder:
         assert batches[2] == [5]
 
     def test_convert_sparse_vector(self):
-        """Test sparse vector conversion."""
+        """Test sparse vector conversion to list format."""
         config = DashScopeConfig(api_key="test-key")
         embedder = DashScopeEmbedder(config)
 
+        # Test dict format {"indices": [...], "values": [...]}
         sparse_data = {"indices": [1, 5, 10], "values": [0.5, 0.3, 0.2]}
         result = embedder._convert_sparse_vector(sparse_data)
 
-        assert result[1] == 0.5
-        assert result[5] == 0.3
-        assert result[10] == 0.2
+        # New format: [{"index": int, "value": float}, ...]
+        assert len(result) == 3
+        assert result[0] == {"index": 1, "value": 0.5}
+        assert result[1] == {"index": 5, "value": 0.3}
+        assert result[2] == {"index": 10, "value": 0.2}
+
+        # Test list format [{"index": int, "value": float}, ...]
+        sparse_data2 = [{"index": 2, "value": 0.8}, {"index": 7, "value": 0.4}]
+        result2 = embedder._convert_sparse_vector(sparse_data2)
+
+        assert len(result2) == 2
+        assert result2[0] == {"index": 2, "value": 0.8}
+        assert result2[1] == {"index": 7, "value": 0.4}
 
     @patch("ai_knowledge_service.implementations.steps.embedders.dashscope_embedder.TextEmbedding")
     def test_no_texts_to_embed(self, mock_text_embedding):

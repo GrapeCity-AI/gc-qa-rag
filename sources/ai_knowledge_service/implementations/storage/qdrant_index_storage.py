@@ -488,24 +488,14 @@ class QdrantIndexStorage(IIndexStorage):
         if "dense_vector" in record.content:
             vectors["question_dense"] = record.content["dense_vector"]
 
-        # Extract sparse vectors
-        sparse_vectors = {}
-
+        # Extract and add sparse vectors to the same vector dict
         if "question_sparse" in record.content:
             sparse_data = record.content["question_sparse"]
-            if isinstance(sparse_data, dict):
-                sparse_vectors["question_sparse"] = SparseVector(
-                    indices=list(sparse_data.keys()),
-                    values=list(sparse_data.values()),
-                )
+            vectors["question_sparse"] = self._transform_sparse(sparse_data)
 
         if "answer_sparse" in record.content:
             sparse_data = record.content["answer_sparse"]
-            if isinstance(sparse_data, dict):
-                sparse_vectors["answer_sparse"] = SparseVector(
-                    indices=list(sparse_data.keys()),
-                    values=list(sparse_data.values()),
-                )
+            vectors["answer_sparse"] = self._transform_sparse(sparse_data)
 
         # Build payload
         payload = {
@@ -520,3 +510,35 @@ class QdrantIndexStorage(IIndexStorage):
             vector=vectors if vectors else None,
             payload=payload,
         )
+
+    def _transform_sparse(
+        self,
+        sparse_data: Any,
+    ) -> SparseVector:
+        """
+        Transform sparse embedding data to Qdrant SparseVector.
+
+        Handles the original format: [{"index": int, "value": float}, ...]
+        Converts to Qdrant's {"indices": [...], "values": [...]} format.
+        """
+        if isinstance(sparse_data, list):
+            # Original format: [{"index": int, "value": float}, ...]
+            indices = [item["index"] for item in sparse_data if isinstance(item, dict)]
+            values = [item["value"] for item in sparse_data if isinstance(item, dict)]
+            return SparseVector(indices=indices, values=values)
+        elif isinstance(sparse_data, dict):
+            # Already in {"indices": [...], "values": [...]} format
+            if "indices" in sparse_data and "values" in sparse_data:
+                return SparseVector(
+                    indices=sparse_data["indices"],
+                    values=sparse_data["values"],
+                )
+            # Or dict format {index: value, ...}
+            else:
+                return SparseVector(
+                    indices=list(sparse_data.keys()),
+                    values=list(sparse_data.values()),
+                )
+        else:
+            self._logger.warning(f"Unknown sparse data format: {type(sparse_data)}")
+            return SparseVector(indices=[], values=[])
