@@ -47,7 +47,7 @@ async def list_tasks(
     if status:
         try:
             status_enum = TaskStatus(status)
-            all_tasks = [t for t in all_tasks if task_queue.get_status(t.id) == status_enum]
+            all_tasks = [t for t in all_tasks if task_queue.get_task_status(t.id) == status_enum]
         except ValueError:
             raise HTTPException(status_code=400, detail=f"Invalid status: {status}")
 
@@ -72,7 +72,7 @@ async def list_tasks(
     for task in page_items:
         kb = kb_store.get_knowledge_base(task.knowledge_base_id)
         version = kb_store.get_version(task.knowledge_base_version_id)
-        task_status = task_queue.get_status(task.id)
+        task_status = task_queue.get_task_status(task.id)
 
         summaries.append(
             TaskSummary(
@@ -112,7 +112,7 @@ async def get_task(
 
     kb = kb_store.get_knowledge_base(task.knowledge_base_id)
     version = kb_store.get_version(task.knowledge_base_version_id)
-    task_status = task_queue.get_status(task_id)
+    task_status = task_queue.get_task_status(task_id)
 
     duration = None
     if task.started_at and task.completed_at:
@@ -153,7 +153,7 @@ async def get_task_result(
 
     result = task_queue.get_result(task_id)
     if result is None:
-        task_status = task_queue.get_status(task_id)
+        task_status = task_queue.get_task_status(task_id)
         if task_status in (TaskStatus.PENDING, TaskStatus.RUNNING):
             raise HTTPException(status_code=400, detail="Task has not completed yet")
         raise HTTPException(status_code=404, detail="Task result not found")
@@ -233,7 +233,7 @@ async def cancel_task(
     if task is None:
         raise HTTPException(status_code=404, detail=f"Task not found: {task_id}")
 
-    task_status = task_queue.get_status(task_id)
+    task_status = task_queue.get_task_status(task_id)
     if task_status not in (TaskStatus.PENDING, TaskStatus.RUNNING):
         raise HTTPException(
             status_code=400,
@@ -281,7 +281,7 @@ async def retry_task(
     if original_task is None:
         raise HTTPException(status_code=404, detail=f"Task not found: {task_id}")
 
-    task_status = task_queue.get_status(task_id)
+    task_status = task_queue.get_task_status(task_id)
     if task_status not in (TaskStatus.FAILED, TaskStatus.CANCELLED):
         raise HTTPException(
             status_code=400,

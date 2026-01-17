@@ -46,9 +46,9 @@ function KnowledgeBaseDetail() {
   const { data: versions, isLoading: versionsLoading } = useVersions(id!)
   const deleteKb = useDeleteKnowledgeBase()
   const createVersion = useCreateVersion(id!)
-  const buildVersion = useBuildVersion('')
-  const publishVersion = usePublishVersion('')
-  const ingestVersion = useIngestVersion('')
+  const buildVersion = useBuildVersion()
+  const publishVersion = usePublishVersion()
+  const ingestVersion = useIngestVersion()
 
   const [createModalOpen, setCreateModalOpen] = useState(false)
   const [buildModalOpen, setBuildModalOpen] = useState(false)
@@ -56,7 +56,10 @@ function KnowledgeBaseDetail() {
   const [ingestModalOpen, setIngestModalOpen] = useState(false)
   const [selectedVersion, setSelectedVersion] = useState<string | null>(null)
   const [fileBrowserVersionId, setFileBrowserVersionId] = useState<string | null>(null)
-  const [form] = Form.useForm()
+  const [createForm] = Form.useForm()
+  const [buildForm] = Form.useForm()
+  const [publishForm] = Form.useForm()
+  const [ingestForm] = Form.useForm()
 
   const handleDelete = async () => {
     try {
@@ -73,7 +76,7 @@ function KnowledgeBaseDetail() {
       await createVersion.mutateAsync(values)
       message.success('Version created')
       setCreateModalOpen(false)
-      form.resetFields()
+      createForm.resetFields()
     } catch {
       message.error('Failed to create version')
     }
@@ -83,7 +86,10 @@ function KnowledgeBaseDetail() {
     if (!selectedVersion) return
     try {
       const result = await buildVersion.mutateAsync({
-        build_type: values.build_type as 'full' | 'incremental',
+        versionId: selectedVersion,
+        data: {
+          build_type: values.build_type as 'full' | 'incremental',
+        },
       })
       message.success('Build task created')
       setBuildModalOpen(false)
@@ -97,8 +103,11 @@ function KnowledgeBaseDetail() {
     if (!selectedVersion) return
     try {
       const result = await publishVersion.mutateAsync({
-        target_environment_id: values.target_environment_id,
-        alias_name: values.alias_name,
+        versionId: selectedVersion,
+        data: {
+          target_environment_id: values.target_environment_id,
+          alias_name: values.alias_name,
+        },
       })
       message.success('Publish task created')
       setPublishModalOpen(false)
@@ -121,13 +130,16 @@ function KnowledgeBaseDetail() {
       }
 
       const result = await ingestVersion.mutateAsync({
-        source_type: values.source_type,
-        source_config: sourceConfig,
-        incremental: values.incremental,
+        versionId: selectedVersion,
+        data: {
+          source_type: values.source_type,
+          source_config: sourceConfig,
+          incremental: values.incremental,
+        },
       })
       message.success('Ingest task created')
       setIngestModalOpen(false)
-      form.resetFields()
+      ingestForm.resetFields()
       navigate(`/tasks/${result.id}`)
     } catch {
       message.error('Failed to trigger ingest')
@@ -338,10 +350,10 @@ function KnowledgeBaseDetail() {
         title="Create Version"
         open={createModalOpen}
         onCancel={() => setCreateModalOpen(false)}
-        onOk={() => form.submit()}
+        onOk={() => createForm.submit()}
         confirmLoading={createVersion.isPending}
       >
-        <Form form={form} layout="vertical" onFinish={handleCreateVersion}>
+        <Form form={createForm} layout="vertical" onFinish={handleCreateVersion}>
           <Form.Item
             name="version_tag"
             label="Version Tag"
@@ -357,10 +369,10 @@ function KnowledgeBaseDetail() {
         title="Trigger Build"
         open={buildModalOpen}
         onCancel={() => setBuildModalOpen(false)}
-        onOk={() => form.submit()}
+        onOk={() => buildForm.submit()}
         confirmLoading={buildVersion.isPending}
       >
-        <Form form={form} layout="vertical" onFinish={handleBuild} initialValues={{ build_type: 'full' }}>
+        <Form form={buildForm} layout="vertical" onFinish={handleBuild} initialValues={{ build_type: 'full' }}>
           <Form.Item
             name="build_type"
             label="Build Type"
@@ -379,10 +391,10 @@ function KnowledgeBaseDetail() {
         title="Publish Version"
         open={publishModalOpen}
         onCancel={() => setPublishModalOpen(false)}
-        onOk={() => form.submit()}
+        onOk={() => publishForm.submit()}
         confirmLoading={publishVersion.isPending}
       >
-        <Form form={form} layout="vertical" onFinish={handlePublish}>
+        <Form form={publishForm} layout="vertical" onFinish={handlePublish}>
           <Form.Item
             name="target_environment_id"
             label="Target Environment"
@@ -405,14 +417,14 @@ function KnowledgeBaseDetail() {
         open={ingestModalOpen}
         onCancel={() => {
           setIngestModalOpen(false)
-          form.resetFields()
+          ingestForm.resetFields()
         }}
-        onOk={() => form.submit()}
+        onOk={() => ingestForm.submit()}
         confirmLoading={ingestVersion.isPending}
         width={600}
       >
         <Form
-          form={form}
+          form={ingestForm}
           layout="vertical"
           onFinish={handleIngest}
           initialValues={{ source_type: 'filesystem', incremental: false }}

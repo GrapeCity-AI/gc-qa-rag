@@ -46,36 +46,39 @@ export function useCreateVersion(kbId: string) {
 }
 
 // Build version
-export function useBuildVersion(versionId: string) {
+export function useBuildVersion() {
   const queryClient = useQueryClient()
 
   return useMutation({
-    mutationFn: (data: VersionBuildRequest) => versionsApi.build(versionId, data),
-    onSuccess: () => {
+    mutationFn: ({ versionId, data }: { versionId: string; data: VersionBuildRequest }) =>
+      versionsApi.build(versionId, data),
+    onSuccess: (_, { versionId }) => {
       queryClient.invalidateQueries({ queryKey: versionKeys.detail(versionId) })
     },
   })
 }
 
 // Publish version
-export function usePublishVersion(versionId: string) {
+export function usePublishVersion() {
   const queryClient = useQueryClient()
 
   return useMutation({
-    mutationFn: (data: VersionPublishRequest) => versionsApi.publish(versionId, data),
-    onSuccess: () => {
+    mutationFn: ({ versionId, data }: { versionId: string; data: VersionPublishRequest }) =>
+      versionsApi.publish(versionId, data),
+    onSuccess: (_, { versionId }) => {
       queryClient.invalidateQueries({ queryKey: versionKeys.detail(versionId) })
     },
   })
 }
 
 // Ingest version (fetch data from source)
-export function useIngestVersion(versionId: string) {
+export function useIngestVersion() {
   const queryClient = useQueryClient()
 
   return useMutation({
-    mutationFn: (data: VersionIngestRequest) => versionsApi.ingest(versionId, data),
-    onSuccess: () => {
+    mutationFn: ({ versionId, data }: { versionId: string; data: VersionIngestRequest }) =>
+      versionsApi.ingest(versionId, data),
+    onSuccess: (_, { versionId }) => {
       queryClient.invalidateQueries({ queryKey: versionKeys.detail(versionId) })
       queryClient.invalidateQueries({ queryKey: versionKeys.files(versionId) })
     },
