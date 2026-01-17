@@ -66,7 +66,7 @@ GC-QA-RAG 是一个**企业级的检索增强生成（RAG）系统**。我们通
 
 我们强烈推荐使用 Docker 进行一键部署，这是体验本项目的最快方式。
 
-**⚠️ 重要提醒**：在部署之前，您必须先配置 API 密钥，否则系统无法正常工作！密钥若有变更，需重启服务。
+**⚠️ 重要提醒**：在部署之前，你必须先配置 API 密钥，否则系统无法正常工作！密钥若有变更，需重启服务。
 
 ### 🐳 Docker 一键部署 (推荐)
 
@@ -74,7 +74,7 @@ GC-QA-RAG 是一个**企业级的检索增强生成（RAG）系统**。我们通
 
 **第一步：获取 API 密钥**
 
-您需要准备以下 API 密钥：
+你需要准备以下 API 密钥：
 
 -   **大语言模型 API**：推荐使用[阿里云百炼](https://bailian.console.aliyun.com/)或[OpenAI API](https://platform.openai.com/)
 -   **嵌入模型 API**：推荐使用阿里云的文本嵌入模型（目前仅支持 text-embedding-v4）
@@ -117,7 +117,7 @@ cd gc-qa-rag
 # 2. 配置API密钥 (必须！)
 # 编辑 sources/gc-qa-rag-etl/.config.production.json 或 .env 文件
 # 编辑 sources/gc-qa-rag-server/.config.production.json 或 .env 文件
-# 填入您的API密钥
+# 填入你的API密钥
 
 # 3. 进入 ETL 目录
 cd sources/gc-qa-rag-etl/deploy
@@ -136,12 +136,12 @@ docker compose up -d --build
 
 1. **访问 ETL 管理后台**: `http://localhost:8001`
 
-    - 上传您的 PDF、Word、Markdown 等文档
+    - 上传你的 PDF、Word、Markdown 等文档
     - 等待系统处理并生成问答对
     - 发布数据到知识库
 
 2. **访问 RAG 问答主页**: `http://localhost:80`
-    - 基于您上传的文档内容开始提问
+    - 基于你上传的文档内容开始提问
     - 享受智能问答体验！
 
 **完整操作流程**：
