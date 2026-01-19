@@ -24,21 +24,15 @@ dev = [
 ]
 
 [build-system]
-requires = ["pdm-backend"]
-build-backend = "pdm.backend"
+requires = ["setuptools>=61.0"]
+build-backend = "setuptools.build_meta"
 
-[tool.pdm]
-distribution = true
+[tool.setuptools.packages.find]
+where = ["."]
+include = ["ai_knowledge_service*"]
 
-[tool.pdm.build]
-includes = ["abstractions", "implementations", "core", "examples", "api"]
-package-dir = "."
-
-[tool.pdm.dev-dependencies]
-dev = [
-    "pytest>=8.0.0",
-    "pytest-cov>=4.0.0",
-]
+[tool.setuptools.package-dir]
+ai_knowledge_service = "."
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
