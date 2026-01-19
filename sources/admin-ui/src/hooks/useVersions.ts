@@ -2,6 +2,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { versionsApi, ListVersionsParams, ListFilesParams } from '../api/versions'
 import { VersionCreate, VersionBuildRequest, VersionPublishRequest, VersionIngestRequest } from '../api/types'
 import { knowledgeBaseKeys } from './useKnowledgeBases'
+import { taskKeys } from './useTasks'
 
 // Query keys
 export const versionKeys = {
@@ -20,6 +21,7 @@ export function useVersions(kbId: string, params: ListVersionsParams = {}) {
     queryKey: versionKeys.list(kbId, params),
     queryFn: () => versionsApi.list(kbId, params),
     enabled: !!kbId,
+    refetchInterval: 5000, // Refresh every 5 seconds
   })
 }
 
@@ -29,6 +31,11 @@ export function useVersion(versionId: string) {
     queryKey: versionKeys.detail(versionId),
     queryFn: () => versionsApi.get(versionId),
     enabled: !!versionId,
+    refetchInterval: (query) => {
+      // Refetch every 3 seconds while version is building
+      const status = query.state.data?.status
+      return status === 'building' ? 3000 : false
+    },
   })
 }
 
@@ -54,6 +61,8 @@ export function useBuildVersion() {
       versionsApi.build(versionId, data),
     onSuccess: (_, { versionId }) => {
       queryClient.invalidateQueries({ queryKey: versionKeys.detail(versionId) })
+      queryClient.invalidateQueries({ queryKey: versionKeys.lists() })
+      queryClient.invalidateQueries({ queryKey: taskKeys.lists() })
     },
   })
 }
@@ -67,6 +76,8 @@ export function usePublishVersion() {
       versionsApi.publish(versionId, data),
     onSuccess: (_, { versionId }) => {
       queryClient.invalidateQueries({ queryKey: versionKeys.detail(versionId) })
+      queryClient.invalidateQueries({ queryKey: versionKeys.lists() })
+      queryClient.invalidateQueries({ queryKey: taskKeys.lists() })
     },
   })
 }
@@ -80,7 +91,9 @@ export function useIngestVersion() {
       versionsApi.ingest(versionId, data),
     onSuccess: (_, { versionId }) => {
       queryClient.invalidateQueries({ queryKey: versionKeys.detail(versionId) })
+      queryClient.invalidateQueries({ queryKey: versionKeys.lists() })
       queryClient.invalidateQueries({ queryKey: versionKeys.files(versionId) })
+      queryClient.invalidateQueries({ queryKey: taskKeys.lists() })
     },
   })
 }

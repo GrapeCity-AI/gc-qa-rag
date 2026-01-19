@@ -23,6 +23,7 @@ export function useTasks(params: ListTasksParams = {}) {
   return useQuery({
     queryKey: taskKeys.list(params),
     queryFn: () => tasksApi.list(params),
+    refetchInterval: 5000, // Refresh every 5 seconds
   })
 }
 
