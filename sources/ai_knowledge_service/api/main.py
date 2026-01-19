@@ -55,6 +55,12 @@ async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
     settings = get_settings()
     logger.info(f"Loaded settings: debug={settings.debug}, log_level={settings.log_level}")
 
+    # Debug: Check API keys are loaded
+    llm_key = settings.llm.api_key
+    emb_key = settings.embedding.api_key
+    logger.info(f"LLM API Key: {'***' + llm_key[-4:] if len(llm_key) > 4 else '(not set)'}")
+    logger.info(f"Embedding API Key: {'***' + emb_key[-4:] if len(emb_key) > 4 else '(not set)'}")
+
     # Setup DI container
     container = setup_container(settings)
     app.state.container = container

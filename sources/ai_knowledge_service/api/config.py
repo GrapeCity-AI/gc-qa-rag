@@ -11,11 +11,16 @@ from typing import Optional
 from pydantic import Field
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
+# Get the directory where this config file is located
+_CONFIG_DIR = Path(__file__).parent.parent
+_ENV_FILE = _CONFIG_DIR / ".env"
+
 
 class LLMSettings(BaseSettings):
     """LLM API configuration."""
 
     model_config = SettingsConfigDict(
+        env_file=_ENV_FILE,
         env_prefix="LLM_",
         extra="ignore",
     )
@@ -32,6 +37,7 @@ class EmbeddingSettings(BaseSettings):
     """DashScope embedding configuration."""
 
     model_config = SettingsConfigDict(
+        env_file=_ENV_FILE,
         env_prefix="DASHSCOPE_",
         extra="ignore",
     )
@@ -48,6 +54,7 @@ class QdrantSettings(BaseSettings):
     """Qdrant vector database configuration."""
 
     model_config = SettingsConfigDict(
+        env_file=_ENV_FILE,
         env_prefix="QDRANT_",
         extra="ignore",
     )
@@ -64,6 +71,7 @@ class StorageSettings(BaseSettings):
     """Storage path configuration."""
 
     model_config = SettingsConfigDict(
+        env_file=_ENV_FILE,
         env_prefix="STORAGE_",
         extra="ignore",
     )
@@ -93,6 +101,7 @@ class SchedulerSettings(BaseSettings):
     """Task scheduler configuration."""
 
     model_config = SettingsConfigDict(
+        env_file=_ENV_FILE,
         env_prefix="SCHEDULER_",
         extra="ignore",
     )
@@ -115,7 +124,7 @@ class AppSettings(BaseSettings):
     """Main application settings aggregating all sub-settings."""
 
     model_config = SettingsConfigDict(
-        env_file=".env",
+        env_file=_ENV_FILE,
         env_file_encoding="utf-8",
         extra="ignore",
     )
