@@ -2,7 +2,7 @@
 Version Manager interface - Manages knowledge base and file versions.
 """
 
-from typing import List, Optional, Protocol, runtime_checkable
+from typing import Any, Dict, List, Optional, Protocol, runtime_checkable
 
 from ai_knowledge_service.abstractions.models.knowledge_base import (
     KnowledgeBase,
@@ -78,6 +78,18 @@ class IVersionManager(Protocol):
 
         Returns:
             bool: True if the knowledge base was deleted.
+        """
+        ...
+
+    def update_knowledge_base(self, kb: KnowledgeBase) -> None:
+        """
+        Update a knowledge base.
+
+        Args:
+            kb: The knowledge base with updated fields.
+
+        Raises:
+            ValueError: If the knowledge base doesn't exist.
         """
         ...
 
@@ -186,6 +198,18 @@ class IVersionManager(Protocol):
         """
         ...
 
+    def update_version(self, version: KnowledgeBaseVersion) -> None:
+        """
+        Update a version.
+
+        Args:
+            version: The version with updated fields.
+
+        Raises:
+            ValueError: If the version doesn't exist.
+        """
+        ...
+
     def delete_version(self, version_id: str) -> bool:
         """
         Delete a version.
@@ -207,6 +231,7 @@ class IVersionManager(Protocol):
         raw_file_id: str,
         knowledge_base_version_id: str,
         content_hash: str,
+        metadata: Optional[Dict[str, Any]] = None,
     ) -> FileVersion:
         """
         Create a file version.
@@ -215,6 +240,7 @@ class IVersionManager(Protocol):
             raw_file_id: Raw file ID.
             knowledge_base_version_id: Knowledge base version ID.
             content_hash: Content hash for change detection.
+            metadata: Optional metadata (source_type, source_uri, original_name, etc.).
 
         Returns:
             FileVersion: The created file version.

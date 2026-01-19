@@ -120,7 +120,7 @@ export interface VersionPublishRequest {
 }
 
 export interface VersionIngestRequest {
-  source_type: string
+  connector_type: string
   source_config: Record<string, unknown>
   incremental?: boolean
   dedup_strategy?: 'skip' | 'replace' | 'version'

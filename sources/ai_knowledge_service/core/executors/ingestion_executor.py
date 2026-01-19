@@ -10,6 +10,7 @@ from datetime import datetime
 from typing import Dict, List, Optional
 
 from ai_knowledge_service.abstractions.execution.executor import IIngestionExecutor
+from ai_knowledge_service.abstractions.infrastructure.version_manager import IVersionManager
 from ai_knowledge_service.abstractions.models.tasks import (
     IngestionTask,
     IngestionTaskResult,
@@ -34,12 +35,14 @@ class IngestionExecutor(BaseExecutor[IngestionTask, IngestionTaskResult], IInges
     - Connect to data sources using appropriate connectors
     - Fetch and validate content
     - Store raw files with deduplication
+    - Create file versions linking raw files to KB versions
     - Track ingestion statistics
     """
 
     def __init__(
         self,
         raw_file_storage: IRawFileStorage,
+        version_manager: IVersionManager,
         connectors: Dict[str, ISourceConnector],
         logger: Optional[logging.Logger] = None,
     ):
@@ -48,11 +51,13 @@ class IngestionExecutor(BaseExecutor[IngestionTask, IngestionTaskResult], IInges
 
         Args:
             raw_file_storage: Storage for raw files.
+            version_manager: Manager for file versions.
             connectors: Mapping of connector type to connector instance.
             logger: Optional logger instance.
         """
         super().__init__(logger)
         self._storage = raw_file_storage
+        self._version_manager = version_manager
         self._connectors = connectors
 
     @property
@@ -147,6 +152,21 @@ class IngestionExecutor(BaseExecutor[IngestionTask, IngestionTaskResult], IInges
                     # Store the record
                     raw_file = self._storage.save(record, task.knowledge_base_id)
                     ingested_file_ids.append(raw_file.id)
+
+                    # Create file version linking to KB version with metadata
+                    file_metadata = {
+                        "source_type": raw_file.source_type,
+                        "source_uri": raw_file.source_uri,
+                        "original_name": raw_file.original_name,
+                        "mime_type": raw_file.mime_type,
+                        "size_bytes": raw_file.size_bytes,
+                    }
+                    self._version_manager.create_file_version(
+                        raw_file_id=raw_file.id,
+                        knowledge_base_version_id=task.knowledge_base_version_id,
+                        content_hash=raw_file.content_hash,
+                        metadata=file_metadata,
+                    )
 
                     if existing_id:
                         updated_files_count += 1

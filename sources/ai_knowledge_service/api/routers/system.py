@@ -14,7 +14,7 @@ from ai_knowledge_service.api.schemas.common import (
 )
 from ai_knowledge_service.api.dependencies import (
     TaskQueueDep,
-    KbStoreDep,
+    VersionManagerDep,
 )
 from ai_knowledge_service.abstractions.models.tasks import TaskStatus
 
@@ -44,7 +44,7 @@ async def health_check() -> ApiResponse[HealthStatus]:
 
 @router.get("/stats", response_model=ApiResponse[CountStats])
 async def get_stats(
-    kb_store: KbStoreDep,
+    version_manager: VersionManagerDep,
     task_queue: TaskQueueDep,
 ) -> ApiResponse[CountStats]:
     """
@@ -53,20 +53,20 @@ async def get_stats(
     Returns counts of knowledge bases, versions, and task statuses.
     """
     # Get knowledge base counts
-    knowledge_bases = kb_store.list_knowledge_bases()
+    knowledge_bases = version_manager.list_knowledge_bases()
     kb_count = len(knowledge_bases)
 
     # Count versions
     version_count = sum(
-        len(kb_store.list_versions(kb.id)) for kb in knowledge_bases
+        len(version_manager.list_versions(kb.id)) for kb in knowledge_bases
     )
 
     # Get task counts
     all_tasks = task_queue.list_tasks()
-    pending = sum(1 for t in all_tasks if task_queue.get_status(t.id) == TaskStatus.PENDING)
-    running = sum(1 for t in all_tasks if task_queue.get_status(t.id) == TaskStatus.RUNNING)
-    completed = sum(1 for t in all_tasks if task_queue.get_status(t.id) == TaskStatus.COMPLETED)
-    failed = sum(1 for t in all_tasks if task_queue.get_status(t.id) == TaskStatus.FAILED)
+    pending = sum(1 for t in all_tasks if task_queue.get_task_status(t.id) == TaskStatus.PENDING)
+    running = sum(1 for t in all_tasks if task_queue.get_task_status(t.id) == TaskStatus.RUNNING)
+    completed = sum(1 for t in all_tasks if task_queue.get_task_status(t.id) == TaskStatus.COMPLETED)
+    failed = sum(1 for t in all_tasks if task_queue.get_task_status(t.id) == TaskStatus.FAILED)
 
     stats = CountStats(
         knowledge_bases=kb_count,

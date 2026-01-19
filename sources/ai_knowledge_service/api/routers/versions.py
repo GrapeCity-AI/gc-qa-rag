@@ -23,9 +23,8 @@ from ai_knowledge_service.api.schemas.version import (
     VersionUpdate,
 )
 from ai_knowledge_service.api.schemas.task import TaskResponse
-from ai_knowledge_service.api.dependencies import KbStoreDep, TaskQueueDep
+from ai_knowledge_service.api.dependencies import VersionManagerDep, TaskQueueDep
 from ai_knowledge_service.abstractions.models.knowledge_base import (
-    KnowledgeBaseVersion,
     VersionStatus,
     IndexStatus,
 )
@@ -46,18 +45,18 @@ router = APIRouter()
 @router.get("/knowledge-bases/{kb_id}/versions", response_model=PaginatedResponse[VersionSummary])
 async def list_versions(
     kb_id: str,
-    kb_store: KbStoreDep,
+    version_manager: VersionManagerDep,
     page: int = Query(1, ge=1, description="Page number"),
     page_size: int = Query(20, ge=1, le=100, description="Items per page"),
 ) -> PaginatedResponse[VersionSummary]:
     """
     List all versions for a knowledge base.
     """
-    kb = kb_store.get_knowledge_base(kb_id)
+    kb = version_manager.get_knowledge_base(kb_id)
     if kb is None:
         raise HTTPException(status_code=404, detail=f"Knowledge base not found: {kb_id}")
 
-    versions = kb_store.list_versions(kb_id)
+    versions = version_manager.list_versions(kb_id)
     versions.sort(key=lambda x: x.created_at, reverse=True)
 
     # Paginate
@@ -69,7 +68,7 @@ async def list_versions(
 
     summaries = []
     for v in page_items:
-        file_versions = kb_store.get_file_versions(v.id)
+        file_versions = version_manager.get_file_versions(v.id)
         summaries.append(
             VersionSummary(
                 id=v.id,
@@ -94,34 +93,35 @@ async def list_versions(
 @router.post("/knowledge-bases/{kb_id}/versions", response_model=ApiResponse[VersionResponse], status_code=201)
 async def create_version(
     kb_id: str,
-    kb_store: KbStoreDep,
+    version_manager: VersionManagerDep,
     data: VersionCreate,
 ) -> ApiResponse[VersionResponse]:
     """
     Create a new version for a knowledge base.
     """
-    kb = kb_store.get_knowledge_base(kb_id)
+    kb = version_manager.get_knowledge_base(kb_id)
     if kb is None:
         raise HTTPException(status_code=404, detail=f"Knowledge base not found: {kb_id}")
 
     # Validate parent version if provided
     if data.parent_version_id:
-        parent = kb_store.get_version(data.parent_version_id)
+        parent = version_manager.get_version(data.parent_version_id)
         if parent is None:
             raise HTTPException(status_code=400, detail=f"Parent version not found: {data.parent_version_id}")
         if parent.knowledge_base_id != kb_id:
             raise HTTPException(status_code=400, detail="Parent version belongs to a different knowledge base")
 
-    version = KnowledgeBaseVersion(
-        id=str(uuid.uuid4()),
+    # Create the version
+    version = version_manager.create_version(
         knowledge_base_id=kb_id,
         version_tag=data.version_tag,
-        status=VersionStatus.DRAFT,
         parent_version_id=data.parent_version_id,
-        created_at=datetime.now(),
-        metadata=data.metadata,
     )
-    kb_store.save_version(version)
+
+    # Update metadata if provided
+    if data.metadata:
+        version.metadata = data.metadata
+        version_manager.update_version(version)
 
     return ApiResponse.success(
         VersionResponse(
@@ -144,16 +144,16 @@ async def create_version(
 @router.get("/versions/{version_id}", response_model=ApiResponse[VersionResponse])
 async def get_version(
     version_id: str,
-    kb_store: KbStoreDep,
+    version_manager: VersionManagerDep,
 ) -> ApiResponse[VersionResponse]:
     """
     Get a version by ID.
     """
-    version = kb_store.get_version(version_id)
+    version = version_manager.get_version(version_id)
     if version is None:
         raise HTTPException(status_code=404, detail=f"Version not found: {version_id}")
 
-    file_versions = kb_store.get_file_versions(version_id)
+    file_versions = version_manager.get_file_versions(version_id)
     indexed = sum(1 for fv in file_versions if fv.index_status == IndexStatus.INDEXED)
     pending = sum(1 for fv in file_versions if fv.index_status == IndexStatus.PENDING)
     failed = sum(1 for fv in file_versions if fv.index_status == IndexStatus.FAILED)
@@ -179,13 +179,13 @@ async def get_version(
 @router.put("/versions/{version_id}", response_model=ApiResponse[VersionResponse])
 async def update_version(
     version_id: str,
-    kb_store: KbStoreDep,
+    version_manager: VersionManagerDep,
     data: VersionUpdate,
 ) -> ApiResponse[VersionResponse]:
     """
     Update a version. Only DRAFT versions can be updated.
     """
-    version = kb_store.get_version(version_id)
+    version = version_manager.get_version(version_id)
     if version is None:
         raise HTTPException(status_code=404, detail=f"Version not found: {version_id}")
 
@@ -201,9 +201,9 @@ async def update_version(
     if data.metadata is not None:
         version.metadata = data.metadata
 
-    kb_store.save_version(version)
+    version_manager.update_version(version)
 
-    file_versions = kb_store.get_file_versions(version_id)
+    file_versions = version_manager.get_file_versions(version_id)
     indexed = sum(1 for fv in file_versions if fv.index_status == IndexStatus.INDEXED)
     pending = sum(1 for fv in file_versions if fv.index_status == IndexStatus.PENDING)
     failed = sum(1 for fv in file_versions if fv.index_status == IndexStatus.FAILED)
@@ -229,12 +229,12 @@ async def update_version(
 @router.delete("/versions/{version_id}", response_model=ApiResponse[None])
 async def delete_version(
     version_id: str,
-    kb_store: KbStoreDep,
+    version_manager: VersionManagerDep,
 ) -> ApiResponse[None]:
     """
     Delete a version. Only DRAFT or ARCHIVED versions can be deleted.
     """
-    version = kb_store.get_version(version_id)
+    version = version_manager.get_version(version_id)
     if version is None:
         raise HTTPException(status_code=404, detail=f"Version not found: {version_id}")
 
@@ -244,13 +244,8 @@ async def delete_version(
             detail=f"Cannot delete version in status: {version.status.value}. Only DRAFT or ARCHIVED versions can be deleted."
         )
 
-    # Delete associated file versions first
-    file_versions = kb_store.get_file_versions(version_id)
-    for fv in file_versions:
-        kb_store.delete_file_version(fv.id)
-
-    # Delete the version
-    kb_store.delete_version(version_id)
+    # Delete the version (also deletes associated file versions)
+    version_manager.delete_version(version_id)
 
     return ApiResponse.success(None)
 
@@ -258,14 +253,14 @@ async def delete_version(
 @router.post("/versions/{version_id}/build", response_model=ApiResponse[TaskResponse])
 async def trigger_build(
     version_id: str,
-    kb_store: KbStoreDep,
+    version_manager: VersionManagerDep,
     task_queue: TaskQueueDep,
     data: VersionBuildRequest,
 ) -> ApiResponse[TaskResponse]:
     """
     Trigger a build for a version.
     """
-    version = kb_store.get_version(version_id)
+    version = version_manager.get_version(version_id)
     if version is None:
         raise HTTPException(status_code=404, detail=f"Version not found: {version_id}")
 
@@ -276,15 +271,26 @@ async def trigger_build(
         )
 
     # Update version status
-    version.status = VersionStatus.BUILDING
-    kb_store.save_version(version)
+    version_manager.update_version_status(version_id, VersionStatus.BUILDING)
 
     # Get KB for response
-    kb = kb_store.get_knowledge_base(version.knowledge_base_id)
+    kb = version_manager.get_knowledge_base(version.knowledge_base_id)
 
     # Create indexing task
     build_type = BuildType.FULL if data.build_type == "full" else BuildType.INCREMENTAL
-    pipeline_config = [StepConfig(**step) for step in data.pipeline_config]
+
+    # Use provided pipeline config or default pipeline
+    if data.pipeline_config:
+        pipeline_config = [StepConfig(**step) for step in data.pipeline_config]
+    else:
+        # Default pipeline: parse -> chunk -> enrich -> embed -> build index
+        pipeline_config = [
+            StepConfig(step_type="markitdown_parser"),
+            StepConfig(step_type="sentence_chunker"),
+            StepConfig(step_type="qa_enricher"),
+            StepConfig(step_type="dashscope_embedder"),
+            StepConfig(step_type="vector_index_builder"),
+        ]
 
     task = IndexingTask(
         id=str(uuid.uuid4()),
@@ -320,7 +326,7 @@ async def trigger_build(
 @router.post("/versions/{version_id}/ingest", response_model=ApiResponse[TaskResponse])
 async def trigger_ingest(
     version_id: str,
-    kb_store: KbStoreDep,
+    version_manager: VersionManagerDep,
     task_queue: TaskQueueDep,
     data: VersionIngestRequest,
 ) -> ApiResponse[TaskResponse]:
@@ -331,7 +337,7 @@ async def trigger_ingest(
     in the version. After ingestion, you can trigger a build to process
     the files and create indexes.
     """
-    version = kb_store.get_version(version_id)
+    version = version_manager.get_version(version_id)
     if version is None:
         raise HTTPException(status_code=404, detail=f"Version not found: {version_id}")
 
@@ -342,11 +348,11 @@ async def trigger_ingest(
         )
 
     # Get KB for response and source config
-    kb = kb_store.get_knowledge_base(version.knowledge_base_id)
+    kb = version_manager.get_knowledge_base(version.knowledge_base_id)
 
-    # Build source config from request
+    # Build source config - pass through directly to connector
     source_config = {
-        "source_type": data.source_type,
+        "connector_type": data.connector_type,
         **data.source_config,
     }
 
@@ -386,14 +392,14 @@ async def trigger_ingest(
 @router.post("/versions/{version_id}/publish", response_model=ApiResponse[TaskResponse])
 async def trigger_publish(
     version_id: str,
-    kb_store: KbStoreDep,
+    version_manager: VersionManagerDep,
     task_queue: TaskQueueDep,
     data: VersionPublishRequest,
 ) -> ApiResponse[TaskResponse]:
     """
     Trigger publishing for a version.
     """
-    version = kb_store.get_version(version_id)
+    version = version_manager.get_version(version_id)
     if version is None:
         raise HTTPException(status_code=404, detail=f"Version not found: {version_id}")
 
@@ -404,7 +410,7 @@ async def trigger_publish(
         )
 
     # Get KB for response
-    kb = kb_store.get_knowledge_base(version.knowledge_base_id)
+    kb = version_manager.get_knowledge_base(version.knowledge_base_id)
 
     # Create publishing task
     strategy = PublishStrategy.BLUE_GREEN if data.publish_strategy == "blue_green" else PublishStrategy.REPLACE
@@ -445,7 +451,7 @@ async def trigger_publish(
 @router.get("/versions/{version_id}/files", response_model=PaginatedResponse[FileVersionResponse])
 async def list_version_files(
     version_id: str,
-    kb_store: KbStoreDep,
+    version_manager: VersionManagerDep,
     page: int = Query(1, ge=1, description="Page number"),
     page_size: int = Query(50, ge=1, le=200, description="Items per page"),
     status: str | None = Query(None, description="Filter by index status"),
@@ -453,11 +459,11 @@ async def list_version_files(
     """
     List files in a version.
     """
-    version = kb_store.get_version(version_id)
+    version = version_manager.get_version(version_id)
     if version is None:
         raise HTTPException(status_code=404, detail=f"Version not found: {version_id}")
 
-    file_versions = kb_store.get_file_versions(version_id)
+    file_versions = version_manager.get_file_versions(version_id)
 
     # Apply status filter
     if status:

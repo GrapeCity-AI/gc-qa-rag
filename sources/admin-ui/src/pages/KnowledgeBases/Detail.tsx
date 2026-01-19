@@ -117,7 +117,7 @@ function KnowledgeBaseDetail() {
     }
   }
 
-  const handleIngest = async (values: { source_type: string; source_config: string; incremental: boolean }) => {
+  const handleIngest = async (values: { connector_type: string; source_config: string; incremental: boolean }) => {
     if (!selectedVersion) return
     try {
       // Parse source_config as JSON
@@ -132,7 +132,7 @@ function KnowledgeBaseDetail() {
       const result = await ingestVersion.mutateAsync({
         versionId: selectedVersion,
         data: {
-          source_type: values.source_type,
+          connector_type: values.connector_type,
           source_config: sourceConfig,
           incremental: values.incremental,
         },
@@ -427,12 +427,12 @@ function KnowledgeBaseDetail() {
           form={ingestForm}
           layout="vertical"
           onFinish={handleIngest}
-          initialValues={{ source_type: 'filesystem', incremental: false }}
+          initialValues={{ connector_type: 'filesystem', incremental: false }}
         >
           <Form.Item
-            name="source_type"
-            label="Source Type"
-            rules={[{ required: true, message: 'Please select a source type' }]}
+            name="connector_type"
+            label="Connector Type"
+            rules={[{ required: true, message: 'Please select a connector type' }]}
           >
             <Select>
               <Select.Option value="filesystem">Filesystem</Select.Option>
@@ -444,11 +444,11 @@ function KnowledgeBaseDetail() {
             name="source_config"
             label="Source Configuration (JSON)"
             rules={[{ required: true, message: 'Please provide source configuration' }]}
-            extra={'Example: {"root_path": "/path/to/docs", "patterns": "**/*.md"}'}
+            extra={'Example: {"connection_params": {"path": "/path/to/docs"}, "fetch_options": {"patterns": ["**/*.md"]}}'}
           >
             <Input.TextArea
               rows={4}
-              placeholder={'{"root_path": "/path/to/documents", "patterns": "**/*.md,**/*.txt"}'}
+              placeholder={'{"connection_params": {"path": "/path/to/documents"}, "fetch_options": {"patterns": ["**/*.md", "**/*.txt"]}}'}
             />
           </Form.Item>
           <Form.Item

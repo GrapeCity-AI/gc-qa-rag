@@ -133,10 +133,10 @@ class VersionPublishRequest(BaseModel):
 class VersionIngestRequest(BaseModel):
     """Request model for triggering ingestion from data source."""
 
-    source_type: str = Field(..., description="Source type: sitemap, filesystem, forum_api")
+    connector_type: str = Field(..., description="Connector type: sitemap, filesystem, forum_api")
     source_config: dict[str, Any] = Field(
         default_factory=dict,
-        description="Source-specific configuration"
+        description="Source-specific configuration with connection_params and fetch_options"
     )
     incremental: bool = Field(default=False, description="Whether to perform incremental ingestion")
     dedup_strategy: str = Field(default="version", description="Deduplication strategy: skip, replace, version")
@@ -145,18 +145,18 @@ class VersionIngestRequest(BaseModel):
         "json_schema_extra": {
             "examples": [
                 {
-                    "source_type": "sitemap",
+                    "connector_type": "sitemap",
                     "source_config": {
-                        "sitemap_url": "https://example.com/sitemap.xml",
-                        "max_pages": 100
+                        "connection_params": {"url": "https://example.com/sitemap.xml"},
+                        "fetch_options": {"max_pages": 100}
                     },
                     "incremental": False
                 },
                 {
-                    "source_type": "filesystem",
+                    "connector_type": "filesystem",
                     "source_config": {
-                        "root_path": "/path/to/documents",
-                        "patterns": "**/*.md,**/*.txt"
+                        "connection_params": {"path": "/path/to/documents"},
+                        "fetch_options": {"patterns": ["**/*.md", "**/*.txt"]}
                     }
                 }
             ]

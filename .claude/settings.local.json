@@ -1,7 +1,9 @@
 {
   "permissions": {
     "allow": [
-      "Bash(ls -la \"C:\\\\Workspace\\\\GitHub\\\\gc-qa-rag\\\\sources\\\\ai_knowledge_service\\\\api\\\\routers\"\" | find . -name \"*.py \" -type f)"
+      "Bash(ls -la \"C:\\\\Workspace\\\\GitHub\\\\gc-qa-rag\\\\sources\\\\ai_knowledge_service\\\\api\\\\routers\"\" | find . -name \"*.py \" -type f)",
+      "Bash(powershell:*)",
+      "Bash(dir:*)"
     ]
   }
 }

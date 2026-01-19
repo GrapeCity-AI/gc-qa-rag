@@ -22,7 +22,7 @@ from ai_knowledge_service.api.schemas.task import (
     TaskRetryRequest,
     TaskSummary,
 )
-from ai_knowledge_service.api.dependencies import KbStoreDep, TaskQueueDep
+from ai_knowledge_service.api.dependencies import VersionManagerDep, TaskQueueDep
 from ai_knowledge_service.abstractions.models.tasks import TaskStatus, TaskType
 
 
@@ -32,7 +32,7 @@ router = APIRouter()
 @router.get("", response_model=PaginatedResponse[TaskSummary])
 async def list_tasks(
     task_queue: TaskQueueDep,
-    kb_store: KbStoreDep,
+    version_manager: VersionManagerDep,
     page: int = Query(1, ge=1, description="Page number"),
     page_size: int = Query(20, ge=1, le=100, description="Items per page"),
     status: str | None = Query(None, description="Filter by status"),
@@ -70,8 +70,8 @@ async def list_tasks(
 
     summaries = []
     for task in page_items:
-        kb = kb_store.get_knowledge_base(task.knowledge_base_id)
-        version = kb_store.get_version(task.knowledge_base_version_id)
+        kb = version_manager.get_knowledge_base(task.knowledge_base_id)
+        version = version_manager.get_version(task.knowledge_base_version_id)
         task_status = task_queue.get_task_status(task.id)
 
         summaries.append(
@@ -101,7 +101,7 @@ async def list_tasks(
 async def get_task(
     task_id: str,
     task_queue: TaskQueueDep,
-    kb_store: KbStoreDep,
+    version_manager: VersionManagerDep,
 ) -> ApiResponse[TaskResponse]:
     """
     Get a task by ID.
@@ -110,8 +110,8 @@ async def get_task(
     if task is None:
         raise HTTPException(status_code=404, detail=f"Task not found: {task_id}")
 
-    kb = kb_store.get_knowledge_base(task.knowledge_base_id)
-    version = kb_store.get_version(task.knowledge_base_version_id)
+    kb = version_manager.get_knowledge_base(task.knowledge_base_id)
+    version = version_manager.get_version(task.knowledge_base_version_id)
     task_status = task_queue.get_task_status(task_id)
 
     duration = None
@@ -223,7 +223,7 @@ async def get_task_result(
 async def cancel_task(
     task_id: str,
     task_queue: TaskQueueDep,
-    kb_store: KbStoreDep,
+    version_manager: VersionManagerDep,
     data: TaskCancelRequest | None = None,
 ) -> ApiResponse[TaskResponse]:
     """
@@ -244,8 +244,8 @@ async def cancel_task(
     if not success:
         raise HTTPException(status_code=400, detail="Failed to cancel task")
 
-    kb = kb_store.get_knowledge_base(task.knowledge_base_id)
-    version = kb_store.get_version(task.knowledge_base_version_id)
+    kb = version_manager.get_knowledge_base(task.knowledge_base_id)
+    version = version_manager.get_version(task.knowledge_base_version_id)
 
     return ApiResponse.success(
         TaskResponse(
@@ -271,7 +271,7 @@ async def cancel_task(
 async def retry_task(
     task_id: str,
     task_queue: TaskQueueDep,
-    kb_store: KbStoreDep,
+    version_manager: VersionManagerDep,
     data: TaskRetryRequest | None = None,
 ) -> ApiResponse[TaskResponse]:
     """
@@ -317,8 +317,8 @@ async def retry_task(
 
     task_queue.enqueue(new_task)
 
-    kb = kb_store.get_knowledge_base(new_task.knowledge_base_id)
-    version = kb_store.get_version(new_task.knowledge_base_version_id)
+    kb = version_manager.get_knowledge_base(new_task.knowledge_base_id)
+    version = version_manager.get_version(new_task.knowledge_base_version_id)
 
     return ApiResponse.success(
         TaskResponse(

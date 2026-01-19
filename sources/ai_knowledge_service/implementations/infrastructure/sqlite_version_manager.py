@@ -12,7 +12,7 @@ import uuid
 from contextlib import contextmanager
 from datetime import datetime
 from pathlib import Path
-from typing import Generator, List, Optional
+from typing import Any, Dict, Generator, List, Optional
 
 from ai_knowledge_service.abstractions.infrastructure.version_manager import (
     IVersionManager,
@@ -207,6 +207,28 @@ class SqliteVersionManager(IVersionManager):
 
             return cursor.rowcount > 0
 
+    def update_knowledge_base(self, kb: KnowledgeBase) -> None:
+        """Update a knowledge base."""
+        with self._cursor() as cursor:
+            cursor.execute(
+                "SELECT id FROM knowledge_bases WHERE id = ?",
+                (kb.id,)
+            )
+            if not cursor.fetchone():
+                raise ValueError(f"Knowledge base not found: {kb.id}")
+
+            cursor.execute("""
+                UPDATE knowledge_bases
+                SET name = ?, description = ?, updated_at = ?, metadata = ?
+                WHERE id = ?
+            """, (
+                kb.name,
+                kb.description,
+                kb.updated_at.isoformat(),
+                json.dumps(kb.metadata),
+                kb.id,
+            ))
+
     # ============ Knowledge Base Version Management ============
 
     def create_version(
@@ -358,6 +380,34 @@ class SqliteVersionManager(IVersionManager):
             if cursor.rowcount == 0:
                 raise ValueError(f"Version not found: {version_id}")
 
+    def update_version(self, version: KnowledgeBaseVersion) -> None:
+        """Update a version."""
+        with self._cursor() as cursor:
+            cursor.execute(
+                "SELECT id FROM knowledge_base_versions WHERE id = ?",
+                (version.id,)
+            )
+            if not cursor.fetchone():
+                raise ValueError(f"Version not found: {version.id}")
+
+            published_at = None
+            if version.published_at:
+                published_at = version.published_at.isoformat()
+
+            cursor.execute("""
+                UPDATE knowledge_base_versions
+                SET version_tag = ?, status = ?, parent_version_id = ?,
+                    published_at = ?, metadata = ?
+                WHERE id = ?
+            """, (
+                version.version_tag,
+                version.status.value,
+                version.parent_version_id,
+                published_at,
+                json.dumps(version.metadata),
+                version.id,
+            ))
+
     def delete_version(self, version_id: str) -> bool:
         """Delete a version."""
         with self._cursor() as cursor:
@@ -380,6 +430,7 @@ class SqliteVersionManager(IVersionManager):
         raw_file_id: str,
         knowledge_base_version_id: str,
         content_hash: str,
+        metadata: Optional[Dict[str, Any]] = None,
     ) -> FileVersion:
         """Create a file version."""
         file_version = FileVersion(
@@ -389,6 +440,7 @@ class SqliteVersionManager(IVersionManager):
             content_hash=content_hash,
             index_status=IndexStatus.PENDING,
             created_at=datetime.now(),
+            metadata=metadata or {},
         )
 
         with self._cursor() as cursor:

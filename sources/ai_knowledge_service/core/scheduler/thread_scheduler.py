@@ -16,6 +16,11 @@ from ai_knowledge_service.abstractions.execution.scheduler import (
     SchedulerStatus,
 )
 from ai_knowledge_service.abstractions.execution.executor import ITaskExecutor
+from ai_knowledge_service.abstractions.infrastructure.event_bus import (
+    BuildTaskCompletedEvent,
+    IEventBus,
+    VersionPublishedEvent,
+)
 from ai_knowledge_service.abstractions.models.tasks import TaskType, TaskStatus
 
 
@@ -33,6 +38,7 @@ class ThreadScheduler(ITaskScheduler):
     def __init__(
         self,
         task_queue: ITaskQueue,
+        event_bus: Optional[IEventBus] = None,
         logger: Optional[logging.Logger] = None,
         poll_interval: float = 0.5,
     ):
@@ -41,10 +47,12 @@ class ThreadScheduler(ITaskScheduler):
 
         Args:
             task_queue: Task queue to pull tasks from.
+            event_bus: Optional event bus for publishing task completion events.
             logger: Optional logger instance.
             poll_interval: Interval in seconds between queue polls.
         """
         self._task_queue = task_queue
+        self._event_bus = event_bus
         self._logger = logger or logging.getLogger(self.__class__.__name__)
         self._poll_interval = poll_interval
 
@@ -292,6 +300,7 @@ class ThreadScheduler(ITaskScheduler):
 
             if result.status == TaskStatus.COMPLETED:
                 self._task_queue.complete(task.id, result)
+                self._publish_completion_event(task, result)
             else:
                 self._task_queue.fail(
                     task.id,
@@ -310,3 +319,44 @@ class ThreadScheduler(ITaskScheduler):
                 f"{thread_name}: Error processing task {task.id}: {e}"
             )
             self._task_queue.fail(task.id, str(e))
+
+    def _publish_completion_event(self, task, result) -> None:
+        """Publish task completion event to the event bus."""
+        if self._event_bus is None:
+            return
+
+        try:
+            task_type = task.task_type
+
+            if task_type == TaskType.INDEXING:
+                # Publish BuildTaskCompletedEvent for indexing tasks
+                event = BuildTaskCompletedEvent(
+                    task_id=task.id,
+                    knowledge_base_id=task.knowledge_base_id,
+                    knowledge_base_version_id=task.knowledge_base_version_id,
+                    success=result.status == TaskStatus.COMPLETED,
+                    records_indexed=getattr(result, "index_records_count", 0),
+                    errors_count=result.failed_count,
+                )
+                self._event_bus.publish(event)
+                self._logger.debug(
+                    f"Published BuildTaskCompletedEvent for task {task.id}"
+                )
+
+            elif task_type == TaskType.PUBLISHING:
+                # Publish VersionPublishedEvent for publishing tasks
+                if result.status == TaskStatus.COMPLETED:
+                    event = VersionPublishedEvent(
+                        knowledge_base_id=task.knowledge_base_id,
+                        knowledge_base_version_id=task.knowledge_base_version_id,
+                        target_environment_id=task.target_environment_id,
+                        target_collection=getattr(result, "target_collection", ""),
+                        alias_applied=getattr(result, "alias_applied", "") or "",
+                    )
+                    self._event_bus.publish(event)
+                    self._logger.debug(
+                        f"Published VersionPublishedEvent for version {task.knowledge_base_version_id}"
+                    )
+
+        except Exception as e:
+            self._logger.warning(f"Failed to publish completion event: {e}")
